@@ -61,6 +61,7 @@ const KIN_LABELS = {
   fiance: ['Fiancé', 'Fiancée', 'Fiancé'],
   spouse: ['Husband', 'Wife', 'Spouse'],
   lover: ['Lover', 'Lover', 'Lover'],
+  fling: ['Fling', 'Fling', 'Fling'], // a one-night stand (47-romance.js)
   ex: ['Ex', 'Ex', 'Ex'],
   exspouse: ['Ex-husband', 'Ex-wife', 'Ex-spouse'],
   bestie: ['Best friend', 'Best friend', 'Best friend'],
@@ -87,7 +88,7 @@ const REL_GROUPS = [
   { id: 'friends', name: 'Friends', kinds: ['bestie', 'friend', 'lover'] },
   { id: 'school', name: 'School', kinds: ['classmate'] },
   { id: 'work', name: 'Work', kinds: ['boss', 'coworker'] },
-  { id: 'other', name: 'Others', kinds: ['ex', 'exspouse', 'enemy', 'cellmate'] },
+  { id: 'other', name: 'Others', kinds: ['ex', 'exspouse', 'fling', 'enemy', 'cellmate'] },
 ];
 
 const CLIQUES = {

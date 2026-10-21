@@ -133,7 +133,8 @@ for (let i = 0; i < N; i++) {
     // Persona lives steer the first generation into careers random play rarely reaches, so
     // their actions and events get tested: parents (i % 10 = 1: three kids at 30, a company,
     // half of them a crime family too, and lots of parenting), sports (3), fame (5), the
-    // underworld (7), and the courts (9: a judge or a lawyer at 36, sometimes already high
+    // underworld (7), romance (8: a partner at 24, then hookups, affairs and open
+    // relationships), and the courts (9: a judge or a lawyer at 36, sometimes already high
     // on the ladder).
     const age = s.year - s.people[s.playerId].birthYear;
     if (s.gen === 1 && !s.player.prison) {
@@ -154,6 +155,17 @@ for (let i = 0; i < N; i++) {
           for (const pid in s.player.rels) for (const a of ctx.actionList(s, 'person', pid)) if (a.group === 'parent') acts.push([a.id, pid]);
           if (acts.length) { const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'parent:' + id); }
           if (chance(0.15)) { ctx.doAction(s, 'name_heir'); stats.actionsRun.name_heir = (stats.actionsRun.name_heir || 0) + 1; resolveAll(s, 'heir'); }
+        }
+        if (i % 10 === 8 && age === 24 && !ctx.romanticId(s)) {
+          const q = ctx.makeAdultNear(s, {});
+          ctx.setRel(s, q.id, 'partner', 75); q.partner = s.playerId;
+          for (let k = 0; k < 3; k++) ctx.setRel(s, ctx.makeAdultNear(s, {}).id, 'friend', 70);
+        }
+        if (i % 10 === 8 && age > 24 && age < 70 && chance(0.6)) {
+          const acts = [];
+          for (const pid in s.player.rels) for (const a of ctx.actionList(s, 'person', pid)) if (a.id.startsWith('rx_') || ['p_askout', 'p_leave_for', 'p_breakup'].includes(a.id)) acts.push([a.id, pid]);
+          for (const id of ['hookup', 'find_date']) if (ctx.actionList(s, 'love').some((a) => a.id === id)) acts.push([id, undefined]);
+          if (acts.length) { const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'romance:' + id); }
         }
         if (i % 10 === 5 && age === 20) { const job = ['musician', 'author', 'comedian', 'director', 'producer', 'actor', 'model'][Math.floor(i / 10) % 7]; if (s.player.career) ctx.leaveJob(s, 'switched'); Object.assign(s.player.skills, { music: 50, writing: 50, acting: 50, art: 50, charisma: 40 }); s.people[s.playerId].stats.looks = Math.max(75, s.people[s.playerId].stats.looks); ctx.hire(s, job, 0); }
       } catch (e) { fail('persona setup threw: ' + e.stack.split('\n').slice(0, 3).join(' | '), s); }

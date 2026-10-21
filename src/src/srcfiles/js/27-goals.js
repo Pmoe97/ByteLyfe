@@ -112,6 +112,11 @@ const ACHIEVEMENTS = [
   { id: 'old_school_tie', name: 'Old School Tie', emoji: '🏛️', desc: 'Send a child to boarding school.', check: (s) => LC(s, 'boarding') >= 1 },
   { id: 'matchmaker', name: 'Matchmaker', emoji: '💑', desc: 'Arrange a marriage for one of your children.', check: (s) => LC(s, 'arranged') >= 1 },
   { id: 'succession', name: 'Succession', emoji: '🗝️', desc: 'Pass the family business to the heir you named.', check: (s) => LC(s, 'heirBusiness') >= 1 },
+  { id: 'open_book', name: 'Open Book', emoji: '🔓', desc: 'Open up a relationship.', check: (s) => LC(s, 'openRel') >= 1 },
+  { id: 'smooth_operator', name: 'Smooth Operator', emoji: '🕶️', desc: 'Keep an affair secret for five years.', check: (s) => LC(s, 'longAffair') >= 1 },
+  { id: 'busted', name: 'Busted', emoji: '😳', desc: 'Get caught cheating.', check: (s) => LC(s, 'caughtCheating') >= 1 },
+  { id: 'its_complicated', name: 'It’s Complicated', emoji: '🕸️', desc: 'Have three lovers at once.', check: (s) => relPeople(s, ['lover']).length >= 3 },
+  { id: 'ghosts_past', name: 'Ghosts of Flings Past', emoji: '👻', desc: 'Have a one-night stand come back into your life.', check: (s) => LC(s, 'flingReturns') >= 1 },
   { id: 'family_way', name: 'Keep It in the Family', emoji: '🕴️', desc: 'Take over the crime family your parent left you.', check: (s) => LC(s, 'mobHeir') >= 1 },
 ];
 

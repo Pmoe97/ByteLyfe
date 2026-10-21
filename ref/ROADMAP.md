@@ -102,15 +102,16 @@ outlast you across generations.
 - **Extras:** 5 new company events and 4 new achievements (Hostile Takeover, Franchise King,
   Market Leader, Stock Picker).
 
-**Meta.** 108 achievements kept across lives, three bucket-list goals per life, legacy titles
+**Meta.** 113 achievements kept across lives, three bucket-list goals per life, legacy titles
 and epitaphs, the Hall of Lives, multiple save slots, export/import codes. God Mode (stats,
 money, skills, traits, instant careers and degrees, relationship editing) and a 10-year Time
 Machine, both free. Light/dark themes, text size, reduced motion.
 
 **Content tags.** Events, choices and actions can be tagged `chaos` (absurd and
 supernatural) or `mature` (harder crime and affair content). Each tag has an off-by-default
-switch in Settings, so players who want the game weirder or darker can opt in. So far, four
-toddler hazards are tagged `chaos`, and nothing is tagged `mature`.
+switch in Settings, so players who want the game weirder or darker can opt in. So far, seven
+events are tagged `chaos` (four of them toddler hazards), and three of the messiest affair and
+one-night-stand events are tagged `mature` (see Relationships 2.0).
 
 **Quick wins.** Petty actions: throw a tantrum to squeeze money out of your parents,
 toilet-paper someone's house, yell at people (detention at school, a write-up at work), spread
@@ -304,41 +305,59 @@ or even the prison you're in, and get sued yourself.
   arranged matches that work or don't...) and 5 achievements (Stage Parent, Old School Tie,
   Matchmaker, Succession, Keep It in the Family).
 
+**Relationships 2.0.** Love gets more complicated. Romance actions now have their own section on a
+person's page.
+- **Open relationships:** ask your partner to open the relationship. Their answer depends on how
+  things are between you and on who they are (adventurous partners say yes more often, romantic ones
+  less). Partners can ask you, too. While it's open, new partners on the side aren't a secret, but
+  jealousy builds with every one of them and can end in an ultimatum or a breakup. Close it again any
+  time, and decide whether the others end or carry on in secret.
+- **Secret partners:** every affair has a risk of getting caught, shown on the lover's page, that
+  grows each year and with every secret rendezvous. Cover your tracks to lower it. When you're
+  caught, deny everything, confess and beg, leave your partner for your lover, or suggest opening
+  the relationship.
+- **One-night stands come back:** the person from a hookup stays in your life. Hook up again, ask
+  them on a real date, or ghost them. Years later they turn up as your new manager, your new
+  neighbor, your friend's or sibling's date, a viral thread about you, a face at your partner's
+  work party, or with a child who has your eyes.
+- **Extras:** 19 romance events (an ultimatum from a lover, being spotted across town, a suspicious
+  partner, a private investigator, double-booking Valentine's Day...), 3 of them tagged `mature`
+  (blackmail, a lover on your doorstep, a fling who won't go away), and 5 achievements (Open Book,
+  Smooth Operator, Busted, It's Complicated, Ghosts of Flings Past).
+
 ## Next up
 
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Relationships 2.0.** Ask a partner to open the relationship, keep secret partners on the
-    side with odds of getting caught, and one-night stands that come back as recurring drama.
-2. **Cities.** A few cities per country, each with its own cost of living, job market and
+1. **Cities.** A few cities per country, each with its own cost of living, job market and
     events. Move within a country, pick a neighborhood, and rent from landlords who raise the
     rent, skip repairs or evict you. The other side too: be a landlord with named tenants, set
     the rent, handle repairs and evictions.
-3. **Real currencies** per country, with exchange when emigrating.
-4. **Chaos mode** (`chaos` tag). Random events that grant superpowers (laser eyes, flight...),
+2. **Real currencies** per country, with exchange when emigrating.
+3. **Chaos mode** (`chaos` tag). Random events that grant superpowers (laser eyes, flight...),
     superhero and supervillain careers, ascending as an archangel or a demon lord. Vampire
     lives: feeding, slow aging, hunters, and turning others.
-5. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
+4. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
     A daily challenge with streaks. Every challenge stays available, free.
-6. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
-7. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
+5. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
+6. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
     (collect animals, build exhibits, breeding programs), both on the business engine.
-8. **Military depth.** Wars, desertion, veterans' benefits.
-9. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+7. **Military depth.** Wars, desertion, veterans' benefits.
+8. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
     double agents, and getting burned.
-10. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+9. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-11. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+10. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-12. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+11. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-13. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+12. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
     purges, coups and declared wars. Builds on Royalty and Military depth.
-14. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+13. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-15. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-16. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+14. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+15. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 

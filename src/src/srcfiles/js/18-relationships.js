@@ -387,7 +387,7 @@ function askOutOdds(s, p) {
   return clamp(odds, 0.05, 0.95);
 }
 defAction({
-  id: 'p_askout', cat: 'person', target: 'person', label: 'Ask out', emoji: '💘',
+  id: 'p_askout', cat: 'person', group: 'romance', target: 'person', label: 'Ask out', emoji: '💘',
   when: (s, pid) => {
     if (!reachable(s, pid) || !isKind(s, pid, [...K_ACQ, ...K_FRIENDS]) || relKind(s, pid) === 'boss') return false;
     const p = tgt(s, pid);
@@ -404,12 +404,8 @@ defAction({
 function startRomance(s, pid) {
   const p = tgt(s, pid);
   const current = romanticId(s);
-  if (current && current !== pid) {
-    setRel(s, pid, 'lover', Math.max(relOf(s, pid) ? relOf(s, pid).rel : 50, 60));
-    tally(s, 'affairs');
-    add(s, { karma: -5, happy: 4 });
-    return { text: `${p.first} said yes... even though you're already with ${nm(s, current)}. You're having an affair.`, tone: 'bad' };
-  }
+  // Already with someone: an affair, or a second partner in an open relationship (47-romance.js).
+  if (current && current !== pid) return affairBegins(s, pid, current);
   setRel(s, pid, 'partner', Math.max(relOf(s, pid) ? relOf(s, pid).rel : 55, 60));
   p.partner = P(s).id;
   tally(s, 'partners');
@@ -417,8 +413,9 @@ function startRomance(s, pid) {
   return { text: `${p.first} said yes! You're dating now. 💕`, tone: 'good', person: pid };
 }
 defAction({
-  id: 'p_date', cat: 'person', target: 'person', label: 'Go on a date', emoji: '🌹',
-  when: (s, pid) => reachable(s, pid) && isKind(s, pid, K_ROMANCE) && A(s) >= 13,
+  id: 'p_date', cat: 'person', group: 'romance', target: 'person', label: 'Go on a date', emoji: '🌹',
+  // A secret lover gets a secret rendezvous instead (47-romance.js).
+  when: (s, pid) => reachable(s, pid) && isKind(s, pid, K_ROMANCE) && A(s) >= 13 && !(relKind(s, pid) === 'lover' && romanticId(s) && !relOf(s, pid).known),
   sub: (s) => fmtMoney(price(s, A(s) < 18 ? 20 : 120)),
   run: (s, pid) => {
     const cost = price(s, A(s) < 18 ? 20 : 120);
@@ -430,7 +427,7 @@ defAction({
   },
 });
 defAction({
-  id: 'p_propose', cat: 'person', target: 'person', label: 'Propose', emoji: '💍',
+  id: 'p_propose', cat: 'person', group: 'romance', target: 'person', label: 'Propose', emoji: '💍',
   when: (s, pid) => reachable(s, pid) && relKind(s, pid) === 'partner' && A(s) >= 18 && tAge(s, pid) >= 18,
   run: (s, pid) => {
     const rings = [['Simple band', 300], ['Nice ring', 3000], ['Stunning ring', 15000], ['Absurdly huge diamond', 120000]];
@@ -472,7 +469,7 @@ function marry(s, pid) {
   return p;
 }
 defAction({
-  id: 'p_wedding', cat: 'person', target: 'person', label: 'Plan the wedding', emoji: '💒',
+  id: 'p_wedding', cat: 'person', group: 'romance', target: 'person', label: 'Plan the wedding', emoji: '💒',
   when: (s, pid) => reachable(s, pid) && relKind(s, pid) === 'fiance',
   run: (s, pid) => {
     const opts = [['Elope at the courthouse', 100], ['Small wedding', 8000], ['Big wedding', 35000], ['Lavish destination wedding', 180000]];
@@ -507,7 +504,7 @@ function endRomance(s, pid, kind) {
   tally(s, 'breakups');
 }
 defAction({
-  id: 'p_breakup', cat: 'person', target: 'person', label: 'Break up', emoji: '💔',
+  id: 'p_breakup', cat: 'person', group: 'romance', target: 'person', label: 'Break up', emoji: '💔',
   when: (s, pid) => reachable(s, pid) && isKind(s, pid, ['partner', 'fiance', 'lover']),
   run: (s, pid) => {
     const n = nm(s, pid);
@@ -517,7 +514,7 @@ defAction({
   },
 });
 defAction({
-  id: 'p_divorce', cat: 'person', target: 'person', label: 'Divorce', emoji: '📝',
+  id: 'p_divorce', cat: 'person', group: 'romance', target: 'person', label: 'Divorce', emoji: '📝',
   when: (s, pid) => reachable(s, pid) && relKind(s, pid) === 'spouse',
   run: (s, pid) => {
     popup(s, { emoji: '📝', title: 'Divorce ' + nm(s, pid) + '?', text: 'Without a prenup, they could walk away with a big share of your money.', handler: 'divorce', ctx: { pid }, choices: [{ label: 'File for divorce', value: true, tone: 'bad' }, { label: 'Never mind', value: false }] });
@@ -538,7 +535,7 @@ function divorce(s, pid, iFiled) {
   return { text: `${iFiled ? 'You divorced' : 'Your divorce from'} ${p.first}${iFiled ? '' : ' is final'}. ${share ? `They walked away with ${fmtMoney(share)}.` : ''}`, tone: 'bad' };
 }
 defAction({
-  id: 'p_counseling', cat: 'person', target: 'person', label: 'Couples counseling', emoji: '🛋️',
+  id: 'p_counseling', cat: 'person', group: 'romance', target: 'person', label: 'Couples counseling', emoji: '🛋️',
   when: (s, pid) => reachable(s, pid) && isKind(s, pid, ['partner', 'fiance', 'spouse']) && A(s) >= 18 && relOf(s, pid).rel < 70,
   sub: (s) => fmtMoney(price(s, 1500)),
   run: (s, pid) => {
@@ -550,7 +547,7 @@ defAction({
   },
 });
 defAction({
-  id: 'p_rekindle', cat: 'person', target: 'person', label: 'Rekindle romance', emoji: '🔥',
+  id: 'p_rekindle', cat: 'person', group: 'romance', target: 'person', label: 'Rekindle romance', emoji: '🔥',
   when: (s, pid) => reachable(s, pid) && isKind(s, pid, K_EXES) && !hasRomance(s) && ageOk(A(s), tAge(s, pid)) && !tgt(s, pid).partner,
   run: (s, pid) => {
     if (bump(s, 'rekindle_' + pid) > 1) return { text: 'Give it some time.', nolog: true };
@@ -560,7 +557,7 @@ defAction({
   },
 });
 defAction({
-  id: 'p_leave_for', cat: 'person', target: 'person', label: 'Leave your partner for them', emoji: '🔀',
+  id: 'p_leave_for', cat: 'person', group: 'romance', target: 'person', label: 'Leave your partner for them', emoji: '🔀',
   when: (s, pid) => reachable(s, pid) && relKind(s, pid) === 'lover' && !!romanticId(s),
   run: (s, pid) => {
     const old = romanticId(s);
@@ -585,7 +582,7 @@ function fertility(age) {
   return 0;
 }
 defAction({
-  id: 'p_baby', cat: 'person', target: 'person', label: 'Try for a baby', emoji: '🍼',
+  id: 'p_baby', cat: 'person', group: 'romance', target: 'person', label: 'Try for a baby', emoji: '🍼',
   when: (s, pid) => reachable(s, pid) && isKind(s, pid, K_ROMANCE) && A(s) >= 18 && tAge(s, pid) >= 18 && !M(s).pregnancy,
   run: (s, pid) => {
     const me = P(s), p = tgt(s, pid);
@@ -728,19 +725,14 @@ defAction({
     const c = makeDateCandidate(s);
     add(s, { happy: randInt(3, 7) });
     tally(s, 'hookups');
+    // They stay in your life as a fling, and may come back (47-romance.js).
+    const p = makeFling(s, c);
     let out = `You hooked up with ${c.first}, ${c.age}. ${pick(['Fireworks.', 'It was... fine.', 'They left before sunrise.', "You don't regret it."])}`;
     if (chance(0.05)) { getSick(s, pick(STIS)); out += ' A few weeks later, you noticed something was off down there.'; }
     const rom = romanticId(s);
-    if (rom && chance(0.25)) {
-      addRel(s, rom, -35);
-      out += ` ${nm(s, rom)} found out.`;
-      if (relOf(s, rom).rel < 25 || chance(0.5)) {
-        if (relKind(s, rom) === 'spouse') { out += ' They filed for divorce.'; divorce(s, rom, false); } else { endRomance(s, rom, 'ex'); out += ' They dumped you.'; }
-      }
-    }
-    if (canConceive(P(s), c) && chance(0.02) && fertility(P(s).gender === 'f' ? A(s) : c.age) > 0) {
-      const p = makePerson(s, { first: c.first, last: c.last, gender: c.gender, age: c.age, country: c.country, looks: c.looks, smarts: c.smarts, job: c.job, edu: c.edu });
-      setRel(s, p.id, 'ex', 30);
+    if (rom && !openWith(s, rom) && chance(0.25)) out += hookupFoundOut(s, rom);
+    if (canConceive(P(s), c) && chance(0.02) && fertility(P(s).gender === 'f' ? A(s) : c.age) > 0 && !M(s).pregnancy) {
+      relOf(s, p.id).kid = true;
       M(s).pregnancy = { partnerId: p.id, carrier: P(s).gender === 'f' ? 'me' : 'partner', year: s.year };
       out += P(s).gender === 'f' ? " And now you're pregnant." : ` Months later, ${c.first} called: they're pregnant.`;
     }
