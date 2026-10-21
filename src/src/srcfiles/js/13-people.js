@@ -168,11 +168,29 @@ function kinLabel(kind, p) {
   if (!L) return cap(kind || 'acquaintance');
   return p.gender === 'm' ? L[0] : p.gender === 'f' ? L[1] : L[2];
 }
+// What they are to you, in words: in-laws are worked out from the family tree
+// ("Mother-in-law", "Future brother-in-law", "Partner's father", "Son-in-law").
+function kinTitle(s, pid) {
+  const r = relOf(s, pid), p = s.people[pid];
+  if (!r || !p) return '';
+  return r.kind === 'inlaw' ? inlawTitle(s, p) : kinLabel(r.kind, p);
+}
+function inlawTitle(s, p) {
+  const word = (m, f, x) => genderWord(p, m, f, x);
+  const mateId = romanticId(s), mate = mateId && s.people[mateId], mk = mate && relKind(s, mateId);
+  const via = (base) => (mk === 'spouse' ? cap(base) + '-in-law' : mk === 'fiance' ? 'Future ' + base + '-in-law' : "Partner's " + base.replace(/-in-law$/, ''));
+  if (mate && mate.parents.includes(p.id)) return via(word('father', 'mother', 'parent'));
+  if (mate && mate.parents.some((x) => p.parents.includes(x))) return via(word('brother', 'sister', 'sibling'));
+  const theirs = p.partner && relKind(s, p.partner);
+  if (theirs === 'sibling' || theirs === 'halfsibling') return word('Brother-in-law', 'Sister-in-law', 'Sibling-in-law');
+  if (theirs === 'child') return word('Son-in-law', 'Daughter-in-law', 'Child-in-law');
+  return 'In-law';
+}
 // "your mother", "your friend" — for sentences.
 function kinOf(s, pid) {
   const r = relOf(s, pid), p = s.people[pid];
   if (!r || !p) return 'someone you know';
-  const lbl = kinLabel(r.kind, p);
+  const lbl = kinTitle(s, pid);
   return 'your ' + (lbl === 'Ex' ? 'ex' : lbl.charAt(0).toLowerCase() + lbl.slice(1));
 }
 function nm(s, pid) { const p = s.people[pid]; return p ? p.first : 'someone'; }
@@ -285,6 +303,8 @@ function gcPeople(s) {
   for (const pid in M(s).rels) keep.add(pid);
   for (const l of s.lineage) if (l.id) keep.add(l.id);
   if (s.crown && s.crown.monarch) keep.add(s.crown.monarch);
+  // Relatives made for the family tree of someone you know stay as long as that person does.
+  for (const id in s.people) { const a = s.people[id].tree; if (a && keep.has(a)) keep.add(id); }
   for (const id of [...keep]) {
     const p = s.people[id];
     if (!p) continue;

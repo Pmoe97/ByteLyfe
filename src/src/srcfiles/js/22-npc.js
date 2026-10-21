@@ -17,7 +17,7 @@ function npcCause(age) {
   return pick(['old age', 'old age', 'heart failure', 'pneumonia', 'a stroke', 'natural causes']);
 }
 
-const REL_DECAY = { parent: 2, stepparent: 3, sibling: 3, halfsibling: 3, child: 2, grandparent: 3, grandchild: 3, partner: 5, fiance: 4, spouse: 4, lover: 6, friend: 6, bestie: 4, enemy: 0, classmate: 4, coworker: 4, boss: 3, ex: 3, exspouse: 2, cellmate: 4, inlaw: 3 };
+const REL_DECAY = { parent: 2, stepparent: 3, sibling: 3, halfsibling: 3, child: 2, grandparent: 3, grandchild: 3, partner: 5, fiance: 4, spouse: 4, lover: 6, friend: 6, bestie: 4, enemy: 0, classmate: 4, coworker: 4, boss: 3, ex: 3, exspouse: 2, cellmate: 4, inlaw: 3, aunt: 3, cousin: 4, nibling: 3 };
 
 function npcTick(s) {
   const m = M(s);
@@ -151,7 +151,7 @@ function npcDies(s, p, cause, opts) {
     if (kind === 'spouse') tally(s, 'widowed');
   }
   if (opts && opts.murdered) { log(s, `🕊️ ${p.first} died ${deathPhrase(cause)}.`, 'bad'); return; }
-  const close = isFamilyKind(kind) || ['bestie', 'partner', 'lover'].includes(kind) || (kind === 'friend' && r.rel >= 50);
+  const close = (isFamilyKind(kind) && !EXTENDED_KINDS.includes(kind)) || ['bestie', 'partner', 'lover'].includes(kind) || (['friend', ...EXTENDED_KINDS].includes(kind) && r.rel >= 50);
   add(s, { happy: close ? -randInt(8, 16) : -randInt(0, 3) });
 
   // Inheritance from family.
@@ -163,10 +163,12 @@ function npcDies(s, p, cause, opts) {
     share = heirs.length ? pot / heirs.length : 0;
   } else if (kind === 'grandparent' && chance(0.5)) {
     share = Math.max(0, p.money) * randFloat(0.05, 0.2);
+  } else if (kind === 'aunt' && !p.children.some((id) => s.people[id] && s.people[id].alive) && chance(0.4)) {
+    share = Math.max(0, p.money) * randFloat(0.1, 0.4);
   } else if (kind === 'spouse') {
     share = Math.max(0, p.money);
   }
-  const label = kinLabel(kind, p).toLowerCase();
+  const label = kinTitle(s, p.id).toLowerCase();
   if (share >= 1) { p.money -= Math.round(share); inherit(s, share, `your ${label} ${p.first}`); }
 
   if (close) {

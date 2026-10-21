@@ -100,6 +100,7 @@ function available(s) {
   return out;
 }
 
+const kin = { lives: 0, people: 0, maxPeople: 0 };
 const courts = { filed: 0, won: 0, lost: 0, settled: 0, sued: 0, beaten: 0, small: 0, rulings: 0, justices: 0, clientWins: 0 };
 const biz = { founded: 0, ipos: 0, exits: 0, fails: 0, maxVal: 0, maxStaff: 0, profitable: 0, coYears: 0, byInd: {} };
 const stats = { lives: 0, deaths: [], worth: [], gens: [], titles: {}, causes: {}, careers: {}, actionsRun: {}, prison: 0, degrees: {}, maxAge: 0, events: {}, tagLives: {} };
@@ -186,6 +187,8 @@ for (let i = 0; i < N; i++) {
     }
   }
   for (const d of s.player.edu.degrees) stats.degrees[d.type] = (stats.degrees[d.type] || 0) + 1;
+  kin.lives++; kin.people += Object.keys(s.people).length; kin.maxPeople = Math.max(kin.maxPeople, Object.keys(s.people).length);
+  for (const id in s.player.rels) { const k = s.player.rels[id].kind; if (['aunt', 'cousin', 'nibling', 'inlaw', 'sibling', 'halfsibling'].includes(k)) kin[k] = (kin[k] || 0) + 1; }
   const lf = s.player.life; biz.founded += lf.companiesFounded || 0; biz.ipos += lf.ipos || 0; biz.exits += lf.exits || 0; biz.fails += lf.bizFails || 0;
   for (const [k, t] of [['filed', 'lawsuitsFiled'], ['won', 'lawsuitsWon'], ['lost', 'lawsuitsLost'], ['settled', 'settlements'], ['sued', 'timesSued'], ['beaten', 'suitsBeaten'], ['small', 'smallClaimsWon'], ['rulings', 'rulings'], ['justices', 'supremeCourt'], ['clientWins', 'clientWins']]) courts[k] += lf[t] || 0;
 }
@@ -209,6 +212,7 @@ console.log(`Careers reached (max level): ${Object.keys(stats.careers).length} o
 console.log(`Prison-years observed: ${stats.prison}`);
 console.log(`Business: ${biz.founded} founded (last gen per life) · ${biz.coYears} company-years, ${Math.round((biz.profitable / Math.max(1, biz.coYears)) * 100)}% profitable · ${biz.ipos} IPOs · ${biz.exits} exits · ${biz.fails} bankruptcies · max worth ${Math.round(biz.maxVal).toLocaleString()} · max staff ${biz.maxStaff}`);
 console.log(`Company-years by industry: ${top(biz.byInd, 22)}`);
+console.log(`Family (last gen per life, average): ${['sibling', 'aunt', 'cousin', 'nibling', 'inlaw'].map((k) => `${((kin[k] || 0) / Math.max(1, kin.lives)).toFixed(1)} ${k}`).join(' · ')} · ${Math.round(kin.people / Math.max(1, kin.lives))} people in the save (max ${kin.maxPeople})`);
 console.log(`Courts (last gen per life): ${courts.filed} lawsuits filed · ${courts.won} won, ${courts.lost} lost, ${courts.settled} settled · sued ${courts.sued} times, ${courts.beaten} beaten · ${courts.small} small-claims wins · ${courts.rulings} rulings, ${courts.justices} justices confirmed · ${courts.clientWins} trials won for clients`);
 console.log(`Content tags on: ${TAG_IDS.map((t) => `${t} in ${stats.tagLives[t] || 0} lives`).join(', ')}`);
 console.log(`Events never fired (${neverFired.length}/${evIds.length}): ${neverFired.join(', ') || 'none'}`);

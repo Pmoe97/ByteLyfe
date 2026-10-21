@@ -70,14 +70,20 @@ const KIN_LABELS = {
   coworker: ['Coworker', 'Coworker', 'Coworker'],
   boss: ['Boss', 'Boss', 'Boss'],
   cellmate: ['Cellmate', 'Cellmate', 'Cellmate'],
-  inlaw: ['In-law', 'In-law', 'In-law'],
+  inlaw: ['In-law', 'In-law', 'In-law'], // kinTitle (13-people.js) says which kind of in-law
+  aunt: ['Uncle', 'Aunt', 'Pibling'],
+  cousin: ['Cousin', 'Cousin', 'Cousin'],
+  nibling: ['Nephew', 'Niece', 'Nibling'],
 };
 // Which kinds count as family (they never drift out of your life).
-const FAMILY_KINDS = ['parent', 'stepparent', 'sibling', 'halfsibling', 'child', 'grandparent', 'grandchild', 'spouse', 'fiance', 'inlaw'];
+const FAMILY_KINDS = ['parent', 'stepparent', 'sibling', 'halfsibling', 'child', 'grandparent', 'grandchild', 'spouse', 'fiance', 'inlaw', 'aunt', 'cousin', 'nibling'];
+// The wider family (45-family.js): close only when you are close to them.
+const EXTENDED_KINDS = ['aunt', 'cousin', 'nibling', 'inlaw'];
 const ROMANTIC_KINDS = ['partner', 'fiance', 'spouse', 'lover'];
 // Display groups for the Relationships screen.
 const REL_GROUPS = [
-  { id: 'family', name: 'Family', kinds: ['parent', 'stepparent', 'spouse', 'fiance', 'partner', 'child', 'sibling', 'halfsibling', 'grandparent', 'grandchild', 'inlaw'] },
+  { id: 'family', name: 'Family', kinds: ['parent', 'stepparent', 'spouse', 'fiance', 'partner', 'child', 'sibling', 'halfsibling', 'grandparent', 'grandchild'] },
+  { id: 'extended', name: 'Extended family', kinds: ['aunt', 'cousin', 'nibling', 'inlaw'] },
   { id: 'friends', name: 'Friends', kinds: ['bestie', 'friend', 'lover'] },
   { id: 'school', name: 'School', kinds: ['classmate'] },
   { id: 'work', name: 'Work', kinds: ['boss', 'coworker'] },

@@ -102,7 +102,7 @@ function renderModal() {
       <div class="modal-top">
         ${pp.title ? `<h3 class="modal-title">${esc(pp.title)}</h3>` : ''}
         <p class="modal-text">${esc(pp.text)}</p>
-        ${who ? `<div class="modal-person">${icon('health', 16)}<span>${esc(fullName(who))}${r ? ' · ' + esc(kinLabel(r.kind, who)) : ''} · ${personAge(who)}</span>${r && who.alive ? `${bar(r.rel)}<span class="muted">${Math.round(r.rel)}%</span>` : ''}</div>` : ''}
+        ${who ? `<div class="modal-person">${icon('health', 16)}<span>${esc(fullName(who))}${r ? ' · ' + esc(kinTitle(G, who.id)) : ''} · ${personAge(who)}</span>${r && who.alive ? `${bar(r.rel)}<span class="muted">${Math.round(r.rel)}%</span>` : ''}</div>` : ''}
         ${pp.deltas && pp.deltas.length ? `<div class="chips modal-deltas">${deltaChips(pp.deltas)}</div>` : ''}
       </div>
       ${pp.input ? `<div class="modal-input"><input id="pp-input" maxlength="${pp.input.max || 30}" value="${esc(pp.input.value || '')}" placeholder="${esc(pp.input.label || '')}" autocomplete="off"></div>` : ''}

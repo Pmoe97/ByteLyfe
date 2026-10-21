@@ -7,7 +7,7 @@ function relMeter(v) { return `<div class="meter">${icon('health', 14)}${bar(v)}
 function personRow(p) {
   const r = relOf(G, p.id);
   const age = ageOf(G, p);
-  const sub = `${kinLabel(r.kind, p)} · ${p.alive ? 'age ' + age : 'died ' + (p.deathYear || '')}${p.alive && npcJobTitle(p) ? ' · ' + npcJobTitle(p) : ''}`;
+  const sub = `${kinTitle(G, p.id)} · ${p.alive ? 'age ' + age : 'died ' + (p.deathYear || '')}${p.alive && npcJobTitle(p) ? ' · ' + npcJobTitle(p) : ''}`;
   return itemRow({
     a: 'sheet', ds: { k: 'person', arg: p.id }, round: true,
     ico: avatarOf(p, 52) + (p.alive ? '' : `<span class="badge">${icon('dove', 18)}</span>`),
@@ -19,7 +19,7 @@ function petRow(pet) {
   return itemRow({ a: 'sheet', ds: { k: 'pet', arg: pet.id }, ico: icon('paw', 32), cls: '', t: esc(pet.name), s: `${esc(pet.breed)} · age ${petAge(G, pet)}`, chev: true, extra: relMeter(pet.rel) });
 }
 SHEETS.people = () => {
-  let html = '';
+  let html = A(G) >= 3 || P(G).parents.length ? `<div class="list" style="margin-bottom:4px">${treeRow()}</div>` : '';
   const all = relPeople(G, null);
   for (const g of REL_GROUPS) {
     const list = all.filter((p) => g.kinds.includes(relOf(G, p.id).kind)).sort((a, b) => g.kinds.indexOf(relOf(G, a.id).kind) - g.kinds.indexOf(relOf(G, b.id).kind) || a.birthYear - b.birthYear);
@@ -67,7 +67,7 @@ SHEETS.person = (pid) => {
   const card = `<div class="card p-card">
     ${avatarOf(p, 104)}
     <div class="p-name">${esc(fullName(p))}</div>
-    <div class="p-meta">${royalTitle(G, p) ? esc(royalName(G, p)) + ' · ' : ''}${esc(kinLabel(r.kind, p))} · ${p.alive ? `${age} years old` : `Died ${esc(deathPhrase(p.cause || 'unknown causes'))} at ${p.deathYear - p.birthYear}`}</div>
+    <div class="p-meta">${royalTitle(G, p) ? esc(royalName(G, p)) + ' · ' : ''}${esc(kinTitle(G, pid))} · ${p.alive ? `${age} years old` : `Died ${esc(deathPhrase(p.cause || 'unknown causes'))} at ${p.deathYear - p.birthYear}`}</div>
     <div class="p-meta">${p.knighted ? '⚔️ Knighted · ' : ''}${job ? esc(job) + ' · ' : ''}${c ? c.flag + ' ' + esc(p.city) : ''}</div>
     ${p.alive ? `<div class="rel-bar"><div class="muted">Relationship · ${Math.round(r.rel)}%</div>${bar(r.rel)}</div>
     <div class="mini-stats">${statCell('health', p.stats.health)}${statCell('smarts', p.stats.smarts)}${statCell('looks', p.stats.looks)}${statCell('happy', p.stats.happy)}</div>` : ''}
@@ -76,7 +76,8 @@ SHEETS.person = (pid) => {
   const body = bodyCard(p, false);
   const sb = META.settings.sandbox && p.alive ? `<div class="section-title">Sandbox</div><div class="card"><div class="slider-row"><span>Relationship</span><input type="range" min="0" max="100" value="${r.rel}" data-in="sbRel" data-id="${pid}"><b id="sbRelV">${r.rel}</b></div></div>` : '';
   const acts = actionRows('person', pid);
-  return { title: fullName(p), html: card + (body ? `<div class="section-title">Appearance</div>${body}` : '') + sb + (acts ? `<div class="section-title">Interact</div>${listOf(acts)}` : (p.alive ? '<div class="note">You can’t interact right now.</div>' : '')) };
+  const tree = `<div class="list" style="margin-top:12px">${itemRow({ a: 'sheet', ds: { k: 'tree', arg: pid }, ico: '🌳', t: `${esc(p.first)}'s family tree`, chev: true })}</div>`;
+  return { title: fullName(p), html: card + tree + (body ? `<div class="section-title">Appearance</div>${body}` : '') + sb + (acts ? `<div class="section-title">Interact</div>${listOf(acts)}` : (p.alive ? '<div class="note">You can’t interact right now.</div>' : '')) };
 };
 INPUT.sbRel = (el, ds) => { Sandbox.setRel(G, ds.id, Number(el.value)); const v = $('#sbRelV'); if (v) v.textContent = el.value; scheduleSave(); };
 

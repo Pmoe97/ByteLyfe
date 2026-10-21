@@ -250,47 +250,66 @@ or even the prison you're in, and get sued yourself.
 - **Extras:** 40 holiday and seasonal events, 3 achievements (Storyteller, Festive, Marathoner) and
   a new goal.
 
+**Livelier families.** Your family keeps living around you, and you can see all of it.
+- **Extended family:** aunts and uncles (and their spouses), cousins, nieces and nephews. They are
+  made the first time you look (the family tree, a family reunion, or "Get to know your extended
+  family"), so lives where you never look stay small. Your mother's brothers carry her maiden name,
+  and grandparents you never met appear on the tree as having died before you were born.
+- **Siblings live their lives:** promotions, weddings you're invited to (give a toast, enjoy the
+  party or skip it), divorces, and babies, who become your nieces and nephews. Sometimes they're
+  named after you. Cousins and nieces and nephews marry too.
+- **In-laws:** meet your partner's family and make a first impression, ask their parents for their
+  blessing (it helps the proposal), and see them at the wedding: they stay home if they dislike you
+  and chip in if they adore you. Labels follow the relationship: "Partner's mother", "Future
+  mother-in-law", "Mother-in-law", "Brother-in-law", "Son-in-law". A breakup or divorce takes them
+  with it.
+- **Family tree diagram:** both sides of your family, from your grandparents down to your
+  grandchildren, with aunts and uncles, cousins, nieces and nephews, and anyone who has died. You can
+  open the tree of a friend, partner or spouse too (their relatives are made just for the tree).
+- **Across generations:** when you continue as your child, your old siblings become their aunts and
+  uncles, and your nieces and nephews become their cousins.
+- **Extras:** 10 family events (a sibling on your couch, babysitting, a cousin's wedding, an
+  in-law reorganizing your kitchen, the holiday tug-of-war between two families, a family feud...)
+  and childless aunts and uncles who may leave you something in their will.
+
 ## Next up
 
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Livelier families.** Siblings' careers and weddings, cousins, aunts, uncles, nieces and
-    nephews, in-laws to win over before the wedding, a family tree diagram, and family trees
-    for friends and spouses. Relatives are created the first time you open them, so saves stay small.
-2. **Parenting.** Choose your kids' schools (public, private, boarding), push them into child
+1. **Parenting.** Choose your kids' schools (public, private, boarding), push them into child
     acting or music, arrange their marriages, and name an heir to the family business or crime
     family while you're still alive.
-3. **Relationships 2.0.** Ask a partner to open the relationship, keep secret partners on the
+2. **Relationships 2.0.** Ask a partner to open the relationship, keep secret partners on the
     side with odds of getting caught, and one-night stands that come back as recurring drama.
-4. **Cities.** A few cities per country, each with its own cost of living, job market and
+3. **Cities.** A few cities per country, each with its own cost of living, job market and
     events. Move within a country, pick a neighborhood, and rent from landlords who raise the
     rent, skip repairs or evict you. The other side too: be a landlord with named tenants, set
     the rent, handle repairs and evictions.
-5. **Real currencies** per country, with exchange when emigrating.
-6. **Chaos mode** (`chaos` tag). Random events that grant superpowers (laser eyes, flight...),
+4. **Real currencies** per country, with exchange when emigrating.
+5. **Chaos mode** (`chaos` tag). Random events that grant superpowers (laser eyes, flight...),
     superhero and supervillain careers, ascending as an archangel or a demon lord. Vampire
     lives: feeding, slow aging, hunters, and turning others.
-7. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
+6. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
     A daily challenge with streaks. Every challenge stays available, free.
-8. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
-9. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
+7. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
+8. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
     (collect animals, build exhibits, breeding programs), both on the business engine.
-10. **Military depth.** Wars, desertion, veterans' benefits.
-11. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+9. **Military depth.** Wars, desertion, veterans' benefits.
+10. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
     double agents, and getting burned.
-12. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+11. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-13. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+12. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-14. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+13. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-15. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+14. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
     purges, coups and declared wars. Builds on Royalty and Military depth.
-16. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+15. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-17. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-18. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+16. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+17. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 

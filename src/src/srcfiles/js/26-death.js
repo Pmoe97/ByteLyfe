@@ -138,6 +138,8 @@ function continueAs(s, pid) {
     setRel(s, c, 'child', rel(60, 95));
     for (const gc of kid.children) if (s.people[gc]) setRel(s, gc, 'grandchild', rel(50, 90));
   }
+  // Aunts, uncles, cousins, nieces, nephews and in-laws carry over (45-family.js).
+  rebuildExtended(s);
 
   // School, degrees and work from the heir's life so far.
   if (age >= 5 && age < 18) {

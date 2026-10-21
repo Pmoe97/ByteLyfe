@@ -33,7 +33,8 @@
       if (heir && Math.random() < 0.7) { click(heir); await sleep(20); continue; }
       break;
     }
-    for (const k of ['activities', 'work', 'assets', 'people', 'profile', 'finance', 'menu', 'goals', 'lineage', 'timemachine', 'sandbox', 'settings', 'jobboard', 'grad']) sheetCheck(k);
+    for (const k of ['activities', 'work', 'assets', 'people', 'profile', 'finance', 'menu', 'goals', 'lineage', 'timemachine', 'sandbox', 'settings', 'jobboard', 'grad', 'tree']) sheetCheck(k);
+    for (const pid of Object.keys(M(G).rels).slice(0, 3)) sheetCheck('tree', pid);
     for (const c of ACT_CATS) sheetCheck('actcat', c.id);
     for (const pid in M(G).rels) sheetCheck('person', pid);
     for (const id in G.pets) sheetCheck('pet', id);

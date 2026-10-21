@@ -446,7 +446,8 @@ onChoice('propose', (s, ctx, i) => {
   if (!pay(s, cost)) return cantAfford(cost);
   const r = relOf(s, ctx.pid);
   const years = s.year - r.since;
-  const odds = clamp(r.rel / 110 + i * 0.05 + Math.min(years, 4) * 0.05 - 0.15, 0.05, 0.97);
+  // Their parents' blessing helps (45-family.js).
+  const odds = clamp(r.rel / 110 + i * 0.05 + Math.min(years, 4) * 0.05 - 0.15 + (blessed(s, ctx.pid) ? 0.1 : 0), 0.05, 0.97);
   if (chance(odds)) {
     setRel(s, ctx.pid, 'fiance');
     add(s, { happy: 10 });
@@ -466,8 +467,8 @@ function marry(s, pid) {
   P(s).partner = p.id;
   P(s).married = true;
   tally(s, 'marriages');
-  // Your spouse's parents become your in-laws.
-  for (const par of p.parents.map((id) => s.people[id]).filter((x) => x && x.alive)) if (!relOf(s, par.id)) setRel(s, par.id, 'inlaw', randInt(35, 75));
+  // Your spouse's parents and siblings become your in-laws (45-family.js).
+  ensureInlaws(s, pid);
   return p;
 }
 defAction({
@@ -491,8 +492,10 @@ onChoice('wedding', (s, ctx, i) => {
   addRel(s, ctx.pid, 10 + i * 3);
   add(s, { happy: 10 + i * 3 });
   if (i === 0) return { text: `You and ${p.first} eloped! You're married. 💒`, tone: 'good', person: p.id };
-  if (chance(0.12)) return { text: `You married ${p.first}! Someone's uncle fell into the cake, but it was perfect anyway.`, tone: 'good', person: p.id };
-  return { text: `You married ${p.first} in a ${['', 'sweet little', 'beautiful', 'jaw-dropping'][i]} ceremony. 💒`, tone: 'good', person: p.id };
+  // The in-laws show up, stay home or chip in (45-family.js).
+  const inlaws = inlawsAtWedding(s, p.id, cost);
+  if (chance(0.12)) return { text: `You married ${p.first}! Someone's uncle fell into the cake, but it was perfect anyway.${inlaws}`, tone: 'good', person: p.id };
+  return { text: `You married ${p.first} in a ${['', 'sweet little', 'beautiful', 'jaw-dropping'][i]} ceremony. 💒${inlaws}`, tone: 'good', person: p.id };
 });
 function endRomance(s, pid, kind) {
   const p = tgt(s, pid);
@@ -500,6 +503,7 @@ function endRomance(s, pid, kind) {
   setRel(s, pid, kind, Math.max(5, relOf(s, pid).rel - 30));
   if (p.partner === P(s).id) { p.partner = null; p.married = false; }
   if (P(s).partner === pid) { P(s).partner = null; P(s).married = false; }
+  dropInlaws(s, pid); // their family goes with them (45-family.js)
   tally(s, 'breakups');
 }
 defAction({
