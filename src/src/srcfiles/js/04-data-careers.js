@@ -9,6 +9,8 @@
  *   special: 'fame' | 'sports' | 'military' | 'politics' — promotion runs on skill
  *            and special actions instead of the plain performance meter.
  *   skill: the skill that grows on the job / drives special promotions.
+ *   appointed: promotions come by appointment (42-courts.js), not the performance meter;
+ *              no raise or promotion requests and no retirement nudges.
  * Pure data.
  * ===================================================================== */
 
@@ -92,7 +94,7 @@ const JOBS = {
   // ---- Law ----
   paralegal: { name: 'Paralegal', emoji: '📑', cat: 'law', ladder: [['Legal Assistant', 39000], ['Paralegal', 53000], ['Senior Paralegal', 70000]], req: { age: 19, edu: 'assoc' } },
   lawyer: { name: 'Law', emoji: '⚖️', cat: 'law', ladder: [['Junior Associate', 92000], ['Associate', 132000], ['Senior Associate', 182000], ['Partner', 360000], ['Managing Partner', 620000]], req: { age: 24, degree: 'jd', clean: true }, skill: 'charisma' },
-  judge: { name: 'Judiciary', emoji: '👩‍⚖️', cat: 'law', ladder: [['Magistrate', 142000], ['District Judge', 192000], ['Appellate Judge', 225000], ['Supreme Court Justice', 285000]], req: { age: 35, degree: 'jd', smarts: 70, clean: true } },
+  judge: { name: 'Judiciary', emoji: '👩‍⚖️', cat: 'law', appointed: true, ladder: [['Magistrate', 142000], ['District Judge', 192000], ['Appellate Judge', 225000], ['Supreme Court Justice', 285000]], req: { age: 35, degree: 'jd', smarts: 70, clean: true } },
 
   // ---- Education ----
   teacher: { name: 'Teaching', emoji: '🍎', cat: 'education', ladder: [['Substitute Teacher', 34000], ['Teacher', 51000], ['Senior Teacher', 64000], ['Vice Principal', 88000], ['Principal', 112000]], req: { age: 21, edu: 'bachelor', clean: true }, skill: 'charisma' },

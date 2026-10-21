@@ -143,7 +143,7 @@ function hire(s, id, level) {
 function leaveJob(s, reason) {
   const c = M(s).career;
   if (!c) return;
-  M(s).jobHistory.push({ id: c.id, level: c.level, years: c.years, end: s.year, reason });
+  M(s).jobHistory.push({ id: c.id, level: c.level, years: c.years, end: s.year, reason, employer: c.employer });
   M(s).career = null;
   clearKind(s, 'coworker');
   clearKind(s, 'boss');
@@ -191,13 +191,13 @@ function careerTick(s) {
   if (c.perf >= 50) c.salary = Math.round(c.salary * randFloat(1.01, 1.04));
   if (c.perf < 18 && chance(0.45)) { fire(s, `Your performance has been terrible. You were let go from your job as a ${careerTitle(s)}.`); return; }
   const need = 1 + Math.floor(c.level / 2);
-  if (c.level < j.ladder.length - 1 && c.levelYears >= need && c.perf >= 62) {
+  if (c.level < j.ladder.length - 1 && !j.appointed && c.levelYears >= need && c.perf >= 62) {
     let odds = 0.3 + (c.perf - 62) / 70;
     if (trait(s, 'ambitious')) odds += 0.1;
     if (chance(odds)) promote(s, 'Your hard work paid off.');
   }
-  // Mandatory retirement nudge.
-  if (A(s) >= 70 && chance(0.35)) {
+  // Mandatory retirement nudge (judges serve until they choose to go).
+  if (A(s) >= 70 && !j.appointed && chance(0.35)) {
     popup(s, {
       emoji: '🏖️', title: 'Time to retire?', text: 'Your boss gently suggests it might be time to retire.', handler: 'retireAsk',
       choices: [{ label: 'Retire', value: true }, { label: 'Keep working', value: false }],
@@ -248,7 +248,7 @@ defAction({
 });
 defAction({
   id: 'ask_raise', cat: 'job', label: 'Ask for a raise', emoji: '💵', desc: 'Could go either way.',
-  when: (s) => hasCareer(s) && !JOBS[M(s).career.id].special,
+  when: (s) => hasCareer(s) && !JOBS[M(s).career.id].special && !JOBS[M(s).career.id].appointed,
   run: (s) => {
     if (bump(s, 'raise') > 1) return { text: 'You already asked this year.', nolog: true };
     const c = M(s).career;
@@ -266,7 +266,7 @@ defAction({
 });
 defAction({
   id: 'ask_promo', cat: 'job', label: 'Ask for a promotion', emoji: '⬆️', desc: 'Make your case for the next rung.',
-  when: (s) => hasCareer(s) && !JOBS[M(s).career.id].special && M(s).career.level < JOBS[M(s).career.id].ladder.length - 1,
+  when: (s) => hasCareer(s) && !JOBS[M(s).career.id].special && !JOBS[M(s).career.id].appointed && M(s).career.level < JOBS[M(s).career.id].ladder.length - 1,
   run: (s) => {
     if (bump(s, 'promo') > 1) return { text: 'You already asked this year.', nolog: true };
     const c = M(s).career;
@@ -546,7 +546,7 @@ defAction({
     add(s, { money: amt, karma: -12 });
     if (chance(0.22)) {
       fire(s, 'Investigators traced the money. You were fired in disgrace.');
-      arrest(s, 'embezzle');
+      arrest(s, 'bribery');
       return;
     }
     return `You quietly pocketed ${fmtMoney(amt)}.`;

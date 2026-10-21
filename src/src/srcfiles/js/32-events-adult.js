@@ -62,13 +62,6 @@ EV('ad_tattoo', {
   ],
 });
 EV('ad_haircut', { ages: [10, 95], w: 0.6, emoji: '💇', text: 'Your hairdresser had a very creative day.', auto: (s) => { add(s, { looks: -2, happy: -2 }); return 'You are wearing a hat for a few weeks.'; } });
-EV('ad_jury', {
-  ages: [18, 80], emoji: '⚖️', text: 'You were summoned for jury duty.',
-  choices: [
-    ['Serve', (s) => { add(s, { karma: 2, smarts: 1 }); return pick(['The case was a dispute over a stolen lawn gnome. You found them guilty.', 'You were the holdout juror. It felt very dramatic.', 'You were dismissed after one day.']); }],
-    ['Try to get out of it', (s) => (chance(0.5) ? 'You told the judge you are "very biased against everyone." Dismissed.' : 'The judge was not buying it. You served anyway.')],
-  ],
-});
 EV('ad_tacos', {
   ages: [10, 90], emoji: '🌮', text: 'A food truck is selling suspiciously cheap tacos.',
   choices: [

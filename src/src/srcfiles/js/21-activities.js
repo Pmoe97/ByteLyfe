@@ -18,6 +18,7 @@ const ACT_CATS = [
   { id: 'mob', name: 'Underworld', emoji: '🕴️' },
   { id: 'crime', name: 'Crime', emoji: '🦹' },
   { id: 'legal', name: 'Identity & Legal', emoji: '📜' },
+  { id: 'court', name: 'Courts', emoji: '⚖️' },
   { id: 'prison', name: 'Prison Life', emoji: '⛓️' },
 ];
 
