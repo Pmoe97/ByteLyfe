@@ -73,14 +73,27 @@ function arrest(s, id) {
   tally(s, 'arrests');
   popup(s, {
     emoji: '⚖️', title: 'Court date', text: `You've been charged with ${c.verb}. Who will defend you?`, handler: 'trial', ctx: { crime: id },
-    choices: LAWYERS.map((l) => ({ label: l.emoji + ' ' + l.name, value: l.id, sub: l.cost ? fmtMoney(price(s, l.cost)) : 'Free', disabled: price(s, l.cost) > M(s).money && l.cost > 0 })).concat([{ label: '🙇 Plead guilty for a lighter sentence', value: 'plea' }]),
+    choices: LAWYERS.map((l) => ({ label: l.emoji + ' ' + l.name, value: l.id, sub: l.cost ? fmtMoney(price(s, l.cost)) : 'Free', disabled: price(s, l.cost) > M(s).money && l.cost > 0 })).concat([
+      { label: '🙋 Represent yourself', value: 'self', sub: hasDegree(s, 'jd') ? 'You know the law' : 'Bold' },
+      { label: '🙇 Plead guilty for a lighter sentence', value: 'plea' },
+    ]),
   });
   return { text: `🚔 You were arrested for ${c.verb}!`, tone: 'bad', emoji: '🚔' };
+}
+// Representing yourself, in a criminal trial or a lawsuit (42-courts.js): a law degree, years
+// as a lawyer or judge, and charisma help. On the LAWYERS bonus scale: about -0.08 for a
+// layperson, up to about 0.35 for a seasoned trial lawyer.
+function selfDefense(s) {
+  const c = M(s).career;
+  let b = skill(s, 'charisma') / 1000 - 0.08;
+  if (hasDegree(s, 'jd')) b += 0.12 + skill(s, 'charisma') / 1000;
+  if (c && ['lawyer', 'judge'].includes(c.id)) b += c.level * 0.03;
+  return b;
 }
 onChoice('trial', (s, ctx, lid) => {
   const c = CRIMES[ctx.crime];
   if (lid === 'plea') return sentence(s, ctx.crime, 0.55, 'You pleaded guilty.');
-  const L = LAWYERS.find((l) => l.id === lid);
+  const L = lid === 'self' ? { id: 'self', cost: 0, bonus: selfDefense(s) } : LAWYERS.find((l) => l.id === lid);
   const cost = price(s, L.cost);
   if (!pay(s, cost)) return cantAfford(cost);
   const priors = M(s).record.length;
@@ -90,7 +103,7 @@ onChoice('trial', (s, ctx, lid) => {
   if (!chance(clamp(odds, 0.05, 0.97))) {
     add(s, { happy: 12 });
     tally(s, 'acquittals');
-    return { text: `NOT GUILTY! ${L.id === 'public' ? 'Your public defender pulled off a miracle.' : 'Your lawyer earned every penny.'}`, tone: 'good', emoji: '🎉' };
+    return { text: `NOT GUILTY! ${L.id === 'public' ? 'Your public defender pulled off a miracle.' : L.id === 'self' ? 'You defended yourself, and the jury believed you.' : 'Your lawyer earned every penny.'}`, tone: 'good', emoji: '🎉' };
   }
   return sentence(s, ctx.crime, 1, 'The jury found you guilty.');
 });

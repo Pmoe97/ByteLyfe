@@ -59,7 +59,7 @@ parks, shopping. The lottery, a casino (blackjack, roulette, slots), charity, 12
 emigration, driver's license, name changes. Social media: posts, going viral,
 verification, sponsorships. Fan meets and publicity stunts.
 
-**Events.** About 150 random events across every stage of life and in prison.
+**Events.** Over 400 random events across every stage of life and in prison (see More story).
 
 **Business ownership (v0.2).** Start up to three companies across 22 industries, from food
 trucks and bakeries to tech startups, biotech, hotels and airlines. Medical, dental, law and
@@ -101,7 +101,7 @@ outlast you across generations.
 - **Extras:** 5 new company events and 4 new achievements (Hostile Takeover, Franchise King,
   Market Leader, Stock Picker).
 
-**Meta.** 93 achievements kept across lives, three bucket-list goals per life, legacy titles
+**Meta.** 100 achievements kept across lives, three bucket-list goals per life, legacy titles
 and epitaphs, the Hall of Lives, multiple save slots, export/import codes. God Mode (stats,
 money, skills, traits, instant careers and degrees, relationship editing) and a 10-year Time
 Machine, both free. Light/dark themes, text size, reduced motion.
@@ -205,49 +205,92 @@ cities that lives on across generations.
 - **Extras:** 6 events (endorsements, doping offers, press-conference trash talk, young fans...),
   7 achievements and The GOAT legacy title.
 
+**Courts.** A new Courts menu. Sue people (from their page), companies, your employer, the city,
+or even the prison you're in, and get sued yourself.
+- **Lawyers:** represent yourself (a law degree and charisma help), hire a no-win, no-fee lawyer
+  who takes 35% of what you win, or pay a budget, experienced or elite team a retainer plus a
+  yearly bill. Run out of money and your lawyer drops you.
+- **A case's life:** a trial a year or two out, discovery that can help or hurt, settlement offers
+  you can take, counter or turn down, and a day in court where you choose how to testify. Juries
+  sometimes add punitive damages against big companies. Whoever loses can appeal. People can
+  only pay what they have, and some countersue.
+- **Getting sued:** car crashes, neighbors, dog bites, malpractice claims against doctors, nurses
+  and lawyers, defamation suits once you're famous, copyright claims against your latest album or
+  book, frivolous strangers, and customers suing your company (the company pays the lawyers and
+  any judgment).
+- **Small claims court:** no lawyers, small stakes, and a verdict the same afternoon.
+- **Judges:** a docket every year that you rule on: criminal trials and lawsuits, then appeals,
+  then the Supreme Court's landmark questions. Rulings that get overturned, and cases left
+  unheard, hurt your reputation. Good judges get appointed up the ladder, then nominated to the
+  Supreme Court and grilled at a televised confirmation hearing. Plus conflicts of interest and
+  envelopes of cash.
+- **Lawyers:** take on clients (criminal defense, no-win no-fee suits, corporate work, pro bono),
+  go to trial or make a deal, build a trial record, and defend celebrities in the trial of the year.
+- **Extras:** represent yourself at a criminal trial, jury duty where you cast the deciding vote,
+  class-action checks, testifying as a witness, a new bribery charge. 13 events, 7 achievements,
+  2 goals, and The Honorable and Serial Litigant legacy titles.
+
+**More story.** 449 events (up from about 200), stories that play out over years, and holidays.
+- **Story chains:** 16 stories that pick up again a year or more later, wherever your choices led:
+  a stray dog that saves your life, a pen pal you finally meet, a garage band's reunion show, a
+  time capsule dug up twenty years on, a neighbor feud that ends in court, a secret half-sibling,
+  a friend's startup, an inherited farmhouse (with a ghost if Chaos is on), an old flame, a
+  marathon, the office lottery pool, a corporate cover-up, the family recipe, one last road
+  trip, a storage-unit auction, and an apprenticeship with an old master.
+- **Holidays**, tied to the countries that celebrate them: New Year's, Valentine's Day, Mother's
+  and Father's Day, Halloween, Thanksgiving, independence days, Lunar New Year, Chuseok, Diwali,
+  Holi, Eid, the Day of the Dead, Carnival, Bonfire Night, St. Patrick's Day, Golden Week, Obon,
+  Midsummer, Oktoberfest, Bastille Day, Ferragosto, La Tomatina, Easter, Christmas on the beach
+  in the southern hemisphere, and holiday dinners with family (or in prison).
+- **Seasons** that follow the climate: first snow and blizzards where it snows, typhoons, monsoons
+  and hurricanes where they hit, spring, summer camp, back to school and beach days.
+- **Everyday life:** about 190 new events for toddlers, kids, middle schoolers, teens, college
+  students (roommates, finals, study abroad, internships), work, love, family and parenting, home
+  and money, health, travel, pets, seniors and prison. A few more events happen each year to match.
+- **Extras:** 40 holiday and seasonal events, 3 achievements (Storyteller, Festive, Marathoner) and
+  a new goal.
+
 ## Next up
 
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Courts.** Sue people and companies, get sued, and rule on cases as a judge.
-2. **More story.** 400+ events, multi-year story chains, holidays and seasonal events.
-3. **Livelier families.** Siblings' careers and weddings, cousins, aunts, uncles, nieces and
+1. **Livelier families.** Siblings' careers and weddings, cousins, aunts, uncles, nieces and
     nephews, in-laws to win over before the wedding, a family tree diagram, and family trees
     for friends and spouses. Relatives are created the first time you open them, so saves stay small.
-4. **Parenting.** Choose your kids' schools (public, private, boarding), push them into child
+2. **Parenting.** Choose your kids' schools (public, private, boarding), push them into child
     acting or music, arrange their marriages, and name an heir to the family business or crime
     family while you're still alive.
-5. **Relationships 2.0.** Ask a partner to open the relationship, keep secret partners on the
+3. **Relationships 2.0.** Ask a partner to open the relationship, keep secret partners on the
     side with odds of getting caught, and one-night stands that come back as recurring drama.
-6. **Cities.** A few cities per country, each with its own cost of living, job market and
+4. **Cities.** A few cities per country, each with its own cost of living, job market and
     events. Move within a country, pick a neighborhood, and rent from landlords who raise the
     rent, skip repairs or evict you. The other side too: be a landlord with named tenants, set
     the rent, handle repairs and evictions.
-7. **Real currencies** per country, with exchange when emigrating.
-8. **Chaos mode** (`chaos` tag). Random events that grant superpowers (laser eyes, flight...),
+5. **Real currencies** per country, with exchange when emigrating.
+6. **Chaos mode** (`chaos` tag). Random events that grant superpowers (laser eyes, flight...),
     superhero and supervillain careers, ascending as an archangel or a demon lord. Vampire
     lives: feeding, slow aging, hunters, and turning others.
-9. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
+7. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
     A daily challenge with streaks. Every challenge stays available, free.
-10. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
-11. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
+8. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
+9. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
     (collect animals, build exhibits, breeding programs), both on the business engine.
-12. **Military depth.** Wars, desertion, veterans' benefits.
-13. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+10. **Military depth.** Wars, desertion, veterans' benefits.
+11. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
     double agents, and getting burned.
-14. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+12. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-15. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+13. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-16. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+14. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-17. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+15. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
     purges, coups and declared wars. Builds on Royalty and Military depth.
-18. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+16. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-19. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-20. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+17. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+18. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 

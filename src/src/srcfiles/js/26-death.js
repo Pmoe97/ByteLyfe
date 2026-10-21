@@ -154,7 +154,7 @@ function continueAs(s, pid) {
     if (heir.edu && rank >= 2) m.edu.degrees.push({ type: heir.edu, major: heir.edu === 'trade' ? pick(TRADE_IDS) : (heir.major || pick(MAJOR_IDS)), year: heir.birthYear + 22, gpa: 70 });
     if (heir.job && heir.job.id && JOBS[heir.job.id]) {
       const lvl = Math.min(heir.job.level, JOBS[heir.job.id].ladder.length - 1);
-      m.career = { id: heir.job.id, level: lvl, perf: 55, years: Math.max(0, age - 23), levelYears: 1, salary: salaryFor(s, heir.job.id, lvl), term: 0 };
+      m.career = { id: heir.job.id, level: lvl, perf: 55, years: Math.max(0, age - 23), levelYears: 1, salary: salaryFor(s, heir.job.id, lvl), term: 0, employer: employerName(s, JOBS[heir.job.id]) };
     } else if (heir.retired) {
       m.retired = { pension: price(s, 15000), year: s.year };
     }

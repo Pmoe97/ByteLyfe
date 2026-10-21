@@ -98,6 +98,16 @@ const ACHIEVEMENTS = [
   { id: 'market_leader', name: 'Market Leader', emoji: '🥇', desc: 'Outsell every rival in your industry.', check: (s) => companies(s).some((c) => !c.closed && c.last && c.last.revenue > 0 && industryRivals(s, c.ind).every((f) => f.rev < c.last.revenue)) },
   { id: 'stock_picker', name: 'Stock Picker', emoji: '💹', desc: 'Make $100,000 in gains selling stocks.', check: (s) => LC(s, 'stockGains') >= price(s, 100000) },
   { id: 'hitmaker', name: 'Hitmaker', emoji: '🔥', desc: 'Launch three hit products.', check: (s) => LC(s, 'hits') >= 3 },
+  { id: 'see_you_in_court', name: 'See You in Court', emoji: '⚖️', desc: 'File a lawsuit.', check: (s) => LC(s, 'lawsuitsFiled') >= 1 },
+  { id: 'jackpot_justice', name: 'Jackpot Justice', emoji: '💰', desc: 'Win $1 million in a single lawsuit.', check: (s) => LC(s, 'bigVerdicts') >= 1 },
+  { id: 'small_claims', name: 'Small Claims, Big Win', emoji: '🧾', desc: 'Win in small claims court.', check: (s) => LC(s, 'smallClaimsWon') >= 1 },
+  { id: 'case_dismissed', name: 'Case Dismissed', emoji: '🛡️', desc: 'Beat a lawsuit someone filed against you.', check: (s) => LC(s, 'suitsBeaten') >= 1 },
+  { id: 'order_in_court', name: 'Order in the Court', emoji: '🔨', desc: 'Rule on 25 cases as a judge.', check: (s) => LC(s, 'rulings') >= 25 },
+  { id: 'highest_court', name: 'Highest Court in the Land', emoji: '🏛️', desc: 'Be confirmed to the Supreme Court.', check: (s) => LC(s, 'supremeCourt') >= 1 },
+  { id: 'storyteller', name: 'Storyteller', emoji: '📖', desc: 'See five story chains through to the end in one life.', check: (s) => LC(s, 'storiesDone') >= 5 },
+  { id: 'festive', name: 'Festive', emoji: '🎉', desc: 'Celebrate ten holidays in one life.', check: (s) => LC(s, 'holidays') >= 10 },
+  { id: 'marathoner', name: 'Marathoner', emoji: '🏅', desc: 'Finish a marathon.', check: (s) => LC(s, 'marathons') >= 1 },
+  { id: 'legal_eagle', name: 'Legal Eagle', emoji: '🦅', desc: 'Win 10 trials for your clients.', check: (s) => LC(s, 'clientWins') >= 10 },
 ];
 
 // Bucket-list goals: three random ones per life.
@@ -131,6 +141,9 @@ const GOALS = [
   { id: 'g_business', text: 'Start your own business', emoji: '🚀', check: (s) => LC(s, 'companiesFounded') >= 1 },
   { id: 'g_ipo', text: 'Take a company public', emoji: '🔔', check: (s) => LC(s, 'ipos') >= 1 },
   { id: 'g_staff', text: 'Employ 50 people at once', emoji: '🏭', check: (s) => sum(companies(s), (c) => headcount(c)) >= 50 },
+  { id: 'g_lawsuit', text: 'Win a lawsuit', emoji: '⚖️', check: (s) => LC(s, 'lawsuitsWon') >= 1 },
+  { id: 'g_marathon', text: 'Run a marathon', emoji: '🏃', check: (s) => LC(s, 'marathons') >= 1 },
+  { id: 'g_judge', text: 'Become a judge', emoji: '🔨', check: (s) => !!M(s).career && M(s).career.id === 'judge' },
 ];
 
 // Legacy titles at death, in priority order. The first three that match are shown.
@@ -139,6 +152,7 @@ const LEGACY_TITLES = [
   { id: 'royal', name: 'Royal', emoji: '🏰', check: (s) => !!s.crown && royalBlood(s, P(s)) },
   { id: 'don', name: 'The Don', emoji: '👔', check: (s) => LC(s, 'becameBoss') + LC(s, 'cartelBoss') >= 1 },
   { id: 'legend', name: 'Living Legend', emoji: '🏆', check: (s) => LC(s, 'awards') >= 5 },
+  { id: 'justice', name: 'The Honorable', emoji: '🔨', check: (s) => LC(s, 'supremeCourt') >= 1 || LC(s, 'judgeYears') >= 10 },
   { id: 'goat', name: 'The GOAT', emoji: '🐐', check: (s) => LC(s, 'championships') + LC(s, 'mvps') + LC(s, 'beltWon') + LC(s, 'worldTitles') >= 3 },
   { id: 'gone_soon', name: 'Gone Too Soon', emoji: '🥀', check: (s) => A(s) < 25 },
   { id: 'fugitive', name: 'Fugitive', emoji: '🕶️', check: (s) => M(s).wanted > 0 },
@@ -156,6 +170,7 @@ const LEGACY_TITLES = [
   { id: 'heartbreaker', name: 'Heartbreaker', emoji: '💔', check: (s) => LC(s, 'breakups') + LC(s, 'divorces') >= 6 },
   { id: 'athlete', name: 'Athlete', emoji: '🏅', check: (s) => skill(s, 'athletics') >= 80 || skill(s, 'fitness') >= 85 },
   { id: 'globetrotter', name: 'Globetrotter', emoji: '🌍', check: (s) => LC(s, 'vacations') >= 8 },
+  { id: 'litigious', name: 'Serial Litigant', emoji: '📁', check: (s) => LC(s, 'lawsuitsFiled') >= 6 },
   { id: 'workaholic', name: 'Workaholic', emoji: '💼', check: (s) => LC(s, 'workYears') >= 45 },
   { id: 'broke', name: 'Broke', emoji: '📉', check: (s) => netWorth(s) < 0 },
   { id: 'lonely', name: 'Lone Wolf', emoji: '🐺', check: (s) => A(s) >= 40 && !LC(s, 'partners') },

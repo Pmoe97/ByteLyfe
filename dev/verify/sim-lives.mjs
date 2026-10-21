@@ -90,7 +90,8 @@ function resolveAll(s, where) {
 
 function available(s) {
   const out = [];
-  for (const cat of CATS) for (const a of ctx.actionList(s, cat)) out.push([a.id, undefined]);
+  // A judge's docket and a lawyer's clients are the job, so the bot leans on them.
+  for (const cat of CATS) for (const a of ctx.actionList(s, cat)) { out.push([a.id, undefined]); if (['ct_hear', 'ct_client'].includes(a.id)) out.push([a.id, undefined], [a.id, undefined], [a.id, undefined]); }
   for (const pid in s.player.rels) for (const a of ctx.actionList(s, 'person', pid)) out.push([a.id, pid]);
   for (const pid in s.people) if (!s.people[pid].alive && s.player.rels[pid]) for (const a of ctx.actionList(s, 'person', pid)) out.push([a.id, pid]);
   for (const id in s.pets) for (const a of ctx.actionList(s, 'pet', id)) out.push([a.id, id]);
@@ -99,6 +100,7 @@ function available(s) {
   return out;
 }
 
+const courts = { filed: 0, won: 0, lost: 0, settled: 0, sued: 0, beaten: 0, small: 0, rulings: 0, justices: 0, clientWins: 0 };
 const biz = { founded: 0, ipos: 0, exits: 0, fails: 0, maxVal: 0, maxStaff: 0, profitable: 0, coYears: 0, byInd: {} };
 const stats = { lives: 0, deaths: [], worth: [], gens: [], titles: {}, causes: {}, careers: {}, actionsRun: {}, prison: 0, degrees: {}, maxAge: 0, events: {}, tagLives: {} };
 const t0 = Date.now();
@@ -128,11 +130,13 @@ for (let i = 0; i < N; i++) {
       break;
     }
     // Persona lives steer the first generation into careers random play rarely reaches, so
-    // their actions and events get tested: sports (i % 10 = 3), fame (5), the underworld (7).
+    // their actions and events get tested: sports (i % 10 = 3), fame (5), the underworld (7),
+    // and the courts (9: a judge or a lawyer at 36, sometimes already high on the ladder).
     const age = s.year - s.people[s.playerId].birthYear;
     if (s.gen === 1 && !s.player.prison) {
       try {
         if (i % 10 === 3 && age === 19) { const job = ['athlete', 'fighter', 'racer', 'coach', 'gm'][Math.floor(i / 10) % 5]; if (s.player.career) ctx.leaveJob(s, 'switched'); Object.assign(s.player.skills, { athletics: 60, fitness: 55, martial: 55, driving: 55, business: 40, charisma: 30 }); ctx.hire(s, job, 0); ctx.startSportsCareer(s, job); resolveAll(s, 'persona'); }
+        if (i % 10 === 9 && age === 36) { const job = ['judge', 'lawyer'][Math.floor(i / 10) % 2]; if (s.player.career) ctx.leaveJob(s, 'switched'); s.player.edu.current = null; g('Sandbox').grantDegree(s, 'jd'); s.people[s.playerId].stats.smarts = Math.max(80, s.people[s.playerId].stats.smarts); s.player.skills.charisma = Math.max(40, s.player.skills.charisma || 0); ctx.hire(s, job, Math.floor(i / 20) % 3); }
         if (i % 10 === 5 && age === 20) { const job = ['musician', 'author', 'comedian', 'director', 'producer', 'actor', 'model'][Math.floor(i / 10) % 7]; if (s.player.career) ctx.leaveJob(s, 'switched'); Object.assign(s.player.skills, { music: 50, writing: 50, acting: 50, art: 50, charisma: 40 }); s.people[s.playerId].stats.looks = Math.max(75, s.people[s.playerId].stats.looks); ctx.hire(s, job, 0); }
       } catch (e) { fail('persona setup threw: ' + e.stack.split('\n').slice(0, 3).join(' | '), s); }
     }
@@ -183,6 +187,7 @@ for (let i = 0; i < N; i++) {
   }
   for (const d of s.player.edu.degrees) stats.degrees[d.type] = (stats.degrees[d.type] || 0) + 1;
   const lf = s.player.life; biz.founded += lf.companiesFounded || 0; biz.ipos += lf.ipos || 0; biz.exits += lf.exits || 0; biz.fails += lf.bizFails || 0;
+  for (const [k, t] of [['filed', 'lawsuitsFiled'], ['won', 'lawsuitsWon'], ['lost', 'lawsuitsLost'], ['settled', 'settlements'], ['sued', 'timesSued'], ['beaten', 'suitsBeaten'], ['small', 'smallClaimsWon'], ['rulings', 'rulings'], ['justices', 'supremeCourt'], ['clientWins', 'clientWins']]) courts[k] += lf[t] || 0;
 }
 
 const avg = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0);
@@ -191,6 +196,9 @@ const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).
 const evIds = g('EVENT_IDS');
 const neverFired = evIds.filter((id) => !stats.events[id]);
 const neverRun = ACTION_ORDER.filter((id) => !stats.actionsRun[id]);
+const STORIES = g('STORIES'), SEEN = g('STORY_SEEN');
+const chapters = g('STORY_IDS').flatMap((id) => Object.keys(STORIES[id].chapters).map((ch) => id + ':' + ch));
+const unread = chapters.filter((k) => !SEEN.has(k));
 console.log(`\nByteLyfe sim: ${stats.lives} lives, seed ${SEED}, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 console.log(`Deaths: ${stats.deaths.length} · avg age ${avg(stats.deaths)} · median ${median(stats.deaths)} · max ${stats.maxAge}`);
 console.log(`Net worth at death: median ${median(stats.worth)} · avg ${avg(stats.worth)}`);
@@ -201,9 +209,11 @@ console.log(`Careers reached (max level): ${Object.keys(stats.careers).length} o
 console.log(`Prison-years observed: ${stats.prison}`);
 console.log(`Business: ${biz.founded} founded (last gen per life) · ${biz.coYears} company-years, ${Math.round((biz.profitable / Math.max(1, biz.coYears)) * 100)}% profitable · ${biz.ipos} IPOs · ${biz.exits} exits · ${biz.fails} bankruptcies · max worth ${Math.round(biz.maxVal).toLocaleString()} · max staff ${biz.maxStaff}`);
 console.log(`Company-years by industry: ${top(biz.byInd, 22)}`);
+console.log(`Courts (last gen per life): ${courts.filed} lawsuits filed · ${courts.won} won, ${courts.lost} lost, ${courts.settled} settled · sued ${courts.sued} times, ${courts.beaten} beaten · ${courts.small} small-claims wins · ${courts.rulings} rulings, ${courts.justices} justices confirmed · ${courts.clientWins} trials won for clients`);
 console.log(`Content tags on: ${TAG_IDS.map((t) => `${t} in ${stats.tagLives[t] || 0} lives`).join(', ')}`);
 console.log(`Events never fired (${neverFired.length}/${evIds.length}): ${neverFired.join(', ') || 'none'}`);
 console.log(`Actions never run (${neverRun.length}/${ACTION_ORDER.length}): ${neverRun.join(', ') || 'none'}`);
+console.log(`Story chapters never reached (${unread.length}/${chapters.length}): ${unread.join(', ') || 'none'}`);
 if (failures) {
   console.log(`\n❌ ${failures} invariant failures. First ${fails.length}:`);
   for (const f of fails) console.log('  - ' + f);

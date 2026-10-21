@@ -38,8 +38,11 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `39` | The underworld (`39-underworld.js`): crime families, heists, heat, underworld careers, black market, street racing, and their events | No DOM. `ageUp` reaches `uwTick` through a wrapper. |
 | `40` | Show business (`40-fame.js`): named works, charts, deals, agents, awards, royalties, talk shows and fame events | No DOM. `ageUp` reaches `showbizTick` through a wrapper. |
 | `41` | Sports (`41-sports.js`): leagues and seasons, contracts, fighter rankings, racing, coaching and front-office careers, franchise titles, sports events | No DOM. `ageUp` reaches `sportsTick` through a wrapper; `specialApply` calls `startSportsCareer`. |
-| `42–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1011-ui-sports.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `42` | Courts (`42-courts.js`): lawsuits, settlements, trials and appeals, small claims, a judge's docket and appointments, lawyers' clients, courts events | No DOM. `ageUp` reaches `courtTick` through a wrapper. |
+| `43` | Story chains (`43-stories.js`): the `STORY` engine and multi-year stories | No DOM. `ageUp` reaches `storyTick` through a wrapper. Each story's opening is an `EV`. |
+| `44` | Holidays and seasons (`44-holidays.js`): `HOL`, country holidays, climate-aware seasonal events | Event content. |
+| `45–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1012-ui-courts.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -77,6 +80,19 @@ each line), and shows it next, ahead of anything already queued.
 one option at random (`vary`). Conditions are checked again when the player answers, so an
 event can't act on a job you lost in the meantime.
 
+**Stories.** `STORY(id, { title, ages, w, when, ctx, chapters })` in `43-stories.js` is a chain of
+events across years. The `start` chapter is registered as an ordinary event (`st_<id>`, once per
+life), so it rolls with the year's events. A choice calls `nextChapter(s, st, 'name', lo, hi)` to
+continue the story lo..hi years later; a choice that doesn't ends it. Open stories live in
+`M(s).stories = { id: { ch, at, d } }`, where `d` is the story's own JSON data (names, ids,
+amounts). `storyTick` runs just before `rollYearEvents` and fires every chapter that's due, as a
+popup (`choices`) or a logged line (`auto`). A chapter is skipped, ending the story, when its
+`when` fails or its person (`d.pid`) has died, and it waits while you're in prison.
+
+**Holidays.** `HOL(id, countries, def)` in `44-holidays.js` is `EV('hol_' + id, def)` limited to
+the countries that celebrate it (`null` = everywhere), with a two-year cooldown. It counts the
+holidays you celebrate. Seasonal events use climate lists (`SNOWY`, `STORMY`, `SOUTHERN`).
+
 **Content tags.** Events, single event choices, company events and actions can carry
 `tags: ['chaos']` or `['mature']` (`CONTENT_TAGS` in `12-flow.js`). Tagged content only
 appears while every one of its tags is switched on in Settings (`META.settings.chaos` /
@@ -87,7 +103,7 @@ appears while every one of its tags is switched on in Settings (`META.settings.c
 
 **A year (`ageUp`).** Body → pregnancy → school → career → businesses and the market →
 prison → money → assets → fame → the people around you → royalty → the underworld →
-show business → sports → pets → milestones → random events → new illness → death check. The order
+show business → sports → courts → pets → milestones → story chapters → random events → new illness → death check. The order
 is in `AGE_PHASES` (`25-ageup.js`).
 
 **Health.** Health drifts toward a target set by age and fitness (`healthTarget`), and
@@ -205,6 +221,28 @@ totals per sport, honors, `fighter` and `racer` records).
 - **Franchises:** a franchise you own (`sportsteam` industry) gets a yearly title chance from
   its product quality and reputation.
 
+**Courts.** `42-courts.js` keeps everything in `M(s).court`, created on first contact: open
+`cases`, the last 40 finished ones (`past`), a judge's `docket` and `bench` record, and a lawyer's
+trial `practice`.
+- **A case** is plain JSON: which side you're on, a `type` from `CASE_TYPES`, who the other side
+  is (a person `pid`, a market `firm`, or just a name), the `claim`, its hidden `merit` (how good
+  it really is for you), the other side's lawyer edge (`their`), your `lawyer` (a `COUNSEL` id)
+  and the trial year. `co` means one of your companies is the defendant: it pays the fees and any
+  judgment. Every suit starts at `chooseCounsel`, which files it when a lawyer is picked.
+- **The odds:** `caseOdds` turns merit, both lawyers' edges, karma and charisma into a win chance.
+  Representing yourself uses `selfDefense` (in `20-crime.js`, shared with criminal trials): a law
+  degree, years as a lawyer or judge, and charisma.
+- **Each year** (`courtTick`, after `financeTick`), `caseYear` bills the yearly fee into the finance
+  sheet, drops cases whose other side is gone, rolls discovery (merit moves), and either makes a
+  settlement offer or, in the trial year, opens the testimony popup. `verdict` sets the judgment;
+  the loser may appeal, and `appealRuling` decides it the next year. `finalize` moves the money and
+  closes the case.
+- **Judges:** `judge` is `appointed` in `JOBS`, so `careerTick` never promotes it and it gets no
+  raise or promotion requests. `judgeYear` handles the backlog and the appointments instead, up to a
+  nomination and the `ctConfirm` hearing. The docket (`docketOf`) is rolled once a year for the
+  judge's rung: criminal and civil cases, appeals, then `LANDMARKS`.
+- **Lawyers** take two clients a year (`ct_client`), each a two-step popup.
+
 **Saving.** `29-save.js` wraps the Perchance `kv-plugin` (`root.kv`), falling back to
 `localStorage`, then memory. Folders: `saves` (one JSON state per life), `rewind` (the last
 5 Time Machine snapshots), `meta` (index, settings, achievements, Hall of Lives).
@@ -213,6 +251,7 @@ totals per sport, honors, `fighter` and `racer` records).
 
 - **An event:** add an `EV(...)` to the right `30–33` file. Return outcome text from each
   choice. Use `ctx: (s) => someone(s, ['friend'])` to involve a person (`c.pid`).
+- **A story or a holiday:** add a `STORY(...)` to `43-stories.js` or a `HOL(...)` to `44-holidays.js`.
 - **A job:** add an entry to `JOBS` in `04-data-careers.js`. Requirements are data
   (`req: { edu, majors, degree, trade, smarts, looks, sk, license, clean, drink, age, maxAge }`).
 - **An activity:** `defAction` in `21-activities.js` with a `cat` from `ACT_CATS`.
@@ -229,7 +268,7 @@ never fired and actions that never ran, which usually means a `when` that can't 
 
 | Tool | What it does |
 | --- | --- |
-| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, or the streetwise skill to get into the underworld at 18. Prints a balance summary. |
+| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36. Prints a balance summary, including businesses and the courts, and lists events that never fired, actions that never ran and story chapters never reached. |
 | `dev/verify/tags.mjs` | Content tags: every tag in use is in `CONTENT_TAGS` with a Settings default, and the filters hide tagged events, choices and actions (checked on fixture content, so it works before anything is tagged). Prints how much content carries tags. |
 | `dev/verify/sim-business.mjs` | Business balance report (add an industry id as the third argument to run just that one): every industry run 20 years under a sensible owner (who also franchises and buys a small rival when flush) and a hands-off owner. Survival, profit, size, IPO readiness, franchising and acquisitions at years 1/5/10/20. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |

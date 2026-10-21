@@ -110,12 +110,8 @@ BEV('lawsuit', {
   emoji: '⚖️', text: (s, co) => `A customer is suing ${co.name} for ${fmtMoney(evCost(s, co, 120000))}.`,
   choices: [
     ['Settle out of court', (s, co) => { spendCo(co, evCost(s, co, 50000)); return `You settled for ${fmtMoney(evCost(s, co, 50000))}.`; }],
-    ['Fight it in court', (s, co) => {
-      spendCo(co, evCost(s, co, 20000));
-      if (chance(0.5 + skill(s, 'charisma') / 400 + (hasDegree(s, 'jd') ? 0.15 : 0))) { co.rep = clamp100(co.rep + 2); return { text: 'The judge threw the case out.', tone: 'good' }; }
-      spendCo(co, evCost(s, co, 150000)); co.rep = clamp100(co.rep - 5);
-      return { text: `You lost. ${fmtMoney(evCost(s, co, 150000))} in damages.`, tone: 'bad' };
-    }],
+    // A real court case (42-courts.js): the company pays the lawyers and any judgment.
+    ['Fight it in court', (s, co) => { getSued(s, 'slipfall', randomParty(s), { co: co.id, claim: evCost(s, co, 120000) }); }],
   ],
 });
 BEV('supply', {

@@ -31,6 +31,9 @@ function medPrice(s, t) {
   const base = price(s, t.cost);
   return country(s).freeHealth && !t.noDiscount ? Math.round(base * 0.1) : base;
 }
+// What you pay for care. Until 18, your parents (or guardians) pay, the way they pay for lessons.
+function medBill(s, t) { return A(s) < 18 ? 0 : medPrice(s, t); }
+function medLabel(s, t) { return A(s) < 18 ? 'Your parents pay' : fmtMoney(medPrice(s, t)); }
 
 // Yearly odds of dying. Rises steeply with age; poor health multiplies it.
 function mortality(age, health) {
@@ -170,7 +173,7 @@ defAction({
     const known = knownDiseases(s);
     popup(s, {
       emoji: '🩺', title: 'Doctor', text: known.length ? 'What do you need help with?' : 'You have no known conditions.', handler: 'doctorPick',
-      choices: [{ label: '🔬 Full checkup', value: 'checkup', sub: fmtMoney(medPrice(s, { cost: 200 })) }]
+      choices: [{ label: '🔬 Full checkup', value: 'checkup', sub: medLabel(s, { cost: 200 }) }]
         .concat(known.map((d) => ({ label: DISEASES[d.id].emoji + ' Treat ' + DISEASES[d.id].name.toLowerCase(), value: d.id })))
         .concat([{ label: 'Leave', value: null }]),
     });
@@ -179,7 +182,7 @@ defAction({
 onChoice('doctorPick', (s, ctx, v) => {
   if (!v) return;
   if (v === 'checkup') {
-    const cost = medPrice(s, { cost: 200 });
+    const cost = medBill(s, { cost: 200 });
     if (!pay(s, cost)) return cantAfford(cost);
     const hidden = M(s).diseases.filter((d) => !d.known);
     for (const d of hidden) if (chance(0.85)) d.known = true;
@@ -191,13 +194,13 @@ onChoice('doctorPick', (s, ctx, v) => {
   const D = DISEASES[v];
   popup(s, {
     emoji: D.emoji, title: 'Treat ' + D.name.toLowerCase(), text: D.cure > 0 ? 'Pick a treatment.' : 'There is no known cure, but treatment can ease symptoms.', handler: 'treat', ctx: { id: v },
-    choices: TREATMENTS.map((t) => ({ label: t.emoji + ' ' + t.name, value: t.id, sub: fmtMoney(medPrice(s, t)), disabled: M(s).money < medPrice(s, t) && medPrice(s, t) > 0 })).concat([{ label: 'Never mind', value: null }]),
+    choices: TREATMENTS.map((t) => ({ label: t.emoji + ' ' + t.name, value: t.id, sub: medLabel(s, t), disabled: M(s).money < medBill(s, t) && medBill(s, t) > 0 })).concat([{ label: 'Never mind', value: null }]),
   });
 });
 onChoice('treat', (s, ctx, tid) => {
   if (!tid || !hasDisease(s, ctx.id)) return;
   const t = TREATMENTS.find((x) => x.id === tid), D = DISEASES[ctx.id];
-  const cost = medPrice(s, t);
+  const cost = medBill(s, t);
   if (!pay(s, cost)) return cantAfford(cost);
   if (t.risk && chance(t.risk)) { die(s, 'complications from experimental treatment'); return 'The experimental treatment went terribly wrong.'; }
   const odds = clamp(D.cure * t.mult * (trait(s, 'resilient') ? 1.1 : 1), 0, 0.97);
@@ -213,9 +216,9 @@ onChoice('treat', (s, ctx, tid) => {
 defAction({
   id: 'therapy', cat: 'health', label: 'Therapy', emoji: '🛋️', desc: 'Talk it through with a professional.',
   when: (s) => free(s) && A(s) >= 10,
-  sub: (s) => fmtMoney(medPrice(s, { cost: 180 })),
+  sub: (s) => medLabel(s, { cost: 180 }),
   run: (s) => {
-    const cost = medPrice(s, { cost: 180 });
+    const cost = medBill(s, { cost: 180 });
     if (!pay(s, cost)) return cantAfford(cost);
     const n = bump(s, 'therapy');
     add(s, { happy: Math.round(randInt(3, 8) / n) });
@@ -270,13 +273,13 @@ defAction({
   run: (s) => {
     popup(s, {
       emoji: '🌱', title: 'Rehab', text: 'Which habit do you want to quit?', handler: 'rehab',
-      choices: Object.keys(M(s).addictions).filter((k) => M(s).addictions[k] >= 25).map((k) => ({ label: ADDICTIONS[k].emoji + ' ' + ADDICTIONS[k].name, value: k, sub: fmtMoney(medPrice(s, { cost: 8000 })) })).concat([{ label: 'Never mind', value: null }]),
+      choices: Object.keys(M(s).addictions).filter((k) => M(s).addictions[k] >= 25).map((k) => ({ label: ADDICTIONS[k].emoji + ' ' + ADDICTIONS[k].name, value: k, sub: medLabel(s, { cost: 8000 }) })).concat([{ label: 'Never mind', value: null }]),
     });
   },
 });
 onChoice('rehab', (s, ctx, k) => {
   if (!k) return;
-  const cost = medPrice(s, { cost: 8000 });
+  const cost = medBill(s, { cost: 8000 });
   if (!pay(s, cost)) return cantAfford(cost);
   if (chance(0.7 - (trait(s, 'addictive') ? 0.2 : 0))) {
     delete M(s).addictions[k];
