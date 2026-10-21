@@ -230,3 +230,176 @@ EV('pr_chapel_wedding', {
     ['Wait until you get out', (s, c) => { addRel(s, c.pid, -4); return `${nm(s, c.pid)} said they'd wait for you.`; }],
   ],
 });
+
+/* ---- more story: seniors (55+) ------------------------------------------------------- */
+EV('sr_retire_party', { ages: [50, 90], once: true, emoji: '🎈', when: (s) => !!M(s).retired && s.year - M(s).retired.year <= 1, text: 'Your old coworkers threw you a retirement party.', auto: (s) => { add(s, { happy: 6 }); return `They gave you ${pick(['a gold watch', 'a fishing rod', 'a card signed by people you never met', 'a cake shaped like your old desk'])} and a lot of hugs.`; } });
+EV('sr_grandkid_sitting', {
+  ages: [50, 95], ctx: (s) => someone(s, ['grandchild'], (p) => ageOf(s, p) <= 10), emoji: '🧸', text: (s, c) => `Your kids asked you to watch ${nm(s, c.pid)} for the weekend.`,
+  choices: [
+    ['Spoil them rotten', (s, c) => { addRel(s, c.pid, 12); add(s, { happy: 6 }); return 'Ice cream for breakfast, no bedtime, and a new toy. You are the favorite.'; }],
+    ['Teach them something useful', (s, c) => { addRel(s, c.pid, 8); s.people[c.pid].stats.smarts = clamp100(s.people[c.pid].stats.smarts + 2); return `You taught ${nm(s, c.pid)} ${pick(['to bake bread', 'to play cards', 'to fish', 'to whistle'])}.`; }],
+    ['Say you are too tired', (s) => { relAll(s, ['child'], -3); return 'Your kids found a babysitter. They seemed hurt.'; }],
+  ],
+});
+EV('sr_ballroom', {
+  ages: [55, 95], emoji: '💃', text: 'The community center started a ballroom dancing class.',
+  choices: [
+    ['Sign up', (s) => { addSkill(s, 'fitness', 2); add(s, { happy: 6 }); if (!hasRomance(s) && chance(0.3)) { const p = candidatePerson(s, {}); setRel(s, p.id, 'friend', 60); return { text: `Your dance partner, ${p.first}, keeps stepping on your toes. On purpose, you suspect.`, person: p.id }; } return 'You can foxtrot now. Badly, but with confidence.'; }],
+    ['Your dancing days are over', () => 'Your knees agree.'],
+  ],
+});
+EV('sr_will_talk', {
+  ages: [60, 110], emoji: '📜', when: (s) => myChildren(s).length > 1, text: 'Your kids keep asking, very casually, about your will.',
+  choices: [
+    ['Split everything equally', (s) => { M(s).will = 'equal'; relAll(s, ['child'], 3); return 'Everyone seemed relieved. Suspiciously relieved.'; }],
+    ['Say you are leaving it all to the cat', (s) => { add(s, { happy: 3 }); relAll(s, ['child'], -2); return 'The looks on their faces were worth it.'; }],
+  ],
+});
+EV('sr_keys', {
+  ages: [75, 110], emoji: '🔑', when: (s) => M(s).license && free(s), text: 'Your family thinks it is time you stopped driving.',
+  choices: [
+    ['Hand over the keys', (s) => { M(s).license = false; relAll(s, ['child'], 6); add(s, { happy: -4 }); return 'You are now a proud member of the "who is driving me to the doctor" club.'; }],
+    ['Take a driving test to prove them wrong', (s) => { if (P(s).stats.health + randInt(0, 50) > 70) { add(s, { happy: 5 }); return 'You passed with flying colors and a smug grin.'; } M(s).license = false; add(s, { happy: -6 }); return 'You failed. Graciously, eventually.'; }],
+  ],
+});
+EV('sr_read_kids', {
+  ages: [60, 100], emoji: '📖', text: 'The library is looking for volunteers to read to young kids.',
+  choices: [
+    ['Volunteer every week', (s) => { add(s, { karma: 4, happy: 5 }); return 'The kids call you "the book grandparent." You do all the voices.'; }],
+    ['Not for you', () => 'You prefer your stories quiet.'],
+  ],
+});
+EV('sr_classmate_funeral', { ages: [65, 110], w: 0.7, emoji: '🕯️', text: 'You went to the funeral of an old school friend.', auto: (s) => { add(s, { happy: -3 }); const p = meetSomeone(s, 'friend', 50); return { text: `You reconnected with ${p.first}, who sat next to you in math class sixty years ago.`, person: p.id }; } });
+EV('sr_hearing', {
+  ages: [65, 110], once: true, emoji: '🦻', text: 'Everyone seems to mumble these days.',
+  choices: [
+    { label: 'Get hearing aids', sub: (s) => fmtMoney(medPrice(s, { cost: 3000 })), fx: (s) => { const c = medPrice(s, { cost: 3000 }); if (!pay(s, c)) return cantAfford(c); add(s, { happy: 6 }); return 'You can hear birds again. Also your neighbor’s TV.'; } },
+    ['Just turn the TV up', (s) => { getSick(s, 'hearing'); return 'The TV is at volume 74. The neighbors are learning a lot.'; }],
+  ],
+});
+EV('sr_pickleball', {
+  ages: [55, 90], emoji: '🏓', text: 'Your neighbors started a pickleball league.',
+  choices: [
+    ['Join and get competitive', (s) => { addSkill(s, 'fitness', 3); add(s, { happy: 5, health: 2 }); return chance(0.3) ? 'You won the league trophy. You are insufferable about it.' : 'You dove for a shot and both knees filed a complaint.'; }],
+    ['Join for the snacks', (s) => { add(s, { happy: 4 }); relAll(s, K_FRIENDS, 3); return 'You played twice and organized every potluck.'; }],
+  ],
+});
+EV('sr_dating_app', {
+  ages: [60, 95], emoji: '💌', when: (s) => !hasRomance(s) && free(s), text: 'Your grandkids set you up with a dating app.',
+  choices: [
+    ['Give it a try', (s) => { const p = candidatePerson(s, {}); setRel(s, p.id, 'friend', 55); return tryRomance(s, p.id, 0.1); }],
+    ['Delete it immediately', () => 'You still prefer meeting people at the grocery store.'],
+  ],
+});
+EV('sr_downsize', {
+  ages: [65, 100], emoji: '🏘️', when: (s) => !!myHouse(s) && myHouse(s).beds >= 3 && myChildren(s).every((c) => ageOf(s, c) >= 18), text: 'Your big house feels empty these days.',
+  choices: [
+    ['Sell and downsize', (s) => { const h = myHouse(s); const gain = Math.round(h.value * 0.4); add(s, { money: gain, happy: 3 }); h.value = Math.round(h.value * 0.6); h.beds = 2; h.name = 'Cozy Cottage'; return `You moved somewhere smaller and pocketed ${fmtMoney(gain)}.`; }],
+    ['Stay where the memories are', (s) => { add(s, { happy: 2 }); return 'Every room has a story. You are not done telling them.'; }],
+  ],
+});
+EV('sr_birdwatching', { ages: [55, 110], emoji: '🐦', text: 'You took up birdwatching.', auto: (s) => { add(s, { happy: 4, health: 1 }); return `You spotted ${randInt(12, 140)} species this year, including a ${pick(['heron', 'woodpecker', 'kingfisher', 'barn owl'])} that made you gasp out loud.`; } });
+
+/* ---- more story: any age ------------------------------------------------------------- */
+EV('any_meteor', { ages: [6, 110], w: 0.6, emoji: '🌠', text: 'There was a meteor shower tonight.', auto: (s) => { add(s, { happy: 3 }); return `You counted ${randInt(8, 60)} shooting stars and made a wish on every one.`; } });
+EV('any_rainbow', { ages: [3, 110], w: 0.5, emoji: '🌈', text: 'A double rainbow stretched across the whole sky.', auto: (s) => { add(s, { happy: 2 }); return 'Everyone on the street stopped to take a photo.'; } });
+EV('any_quiz_show', {
+  ages: [16, 90], w: 0.6, emoji: '📺', text: 'You were picked to be a contestant on a TV quiz show.',
+  choices: [
+    ['Play to win', (s) => { add(s, { fame: 2 }); if (P(s).stats.smarts + randInt(0, 60) > 95) { const w = price(s, randInt(5, 100) * 1000); add(s, { money: w, happy: 10 }); return `You won ${fmtMoney(w)}! The final answer was "${pick(['Mount Kilimanjaro', 'the platypus', '1066', 'photosynthesis', 'Saturn'])}."`; } return 'You got knocked out on a question about 1970s soap operas.'; }],
+    ['Freeze up on camera', (s) => { add(s, { happy: -3, fame: 1 }); return 'You said "um" for nine seconds on national TV. It became a meme.'; }],
+  ],
+});
+EV('any_ufo', {
+  ages: [8, 110], w: 0.5, tags: ['chaos'], emoji: '🛸', text: 'A glowing disc hovered over your backyard for a full minute.',
+  choices: [
+    ['Wave at it', (s) => { add(s, { happy: 6 }); return 'It blinked twice and zipped away. Nobody believes you.'; }],
+    ['Film it for the internet', (s) => { add(s, { fame: 3 }); return 'Your blurry video got four million views and ten thousand theories.'; }],
+    ['Hide under the bed', () => 'Smart. Probably.'],
+  ],
+});
+EV('any_ghost', {
+  ages: [8, 110], w: 0.5, tags: ['chaos'], emoji: '👻', text: 'Something keeps rearranging the furniture in your home at night.',
+  choices: [
+    ['Ask it politely to stop', (s) => { add(s, { happy: 3 }); return 'The furniture stopped moving. A thank-you note appeared in old-fashioned handwriting.'; }],
+    ['Call a ghost hunter', (s) => { const c = price(s, 300); M(s).money -= c; return `The ghost hunter charged ${fmtMoney(c)} and left screaming.`; }],
+  ],
+});
+EV('any_flash_mob', { ages: [8, 90], w: 0.5, emoji: '🕺', text: 'A flash mob broke out at the mall while you were shopping.', auto: (s) => { add(s, { happy: 3 }); return chance(0.4) ? 'You joined in. You knew none of the moves. Nobody cared.' : 'You stood very still and hoped nobody would pull you in.'; } });
+EV('any_busker', {
+  ages: [6, 100], emoji: '🎻', text: 'A street musician is playing the most beautiful song you have ever heard.',
+  choices: [
+    ['Tip generously', (s) => { const c = price(s, 20); M(s).money -= c; add(s, { karma: 2, happy: 3 }); return 'They nodded at you mid-song. It made your whole week.'; }],
+    ['Stop and listen', (s) => { add(s, { happy: 2 }); return 'You were twenty minutes late. Worth it.'; }],
+  ],
+});
+EV('any_lost_kid', {
+  ages: [14, 90], emoji: '🧒', text: 'A little kid is crying alone in the middle of a store, looking for their parents.',
+  choices: [
+    ['Help them find their family', (s) => { add(s, { karma: 4 }); return 'You found their frantic dad in the cereal aisle. He hugged you.'; }],
+    ['Tell a store employee', (s) => { add(s, { karma: 2 }); return 'They called it over the speakers. The family was reunited in a minute.'; }],
+  ],
+});
+EV('any_time_traveler', { ages: [10, 110], w: 0.3, tags: ['chaos'], emoji: '⏳', text: 'A stranger in a silver jumpsuit asked you what year it is.', auto: (s) => { add(s, { happy: 2 }); return `When you told them, they said "too early!" and vanished behind a mailbox. You found a newspaper dated ${s.year + randInt(20, 200)}.`; } });
+EV('any_wrong_door', { ages: [16, 90], w: 0.5, emoji: '🚪', text: 'You walked into the wrong apartment, convinced it was yours.', auto: () => (chance(0.5) ? 'The family inside was very nice about it. They offered you soup.' : 'You sat on their couch for five minutes before noticing the different dog.') });
+
+/* ---- more story: prison ------------------------------------------------------------ */
+EV('pr_cooking', {
+  ages: [16, 120], prison: true, emoji: '🍲', text: 'The prison kitchen is short a cook.',
+  choices: [
+    ['Volunteer', (s) => { addSkill(s, 'cooking', 4); M(s).prison.behavior = clamp100(M(s).prison.behavior + 5); return 'You made the cafeteria chili edible. The whole block respects you now.'; }],
+    ['Stay out of the kitchen', () => 'The chili remains a crime.'],
+  ],
+});
+EV('pr_art', {
+  ages: [12, 120], prison: true, emoji: '🎨', text: 'A volunteer started an art program inside.',
+  choices: [
+    ['Sign up', (s) => { addSkill(s, 'art', 4); add(s, { happy: 4 }); M(s).prison.behavior = clamp100(M(s).prison.behavior + 3); return chance(0.2) ? 'One of your paintings was shown in a gallery outside. It sold.' : 'You painted the view from your window. Mostly bars, but beautiful bars.'; }],
+    ['Not interested', () => 'Maybe next time.'],
+  ],
+});
+EV('pr_dogs', {
+  ages: [18, 120], prison: true, emoji: '🐕‍🦺', text: 'The prison is looking for inmates to train service dogs.',
+  choices: [
+    ['Apply', (s) => { add(s, { happy: 8, karma: 3 }); M(s).prison.behavior = clamp100(M(s).prison.behavior + 6); return `Your dog, ${pick(PET_NAMES)}, graduated top of the class and now helps a veteran. You cried at the handover.`; }],
+    ['Pass', () => 'You are more of a cat person.'],
+  ],
+});
+EV('pr_chess', {
+  ages: [12, 120], prison: true, emoji: '♟️', text: 'The block is holding a chess tournament.',
+  choices: [
+    ['Enter', (s) => { add(s, { smarts: 2 }); if (P(s).stats.smarts + randInt(0, 50) > 80) { add(s, { happy: 6 }); return 'You won the whole thing. Even the guards came to watch the final.'; } return 'You lost to a man who has been practicing for 22 years.'; }],
+    ['Watch from the bleachers', () => 'Surprisingly intense.'],
+  ],
+});
+EV('pr_tattoo', {
+  ages: [16, 120], prison: true, emoji: '🖋️', text: 'Your cellmate offers you a homemade tattoo.',
+  choices: [
+    ['Get one', (s) => { add(s, { happy: 2 }); if (chance(0.25)) { add(s, { health: -4 }); return 'It got infected. It also says "MOM" upside down.'; } return `A small ${pick(['spiderweb', 'star', 'clock with no hands', 'teardrop'])}. It is surprisingly good.`; }],
+    ['No thanks', () => 'Your skin stays prison-free.'],
+  ],
+});
+EV('sr_old_letters', { ages: [65, 115], emoji: '💌', text: 'You found a box of old letters in the attic.', auto: (s) => { add(s, { happy: 5 }); return `${pick(['Love letters from your youth', 'Letters from a childhood best friend', 'Postcards from a summer you had almost forgotten'])}. You read them all in one sitting.`; } });
+EV('sr_open_mic', {
+  ages: [60, 100], w: 0.6, emoji: '🎙️', text: 'The local comedy club is holding an open mic night.',
+  choices: [
+    ['Get up and tell your best stories', (s) => { addSkill(s, 'acting', 3); if (chance(0.5)) { add(s, { happy: 8, fame: 1 }); return 'The crowd roared. A young comedian asked if they could use your joke about dentures.'; } return 'You bombed. You loved every second.'; }],
+    ['Heckle from the back', (s) => { add(s, { happy: 3 }); return 'You were funnier than the comedian. Everyone said so.'; }],
+  ],
+});
+EV('any_ring', {
+  ages: [8, 100], w: 0.4, emoji: '💍', text: 'You found a diamond ring on the sidewalk.',
+  choices: [
+    ['Turn it in to the police', (s) => { add(s, { karma: 4 }); if (chance(0.4)) { const r = price(s, 500); add(s, { money: r }); return `The owner was a groom who dropped it on the way to propose. He gave you a ${fmtMoney(r)} reward.`; } return 'Nobody claimed it, but you know you did the right thing.'; }],
+    ['Keep it', (s) => { add(s, { karma: -4 }); M(s).assets.push({ id: uid(s, 'a'), kind: 'jewelry', type: 'ring', emoji: '💍', name: 'Found diamond ring', value: price(s, randInt(1500, 8000)), paid: 0, cond: 100, since: s.year }); return 'It sparkles. Your conscience does not.'; }],
+  ],
+});
+EV('any_fire_alarm', { ages: [6, 110], w: 0.5, emoji: '🚨', text: 'The fire alarm went off at 3 a.m.', auto: (s) => { add(s, { happy: -1 }); return pick(['Someone burned popcorn. Everyone stood outside in pajamas for an hour.', 'False alarm. You met three neighbors for the first time, all in bathrobes.', 'A low battery. You climbed a ladder half asleep.']); } });
+EV('any_traffic', { ages: [16, 100], w: 0.5, emoji: '🚦', when: (s) => !!myCar(s), text: 'You were stuck in a four-hour traffic jam.', auto: (s) => { add(s, { happy: -2 }); return pick(['You listened to an entire audiobook.', 'You and the driver next to you played rock-paper-scissors through the windows.', 'You learned all the words to a song you hate.']); } });
+EV('pr_college', {
+  ages: [18, 120], prison: true, emoji: '🎓', when: (s) => hasHighSchool(s), text: 'A university started offering college classes inside the prison.',
+  choices: [
+    ['Enroll', (s) => { add(s, { smarts: 4 }); M(s).prison.behavior = clamp100(M(s).prison.behavior + 6); return `You aced ${pick(['philosophy', 'business writing', 'statistics', 'world history'])}. Your professor wrote you a letter for the parole board.`; }],
+    ['Not now', () => 'Maybe next semester.'],
+  ],
+});

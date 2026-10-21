@@ -453,3 +453,208 @@ EV('kid_field_trip', {
   ages: [6, 13], when: isStudent, emoji: '🚌', text: () => `Your class went on a field trip to ${pick(['the science museum', 'the aquarium', 'a farm', 'the zoo', 'a chocolate factory', 'the planetarium'])}.`,
   auto: (s) => { add(s, { smarts: randInt(0, 2), happy: 3 }); return pick(['You learned a lot.', 'You got lost from the group for twenty minutes.', 'You bought a souvenir pencil.', 'It was the best day of the year.']); },
 });
+
+/* ---- more story: toddlers (1-4) ----------------------------------------- */
+EV('tod_puddle', {
+  ages: [2, 5], emoji: '🌧️', text: 'There is a giant, perfect, muddy puddle right in front of you.',
+  choices: [
+    ['Jump in with both feet', (s) => { add(s, { happy: 5 }); relAll(s, ['parent'], -1); return 'SPLASH. Your new shoes are now a different color.'; }],
+    ['Walk around it like a grown-up', (s) => { relAll(s, ['parent'], 2); return 'Your parents were so proud. You were a little sad.'; }],
+  ],
+});
+EV('tod_imaginary', {
+  ages: [2, 6], once: true, emoji: '🦄', text: () => `You have an imaginary friend named ${pick(['Mr. Biscuits', 'Zorp', 'Princess Noodle', 'Captain Wiggles', 'Blue'])}.`,
+  choices: [
+    ['Insist they get a seat at dinner', (s) => { addSkill(s, 'acting', 2); add(s, { happy: 3 }); return 'Your parents set an extra plate. Mostly to keep the peace.'; }],
+    ['Keep them a secret', (s) => { add(s, { happy: 2 }); return 'Some friendships are private.'; }],
+  ],
+});
+EV('tod_haircut', {
+  ages: [1, 4], once: true, emoji: '✂️', text: 'It is time for your very first haircut.',
+  choices: [
+    ['Sit perfectly still', (s) => { add(s, { looks: 1 }); return 'The barber gave you a lollipop and a certificate.'; }],
+    ['Scream the whole time', (s) => { add(s, { happy: -2 }); return 'Your bangs are crooked forever, in photos at least.'; }],
+  ],
+});
+EV('tod_hide_seek', {
+  ages: [2, 6], emoji: '🙈', text: 'Your family is playing hide-and-seek.',
+  choices: [
+    ['Hide in the laundry basket', (s) => { add(s, { happy: 4 }); return 'Nobody found you for twenty minutes. You fell asleep in the towels.'; }],
+    ['Hide behind the curtain, feet showing', (s) => { add(s, { happy: 3 }); return 'Everyone pretended not to see you. You won.'; }],
+  ],
+});
+EV('tod_cat_tail', {
+  ages: [1, 4], emoji: '🐈', when: (s) => myPets(s).some((p) => p.species === 'cat'), text: "The family cat's tail is swishing back and forth right in front of you.",
+  choices: [
+    ['Grab it', (s) => { add(s, { happy: -3, health: -1 }); return 'The cat expressed its feelings clearly. With claws.'; }],
+    ['Pet it gently', (s) => { add(s, { happy: 4 }); for (const p of myPets(s)) if (p.species === 'cat') p.rel = clamp100(p.rel + 8); return 'It purred like a tiny engine. You are best friends now.'; }],
+  ],
+});
+EV('tod_why', { ages: [3, 5], once: true, emoji: '❓', text: 'You discovered the word "why."', auto: (s) => { add(s, { smarts: 2 }); relAll(s, ['parent'], -1); return 'You asked it 412 times in one afternoon. Your parents ran out of answers around number 30.'; } });
+EV('tod_shoes', { ages: [3, 5], once: true, emoji: '👟', text: 'You put your shoes on all by yourself.', auto: (s) => { add(s, { happy: 3 }); return 'On the wrong feet. You walked like a penguin all day and refused any help.'; } });
+EV('tod_song', { ages: [2, 5], emoji: '🎵', text: () => `At daycare you learned a song about ${pick(['a spider', 'five little ducks', 'the wheels on a bus', 'a very hungry frog'])}.`, auto: (s) => { addSkill(s, 'music', 1); add(s, { happy: 2 }); return 'You sang it at full volume in the car for six weeks.'; } });
+
+/* ---- more story: kids (5-12) ---------------------------------------------- */
+EV('kid_lemonade_war', {
+  ages: [6, 12], emoji: '🍋', text: 'The kid across the street opened a rival lemonade stand.',
+  choices: [
+    ['Slash your prices', (s) => { const amt = price(s, randInt(3, 25)); add(s, { money: amt }); return `A price war! You sold out and made ${fmtMoney(amt)}.`; }],
+    ['Team up and open a mega stand', (s) => { const amt = price(s, randInt(10, 40)); add(s, { money: amt, karma: 2 }); const p = meetSomeone(s, 'friend', 60); return { text: `Lemonade AND cookies. You split ${fmtMoney(amt * 2)} with ${p.first}.`, person: p.id }; }],
+    ['Spy on their secret recipe', (s) => { add(s, { karma: -1 }); addSkill(s, 'cooking', 1); return 'Their secret was more sugar. So much more sugar.'; }],
+  ],
+});
+EV('kid_magic', {
+  ages: [6, 12], emoji: '🎩', text: 'You learned a magic trick from a library book.',
+  choices: [
+    ['Perform it at dinner', (s) => { addSkill(s, 'acting', 2); if (chance(0.6)) { add(s, { happy: 4 }); return 'The coin disappeared! Then it fell out of your sleeve. Still, applause.'; } return 'The card was not their card. It was never their card.'; }],
+    ['Practice in secret until it is perfect', (s) => { addSkill(s, 'acting', 3); add(s, { smarts: 1 }); return 'A magician never reveals their secrets. Or their first forty failures.'; }],
+  ],
+});
+EV('kid_chess', {
+  ages: [6, 12], emoji: '♟️', ctx: (s) => someone(s, ['grandparent', 'parent'], (p) => ageOf(s, p) >= 45),
+  text: (s, c) => `${nm(s, c.pid)} offers to teach you chess.`,
+  choices: [
+    ['Learn every rule', (s, c) => { add(s, { smarts: 3 }); addRel(s, c.pid, 8); return chance(0.3) ? `After a year, you beat ${nm(s, c.pid)}. They demanded a rematch.` : `${nm(s, c.pid)} beats you every time. You are learning a lot about losing.`; }],
+    ['Use the pieces as action figures', (s, c) => { add(s, { happy: 3 }); addRel(s, c.pid, 3); return 'The knight and the queen had a very dramatic adventure.'; }],
+  ],
+});
+EV('kid_school_play', {
+  ages: [6, 12], emoji: '🎭', when: isStudent, text: 'The school play is holding auditions for the lead role.',
+  choices: [
+    ['Audition', (s) => { addSkill(s, 'acting', 3); if (skill(s, 'acting') + randInt(0, 60) > 45) { add(s, { happy: 8, fame: 1 }); relAll(s, ['parent'], 4); return 'You got the lead! Your parents filmed every second.'; } return `You got cast as ${pick(['Tree #3', 'a talking rock', 'Villager', 'the back half of a horse'])}. You gave it everything.`; }],
+    ['Work on the set instead', (s) => { addSkill(s, 'art', 3); return 'You painted a castle that wobbled when anyone walked past.'; }],
+  ],
+});
+EV('kid_bike', {
+  ages: [5, 9], once: true, emoji: '🚲', text: 'The training wheels are coming off today.',
+  choices: [
+    ['Keep trying until you get it', (s) => { addSkill(s, 'fitness', 3); if (chance(0.3)) { add(s, { health: -2 }); return 'Two scraped knees and one victory lap around the block.'; } add(s, { happy: 6 }); return 'You wobbled, then you flew. You did not stop until dinner.'; }],
+    ['Put them back on', (s) => { add(s, { happy: -1 }); return 'Maybe next summer.'; }],
+  ],
+});
+EV('kid_library_card', { ages: [5, 10], once: true, emoji: '📗', text: 'You got your very own library card.', auto: (s) => { add(s, { smarts: 3, happy: 3 }); return `You checked out the maximum: ${randInt(8, 15)} books about ${pick(['dinosaurs', 'sharks', 'space', 'horses', 'volcanoes', 'pirates'])}.`; } });
+EV('kid_sleepwalk', { ages: [5, 12], w: 0.5, emoji: '😴', text: 'You sleepwalked into the kitchen last night.', auto: () => pick(['Your parents found you making a sandwich with your eyes closed.', 'You were found asleep in the bathtub, fully clothed.', 'You opened the fridge, said "nope," and went back to bed.']) });
+EV('kid_board_game', {
+  ages: [6, 12], emoji: '🎲', text: 'Family game night. You are losing badly.',
+  choices: [
+    ['Cheat a little', (s) => { add(s, { karma: -2 }); if (chance(0.5)) { relAll(s, ['sibling', 'parent'], -3); return 'You got caught with extra money under the board. Game night is cancelled forever.'; } add(s, { happy: 3 }); return 'You won. Nobody suspects a thing.'; }],
+    ['Lose gracefully', (s) => { add(s, { karma: 1 }); relAll(s, ['sibling', 'parent'], 2); return 'You shook hands with the winner. Through gritted teeth.'; }],
+    ['Flip the board', (s) => { add(s, { happy: 1 }); relAll(s, ['sibling', 'parent'], -4); return 'Pieces everywhere. You are still finding them.'; }],
+  ],
+});
+EV('kid_class_president', {
+  ages: [8, 12], emoji: '🗳️', when: isStudent, text: 'Your class is electing a class president.',
+  choices: [
+    ['Run and promise longer recess', (s) => { addSkill(s, 'charisma', 2); if (chance(0.35 + skill(s, 'charisma') / 200)) { add(s, { happy: 8 }); return 'You won in a landslide. Recess stayed exactly the same length.'; } add(s, { happy: -3 }); return 'You lost to the kid who promised a class pizza party.'; }],
+    ["Run your best friend's campaign", (s) => { addSkill(s, 'charisma', 2); relAll(s, K_FRIENDS, 5); return 'Your posters were the best in school.'; }],
+    ['Stay out of politics', () => 'A wise choice at any age.'],
+  ],
+});
+EV('kid_sibling_blame', {
+  ages: [5, 14], emoji: '🏺', ctx: (s) => someone(s, ['sibling', 'halfsibling'], (p) => ageOf(s, p) < 18),
+  text: (s, c) => `${nm(s, c.pid)} broke your parents' favorite vase. Your parents want to know who did it.`,
+  choices: [
+    ['Take the blame', (s, c) => { addRel(s, c.pid, 15); add(s, { karma: 3 }); relAll(s, ['parent'], -2); return `You got grounded. ${nm(s, c.pid)} owes you forever.`; }],
+    ['Tell the truth', (s, c) => { addRel(s, c.pid, -8); relAll(s, ['parent'], 2); return `${nm(s, c.pid)} got grounded and called you a snitch.`; }],
+    ['Blame the dog', (s) => { add(s, { karma: -2 }); return 'The dog looked betrayed.'; }],
+  ],
+});
+EV('kid_bird', {
+  ages: [5, 14], emoji: '🐦', text: 'You found a baby bird that fell out of its nest.',
+  choices: [
+    ['Nurse it back to health', (s) => { add(s, { karma: 3 }); if (chance(0.6)) { add(s, { happy: 6 }); return 'A week later, it flew away from your windowsill. You cried happy tears.'; } add(s, { happy: -4 }); return 'You tried your best. You buried it under the big tree.'; }],
+    ['Put it back in the nest', (s) => { add(s, { karma: 1 }); return 'You climbed up and tucked it in. Its mom came back.'; }],
+  ],
+});
+EV('kid_fort', {
+  ages: [6, 12], emoji: '🌳', text: 'You and your friends want to build a fort in the woods.',
+  choices: [
+    ['Build a real treehouse', (s) => { addSkill(s, 'art', 2); addSkill(s, 'fitness', 2); relAll(s, K_FRIENDS, 5); if (chance(0.1)) { getSick(s, 'broken_arm'); return 'It was magnificent until the floor gave out.'; } return 'It has a rope ladder and a secret password.'; }],
+    ['A blanket fort is fine', (s) => { add(s, { happy: 4 }); return 'Indoor, cozy, and snack-adjacent.'; }],
+  ],
+});
+EV('kid_math_contest', {
+  ages: [8, 12], emoji: '🧮', when: isStudent, text: 'Your teacher wants you to enter the regional math contest.',
+  choices: [
+    ['Study for weeks', (s) => { add(s, { smarts: 3 }); if (P(s).stats.smarts + randInt(0, 40) > 90) { add(s, { happy: 8 }); return 'You won a trophy taller than your little cousin.'; } return 'You placed in the middle. You can do long division in your sleep now.'; }],
+    ['No thanks', () => 'You will not be doing extra math on purpose.'],
+  ],
+});
+EV('kid_help_cook', {
+  ages: [6, 12], emoji: '🍳', when: (s) => relPeople(s, ['parent']).length > 0, text: 'Your parent asks you to help make dinner.',
+  choices: [
+    ['Help with everything', (s) => { addSkill(s, 'cooking', 3); relAll(s, ['parent'], 3); return chance(0.2) ? 'You confused salt and sugar. Everyone was very polite about it.' : 'You made the salad all by yourself. Best salad ever, apparently.'; }],
+    ['Just lick the spoon', (s) => { add(s, { happy: 2 }); return 'Quality control is an important job.'; }],
+  ],
+});
+EV('kid_bangs', { ages: [5, 11], w: 0.6, emoji: '✂️', text: 'You found the scissors and decided to give yourself bangs.', auto: (s) => { add(s, { looks: -2 }); relAll(s, ['parent'], -1); return 'They are very short, and very crooked. School photos are next week.'; } });
+EV('kid_lost_dog', {
+  ages: [7, 14], emoji: '🐕', text: 'You found a dog wandering the street, wearing a collar with a phone number.',
+  choices: [
+    ['Call the number', (s) => { add(s, { karma: 3 }); if (chance(0.5)) { const amt = price(s, randInt(20, 100)); add(s, { money: amt }); return `The owner cried with relief and gave you a ${fmtMoney(amt)} reward.`; } return 'The owner hugged you and the dog licked your face. Reward enough.'; }],
+    ['Try to keep it', (s) => { add(s, { karma: -2 }); return 'Your parents saw the flyers on every pole and made you call.'; }],
+  ],
+});
+EV('kid_lunch_trade', {
+  ages: [6, 12], emoji: '🥪', when: isStudent, text: 'A kid at lunch wants to trade their cookies for your sandwich.',
+  choices: [
+    ['Trade', (s) => { add(s, { happy: 3, health: -1 }); return 'Four cookies for one sandwich. A great deal, nutritionally questionable.'; }],
+    ['Hold out for more', (s) => { addSkill(s, 'business', 2); return 'You got the cookies AND a juice box. A future in business.'; }],
+    ['Keep your sandwich', () => 'A sandwich in the hand.'],
+  ],
+});
+EV('kid_garden', {
+  ages: [6, 12], emoji: '🌱', text: 'You got a small corner of the yard to plant your own garden.',
+  choices: [
+    ['Grow vegetables', (s) => { addSkill(s, 'cooking', 1); add(s, { health: 1, happy: 3 }); return `You grew one gigantic ${pick(['zucchini', 'tomato', 'pumpkin'])} and made everyone admire it.`; }],
+    ['Grow flowers', (s) => { addSkill(s, 'art', 1); add(s, { happy: 3 }); return 'Sunflowers taller than you. The bees approve.'; }],
+    ['Dig for treasure instead', (s) => { add(s, { happy: 2 }); return chance(0.2) ? 'You found a rusty old coin! Probably worthless. Definitely treasure.' : 'You found a worm named Gary.'; }],
+  ],
+});
+EV('kid_field_day', {
+  ages: [6, 12], emoji: '🥇', when: isStudent, text: "It's field day at school.",
+  choices: [
+    ['Go for the sprint', (s) => { addSkill(s, 'athletics', 2); if (skill(s, 'athletics') + skill(s, 'fitness') + randInt(0, 60) > 60) { add(s, { happy: 6 }); return 'First place ribbon! You wore it for a week.'; } return 'You came in fifth. You were robbed by a kid with longer legs.'; }],
+    ['Dominate the three-legged race', (s) => { relAll(s, K_FRIENDS, 3); add(s, { happy: 4 }); return 'You and your partner fell over spectacularly, then won anyway.'; }],
+    ['Hang out at the snack table', (s) => { add(s, { happy: 3 }); return 'Orange slices are the real prize.'; }],
+  ],
+});
+EV('kid_piggy_bank', {
+  ages: [6, 12], emoji: '🐷', text: 'Your piggy bank is finally full.',
+  choices: [
+    ['Open a savings account', (s) => { const amt = price(s, randInt(20, 120)); add(s, { money: amt, smarts: 1 }); return `The bank teller counted ${fmtMoney(amt)} in coins. She was not thrilled.`; }],
+    ['Spend it all on candy', (s) => { add(s, { happy: 6, health: -1 }); return 'You bought one of everything. Your teeth are worried.'; }],
+  ],
+});
+EV('kid_ghost_story', {
+  ages: [7, 13], emoji: '🔦', text: 'At a sleepover, everyone is telling ghost stories with a flashlight.',
+  choices: [
+    ['Tell the scariest story', (s) => { addSkill(s, 'acting', 2); add(s, { happy: 4 }); return 'Two kids called their parents to go home. You are a legend.'; }],
+    ['Pretend you are not scared', (s) => { add(s, { happy: -1 }); return 'You did not sleep. At all.'; }],
+  ],
+});
+EV('kid_best_friend_moves', {
+  ages: [6, 14], emoji: '📦', ctx: (s) => someone(s, ['bestie', 'friend'], (p) => ageOf(s, p) < 18),
+  text: (s, c) => `${nm(s, c.pid)} is moving to another city.`,
+  choices: [
+    ['Promise to video call every week', (s, c) => { addRel(s, c.pid, 10); add(s, { happy: -3 }); return `You actually do. ${nm(s, c.pid)} is still your best friend.`; }],
+    ['Throw them a goodbye party', (s, c) => { addRel(s, c.pid, 8); add(s, { happy: 2 }); return 'Cake, balloons, and a lot of hugging at the end.'; }],
+  ],
+});
+EV('kid_dentist', { ages: [5, 12], w: 0.6, emoji: '🦷', text: 'You went to the dentist.', auto: (s) => { if (chance(0.4)) { add(s, { happy: -2 }); return 'Two cavities. The dentist gave you a very serious talk about soda.'; } return 'No cavities! You got a sticker and a new toothbrush.'; } });
+EV('baby_peekaboo', { ages: [0, 1], emoji: '🙈', text: 'Someone played peekaboo with you.', auto: (s) => { add(s, { happy: 3 }); return 'You laughed so hard you got the hiccups.'; } });
+EV('baby_teething', { ages: [0, 2], once: true, emoji: '🦷', text: 'Your first tooth is coming in.', auto: (s) => { add(s, { happy: -3 }); relAll(s, ['parent'], -1); return 'Nobody in the house slept for a week. You chewed on everything, including the dog.'; } });
+EV('ms_locker', {
+  ages: [11, 14], once: true, emoji: '🔒', when: isStudent, text: 'You cannot open your new locker, and the bell is about to ring.',
+  choices: [
+    ['Ask an older kid for help', (s) => { const p = meetSomeone(s, 'friend', 50); return { text: `${p.first} popped it open with one smack. You have a hero now.`, person: p.id }; }],
+    ['Carry all your books all day', (s) => { addSkill(s, 'fitness', 1); add(s, { happy: -2 }); return 'Your backpack weighed more than you did.'; }],
+  ],
+});
+EV('ms_first_phone', {
+  ages: [10, 14], once: true, emoji: '📱', when: (s) => relPeople(s, ['parent']).length > 0, text: 'Your parents are finally getting you your own phone.',
+  choices: [
+    ['Promise to use it responsibly', (s) => { relAll(s, ['parent'], 4); add(s, { happy: 6 }); return 'You kept that promise for almost a week.'; }],
+    ['Immediately download every game', (s) => { add(s, { happy: 7, smarts: -1 }); return 'Your thumbs have never been stronger.'; }],
+  ],
+});

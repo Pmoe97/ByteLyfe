@@ -196,6 +196,9 @@ const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).
 const evIds = g('EVENT_IDS');
 const neverFired = evIds.filter((id) => !stats.events[id]);
 const neverRun = ACTION_ORDER.filter((id) => !stats.actionsRun[id]);
+const STORIES = g('STORIES'), SEEN = g('STORY_SEEN');
+const chapters = g('STORY_IDS').flatMap((id) => Object.keys(STORIES[id].chapters).map((ch) => id + ':' + ch));
+const unread = chapters.filter((k) => !SEEN.has(k));
 console.log(`\nByteLyfe sim: ${stats.lives} lives, seed ${SEED}, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 console.log(`Deaths: ${stats.deaths.length} · avg age ${avg(stats.deaths)} · median ${median(stats.deaths)} · max ${stats.maxAge}`);
 console.log(`Net worth at death: median ${median(stats.worth)} · avg ${avg(stats.worth)}`);
@@ -210,6 +213,7 @@ console.log(`Courts (last gen per life): ${courts.filed} lawsuits filed · ${cou
 console.log(`Content tags on: ${TAG_IDS.map((t) => `${t} in ${stats.tagLives[t] || 0} lives`).join(', ')}`);
 console.log(`Events never fired (${neverFired.length}/${evIds.length}): ${neverFired.join(', ') || 'none'}`);
 console.log(`Actions never run (${neverRun.length}/${ACTION_ORDER.length}): ${neverRun.join(', ') || 'none'}`);
+console.log(`Story chapters never reached (${unread.length}/${chapters.length}): ${unread.join(', ') || 'none'}`);
 if (failures) {
   console.log(`\n❌ ${failures} invariant failures. First ${fails.length}:`);
   for (const f of fails) console.log('  - ' + f);

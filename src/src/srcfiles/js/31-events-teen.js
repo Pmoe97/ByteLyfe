@@ -180,3 +180,203 @@ EV('teen_hackathon', {
     ['Skip it', () => 'Maybe next year.'],
   ],
 });
+
+/* ---- more story: teens (13-17) --------------------------------------------- */
+EV('teen_debate', {
+  ages: [13, 17], emoji: '🎙️', when: isStudent, text: 'The debate team needs one more member for the regional tournament.',
+  choices: [
+    ['Join and argue everything', (s) => { addSkill(s, 'charisma', 4); add(s, { smarts: 2 }); if (chance(0.3)) { add(s, { happy: 6 }); return 'Your team took first place. You will not stop bringing it up.'; } return 'You lost in the semifinals, but you now win every argument at dinner.'; }],
+    ['No thanks', () => 'You would rather argue for free, at home.'],
+  ],
+});
+EV('teen_yearbook', { ages: [16, 18], once: true, emoji: '📔', when: isStudent, text: 'The yearbook superlatives are out.', auto: (s) => { add(s, { happy: 3 }); const p = P(s).stats; return `You were voted "${p.looks >= 75 ? 'Best Smile' : p.smarts >= 75 ? 'Most Likely to Succeed' : skill(s, 'acting') >= 30 ? 'Most Dramatic' : M(s).karma >= 70 ? 'Nicest Person' : pick(['Most Likely to Be Late to Their Own Wedding', 'Best Laugh', 'Class Clown', 'Most Likely to Become Famous'])}."`; } });
+EV('teen_volunteer', {
+  ages: [14, 17], emoji: '🏥', text: 'The local hospital is looking for teen volunteers this summer.',
+  choices: [
+    ['Sign up', (s) => { add(s, { karma: 4, smarts: 1 }); return 'You delivered flowers, read to patients and learned where every vending machine is.'; }],
+    ['Spend the summer at the pool', (s) => { add(s, { happy: 4 }); return 'You got a great tan and a mild sunburn.'; }],
+  ],
+});
+EV('teen_skate', {
+  ages: [12, 17], emoji: '🛹', text: 'Your friends are learning skateboard tricks at the skate park.',
+  choices: [
+    ['Try a kickflip', (s) => { addSkill(s, 'athletics', 2); if (chance(0.25)) { getSick(s, chance(0.5) ? 'broken_arm' : 'concussion'); return 'You landed on your face. Then the hospital.'; } add(s, { happy: 5 }); return 'You landed it on the forty-third try. Everyone filmed it.'; }],
+    ['Film them instead', (s) => { addSkill(s, 'art', 2); return 'Your skate video got 2,000 views. You are basically a director.'; }],
+  ],
+});
+EV('teen_hair_dye', {
+  ages: [13, 17], emoji: '💇', text: () => `You really want to dye your hair ${pick(['electric blue', 'bright pink', 'platinum', 'green', 'purple'])}.`,
+  choices: [
+    ['Do it yourself in the bathroom', (s) => { add(s, { happy: 4 }); relAll(s, ['parent'], -3); return chance(0.4) ? 'It came out patchy. The bathtub is permanently stained.' : 'It looks amazing. Your parents need time.'; }],
+    ['Ask your parents first', (s) => { if (parentsAgree(s)) { add(s, { happy: 5, looks: 1 }); return 'They said yes and paid for a salon. Who are these people?'; } return 'They said "absolutely not" before you finished the sentence.'; }],
+  ],
+});
+EV('teen_group_project', {
+  ages: [13, 22], emoji: '📊', when: inSchool, text: 'Your group project is due tomorrow. Nobody else in the group has done anything.',
+  choices: [
+    ['Do the whole thing yourself', (s) => { add(s, { smarts: 2, happy: -4 }); const cur = eduCur(s); if (cur) cur.grades = clamp100(cur.grades + 3); return 'You got an A. Everyone else got an A too. Life is unfair.'; }],
+    ['Tell the teacher', (s) => { relAll(s, ['classmate'], -4); return 'You got your grade. Your group stopped talking to you.'; }],
+    ['Do your part and hope', (s) => { const cur = eduCur(s); if (cur) cur.grades = clamp100(cur.grades - 4); return 'The presentation was mostly silence and one slide.'; }],
+  ],
+});
+EV('teen_group_chat', {
+  ages: [12, 19], emoji: '💬', text: 'Your friend group chat is exploding. Two of your friends are fighting, and both want you on their side.',
+  choices: [
+    ['Stay neutral', (s) => { add(s, { karma: 1 }); return 'You sent one sticker of a cat with sunglasses. It defused nothing.'; }],
+    ['Pick a side', (s) => { const p = pickRel(s, K_FRIENDS); if (p) addRel(s, p, -10); return 'You picked a side. The other side noticed.'; }],
+    ['Mute the chat', (s) => { add(s, { happy: 2 }); return 'Peace. Wonderful peace.'; }],
+  ],
+});
+EV('teen_essay_contest', {
+  ages: [15, 18], emoji: '✍️', when: isStudent, text: 'A local business is offering a scholarship for the best essay about your future.',
+  choices: [
+    ['Write your heart out', (s) => { addSkill(s, 'writing', 4); if (skill(s, 'writing') + P(s).stats.smarts / 2 + randInt(0, 40) > 70) { const amt = price(s, 2000); M(s).trust = (M(s).trust || 0) + amt; add(s, { happy: 8 }); return `You won a ${fmtMoney(amt)} scholarship! It is waiting for you when you turn 18.`; } return 'You got an honorable mention and a nice letter.'; }],
+    ['Too much homework already', () => 'You will write your future later.'],
+  ],
+});
+EV('teen_babysit', {
+  ages: [13, 17], emoji: '🍼', text: 'A neighbor asks if you can babysit their two kids on Saturday night.',
+  choices: [
+    ['Take the job', (s) => { const amt = price(s, randInt(30, 80)); add(s, { money: amt }); return chance(0.3) ? `The kids put a whole roll of toilet paper in the bath. You earned every cent of ${fmtMoney(amt)}.` : `They were angels. Easy ${fmtMoney(amt)}.`; }],
+    ['Say you are busy', () => 'You were not busy.'],
+  ],
+});
+EV('teen_screen_time', {
+  ages: [12, 19], emoji: '📱', text: 'Your phone says you averaged nine hours of screen time a day this week.',
+  choices: [
+    ['Delete the worst apps', (s) => { add(s, { smarts: 1, happy: 2 }); return 'You read an actual book. Then you reinstalled everything.'; }],
+    ['Turn off the screen-time report', (s) => { add(s, { happy: -1 }); return 'Problem solved, technically.'; }],
+  ],
+});
+EV('teen_mentor', {
+  ages: [14, 18], emoji: '🍎', when: isStudent, text: 'A teacher says you have real potential and offers to mentor you after school.',
+  choices: [
+    ['Take them up on it', (s) => { add(s, { smarts: 3, happy: 2 }); const cur = eduCur(s); if (cur) cur.grades = clamp100(cur.grades + 6); return 'Every Tuesday, extra reading and long talks. Your grades climbed.'; }],
+    ['Politely decline', () => 'You have a reputation to keep.'],
+  ],
+});
+EV('teen_run_away', {
+  ages: [13, 17], w: 0.5, emoji: '🎒', when: (s) => relPeople(s, ['parent']).length > 0, text: 'After a huge fight at home, you are thinking about running away.',
+  choices: [
+    ["Spend the night at a friend's house", (s) => { relAll(s, ['parent'], -6); add(s, { happy: -2 }); return 'Your parents called every house in town. The talk the next morning was long.'; }],
+    ['Cool off and talk it out', (s) => { relAll(s, ['parent'], 5); add(s, { karma: 1 }); return 'It was awkward. Then it was okay.'; }],
+  ],
+});
+EV('teen_test', {
+  ages: [15, 18], once: true, emoji: '📝', when: isStudent, text: 'The big college entrance exam is next month.',
+  choices: [
+    ['Study every night', (s) => { add(s, { smarts: 4, happy: -2 }); return `You scored in the top ${pick(['5', '10', '15'])} percent. Your parents told everyone.`; }],
+    ['Take a prep course', (s) => { add(s, { smarts: 3 }); return 'Expensive, boring, effective.'; }],
+    ['Wing it', (s) => { add(s, { smarts: P(s).stats.smarts >= 70 ? 1 : -1 }); return P(s).stats.smarts >= 70 ? 'Somehow you did fine. Do not tell anyone how.' : 'You guessed C on everything. Statistics were not on your side.'; }],
+  ],
+});
+EV('teen_robotics', {
+  ages: [13, 18], emoji: '🤖', when: isStudent, text: 'The robotics club is building a robot for the state competition.',
+  choices: [
+    ['Join the build team', (s) => { addSkill(s, 'coding', 4); add(s, { smarts: 2 }); return chance(0.3) ? 'Your robot won the state title by knocking the other robot off the table.' : 'Your robot drove in a circle for two minutes. Still proud.'; }],
+    ['Not your thing', () => 'You will let the robots win without you.'],
+  ],
+});
+EV('teen_thrift', { ages: [13, 25], emoji: '🧥', text: 'You found a vintage jacket at a thrift store for almost nothing.', auto: (s) => { add(s, { looks: 1, happy: 3 }); return 'People keep asking where you got it. You say "oh, this old thing."'; } });
+EV('teen_class_clown', {
+  ages: [12, 17], emoji: '🤡', when: isStudent, text: 'The teacher turns to write on the board. The perfect moment for a joke.',
+  choices: [
+    ['Crack the joke', (s) => { add(s, { happy: 4 }); relAll(s, ['classmate'], 3); if (chance(0.35)) { const cur = eduCur(s); if (cur) cur.grades = clamp100(cur.grades - 2); return 'The whole class laughed. You got detention. Worth it.'; } return 'The whole class laughed, even the teacher.'; }],
+    ['Save it for lunch', () => 'Comedy is all about timing.'],
+  ],
+});
+EV('teen_bestie_fight', {
+  ages: [12, 19], emoji: '💔', ctx: (s) => someone(s, ['bestie']),
+  text: (s, c) => `You and ${nm(s, c.pid)} got into your worst fight ever.`,
+  choices: [
+    ['Apologize first', (s, c) => { addRel(s, c.pid, 12); add(s, { karma: 1 }); return `${nm(s, c.pid)} apologized right back. You both cried. Friends again.`; }],
+    ['Wait for them to apologize', (s, c) => { addRel(s, c.pid, -10); return 'Three weeks of silence. It is so awkward at lunch.'; }],
+  ],
+});
+EV('teen_concert_trip', {
+  ages: [14, 17], emoji: '🎤', text: 'Your favorite band is playing a city three hours away on a school night.',
+  choices: [
+    ['Ask your parents', (s) => { if (parentsAgree(s)) { add(s, { happy: 10 }); return 'They said yes, as long as they could drive you. Totally worth it.'; } add(s, { happy: -3 }); return 'They said no. You listened to the album very loudly in your room.'; }],
+    ['Sneak out and go', (s) => { add(s, { happy: 8 }); if (chance(0.5)) { relAll(s, ['parent'], -10); return 'Best night of your life, until you got home. Grounded for a month.'; } return 'Best night of your life. Your parents never found out.'; }],
+  ],
+});
+
+/* ---- more story: college (in university or grad school) --------------------------- */
+const inCollege = (s) => inSchool(s) && ['college', 'grad'].includes(eduCur(s).kind);
+EV('col_roommate', {
+  ages: [17, 30], once: true, emoji: '🛏️', when: inCollege, text: () => `Your new roommate ${pick(['keeps a pet snake in the closet', 'wakes up at 4 a.m. to do yoga', 'only eats cereal', 'talks in their sleep about spreadsheets', 'has never done laundry'])}.`,
+  choices: [
+    ['Make it work', (s) => { const p = meetSomeone(s, 'friend', 55); return { text: `You and ${p.first} figured it out. You're actually friends now.`, person: p.id }; }],
+    ['Request a room change', (s) => { add(s, { happy: 2 }); return 'Your new roommate is normal. Disappointingly normal.'; }],
+  ],
+});
+EV('col_all_nighter', {
+  ages: [17, 30], emoji: '☕', when: inCollege, text: 'Finals start tomorrow, and you have not opened the textbook.',
+  choices: [
+    ['Pull an all-nighter', (s) => { const cur = eduCur(s); add(s, { health: -2, smarts: 1 }); if (cur) cur.grades = clamp100(cur.grades + randInt(-2, 6)); return 'Six coffees and a sunrise. You remember about half of it.'; }],
+    ['Sleep and hope for the best', (s) => { const cur = eduCur(s); if (cur) cur.grades = clamp100(cur.grades + randInt(-6, 2)); add(s, { health: 1 }); return 'Well rested and very confused by question four.'; }],
+  ],
+});
+EV('col_party', {
+  ages: [17, 28], emoji: '🎉', when: inCollege, text: 'A legendary campus party is happening tonight.',
+  choices: [
+    ['Go all out', (s) => { add(s, { happy: 6 }); if (A(s) >= country(s).drink) habit(s, 'alcohol', 4); if (chance(0.2)) { const p = meetSomeone(s, 'friend', 60); return { text: `You met ${p.first} on the dance floor. Best friends by sunrise.`, person: p.id }; } return 'You do not remember the end, but people keep thanking you for it.'; }],
+    ['Stop by, then leave early', (s) => { add(s, { happy: 3 }); return 'Two hours, one slice of pizza, a good night.'; }],
+    ['Stay in and study', (s) => { add(s, { smarts: 1 }); return 'The library was empty. It was glorious.'; }],
+  ],
+});
+EV('col_abroad', {
+  ages: [18, 26], once: true, emoji: '🌍', when: (s) => inCollege(s) && eduCur(s).kind === 'college', text: 'You could spend a semester studying abroad.',
+  choices: [
+    { label: 'Go for it', sub: (s) => fmtMoney(price(s, 6000)), fx: (s) => { const c = price(s, 6000); if (!pay(s, c)) return cantAfford(c); tally(s, 'vacations'); add(s, { happy: 10, smarts: 2 }); const cc = pick(COUNTRY_IDS.filter((x) => x !== P(s).country)); return `Four months in ${COUNTRIES[cc].name}. You came home with a new language, sort of.`; } },
+    ['Stay on campus', () => 'Maybe for grad school.'],
+  ],
+});
+EV('col_research', {
+  ages: [19, 30], emoji: '🔬', when: (s) => inCollege(s) && P(s).stats.smarts >= 60, text: 'A professor invites you to be a research assistant in their lab.',
+  choices: [
+    ['Accept', (s) => { add(s, { smarts: 4 }); const cur = eduCur(s); if (cur) cur.grades = clamp100(cur.grades + 4); return chance(0.2) ? 'Your name ended up on a published paper. Third author, but still.' : 'You washed a lot of beakers and learned a lot of science.'; }],
+    ['You need your free time', () => 'The professor said the offer stands.'],
+  ],
+});
+EV('col_ramen', { ages: [18, 28], emoji: '🍜', when: (s) => inCollege(s) && M(s).money < price(s, 2000), text: 'You have eaten instant ramen for every meal this week.', auto: (s) => { add(s, { health: -2 }); addSkill(s, 'cooking', 1); return 'You invented a ramen omelet. It is not good.'; } });
+EV('col_club', {
+  ages: [17, 26], emoji: '🎪', when: inCollege, text: 'It is the student club fair.',
+  choices: [
+    ['Join the outdoors club', (s) => { addSkill(s, 'fitness', 3); const p = meetSomeone(s, 'friend', 55); return { text: `Weekend hikes with ${p.first} and a lot of granola.`, person: p.id }; }],
+    ['Join the improv troupe', (s) => { addSkill(s, 'acting', 4); add(s, { happy: 3 }); return 'Yes, and...'; }],
+    ['Join the investment club', (s) => { addSkill(s, 'business', 4); return 'You pretend-traded a pretend-fortune.'; }],
+    ['Just take the free stuff', (s) => { add(s, { happy: 2 }); return 'Seven pens, four T-shirts and a stress ball shaped like a brain.'; }],
+  ],
+});
+EV('col_spring_break', {
+  ages: [18, 26], emoji: '🌴', when: inCollege, text: 'Your friends are planning a spring break trip.',
+  choices: [
+    { label: 'Go to the beach', sub: (s) => fmtMoney(price(s, 900)), fx: (s) => { const c = price(s, 900); if (!pay(s, c)) return cantAfford(c); tally(s, 'vacations'); add(s, { happy: 9 }); if (chance(0.3)) getSick(s, 'sunburn'); return 'A week of sun, sand and questionable decisions.'; } },
+    ['Go home and see family', (s) => { relAll(s, ['parent', 'sibling'], 6); return 'Home cooking and your old bed. Underrated.'; }],
+    ['Stay and catch up on work', (s) => { const cur = eduCur(s); if (cur) cur.grades = clamp100(cur.grades + 4); return 'An empty campus is very productive.'; }],
+  ],
+});
+EV('col_internship', {
+  ages: [19, 30], emoji: '💼', when: inCollege, text: 'You landed an interview for a summer internship.',
+  choices: [
+    ['Take the internship', (s) => { const pay0 = price(s, randInt(2, 9) * 1000); add(s, { money: pay0, smarts: 1 }); addSkill(s, 'business', 3); return chance(0.3) ? `They paid ${fmtMoney(pay0)} and offered you a job after graduation.` : `You made coffee, learned a lot and earned ${fmtMoney(pay0)}.`; }],
+    ['Spend the summer traveling', (s) => { add(s, { happy: 7 }); tally(s, 'vacations'); return 'You saw five countries on a shoestring.'; }],
+  ],
+});
+EV('col_plagiarism', {
+  ages: [17, 30], emoji: '📄', when: inCollege, text: 'A friend begs to copy your essay for the same class.',
+  choices: [
+    ['Let them', (s) => { add(s, { karma: -2 }); if (chance(0.3)) { const cur = eduCur(s); if (cur) { cur.grades = clamp100(cur.grades - 15); cur.probation = true; } return { text: 'The plagiarism software caught you both. Academic probation.', tone: 'bad' }; } return 'Nobody noticed. You feel weird about it anyway.'; }],
+    ['Help them write their own', (s) => { add(s, { karma: 2, smarts: 1 }); relAll(s, K_FRIENDS, 2); return 'It took all night. Their essay was better than yours.'; }],
+    ['Say no', () => 'They were annoyed for a day.'],
+  ],
+});
+EV('col_student_gov', {
+  ages: [18, 26], emoji: '🗳️', when: inCollege, text: 'Student government elections are coming up.',
+  choices: [
+    ['Run for student president', (s) => { addSkill(s, 'charisma', 4); if (chance(0.3 + skill(s, 'charisma') / 200)) { add(s, { happy: 8, fame: 1 }); return 'You won! Your first act was free coffee during finals.'; } return 'You lost to a guy whose whole platform was a petting zoo.'; }],
+    ['Vote and move on', () => 'Democracy in action.'],
+  ],
+});
+EV('col_tuition_hike', { ages: [18, 30], emoji: '💸', when: (s) => inCollege(s) && eduCur(s).cost > 0, text: 'The university announced a tuition increase.', auto: (s) => { const cur = eduCur(s); cur.cost = Math.round(cur.cost * 1.08); add(s, { happy: -3 }); return `Tuition is now ${fmtMoney(cur.cost)} a year. There was a protest on the quad.`; } });

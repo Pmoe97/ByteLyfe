@@ -45,7 +45,7 @@ function eventWeight(s, ev) { return typeof ev.w === 'function' ? ev.w(s) : (ev.
 
 function rollYearEvents(s) {
   const a = A(s);
-  const n = a < 3 ? (chance(0.6) ? 1 : 0) : 1 + (chance(0.55) ? 1 : 0) + (chance(0.2) ? 1 : 0);
+  const n = a < 3 ? (chance(0.6) ? 1 : 0) : 1 + (chance(0.6) ? 1 : 0) + (chance(0.25) ? 1 : 0);
   const pool = EVENT_IDS.map((id) => EVENTS[id]).filter((ev) => eventEligible(s, ev));
   const used = new Set();
   for (let i = 0; i < n; i++) {

@@ -104,6 +104,9 @@ const ACHIEVEMENTS = [
   { id: 'case_dismissed', name: 'Case Dismissed', emoji: '🛡️', desc: 'Beat a lawsuit someone filed against you.', check: (s) => LC(s, 'suitsBeaten') >= 1 },
   { id: 'order_in_court', name: 'Order in the Court', emoji: '🔨', desc: 'Rule on 25 cases as a judge.', check: (s) => LC(s, 'rulings') >= 25 },
   { id: 'highest_court', name: 'Highest Court in the Land', emoji: '🏛️', desc: 'Be confirmed to the Supreme Court.', check: (s) => LC(s, 'supremeCourt') >= 1 },
+  { id: 'storyteller', name: 'Storyteller', emoji: '📖', desc: 'See five story chains through to the end in one life.', check: (s) => LC(s, 'storiesDone') >= 5 },
+  { id: 'festive', name: 'Festive', emoji: '🎉', desc: 'Celebrate ten holidays in one life.', check: (s) => LC(s, 'holidays') >= 10 },
+  { id: 'marathoner', name: 'Marathoner', emoji: '🏅', desc: 'Finish a marathon.', check: (s) => LC(s, 'marathons') >= 1 },
   { id: 'legal_eagle', name: 'Legal Eagle', emoji: '🦅', desc: 'Win 10 trials for your clients.', check: (s) => LC(s, 'clientWins') >= 10 },
 ];
 
@@ -139,6 +142,7 @@ const GOALS = [
   { id: 'g_ipo', text: 'Take a company public', emoji: '🔔', check: (s) => LC(s, 'ipos') >= 1 },
   { id: 'g_staff', text: 'Employ 50 people at once', emoji: '🏭', check: (s) => sum(companies(s), (c) => headcount(c)) >= 50 },
   { id: 'g_lawsuit', text: 'Win a lawsuit', emoji: '⚖️', check: (s) => LC(s, 'lawsuitsWon') >= 1 },
+  { id: 'g_marathon', text: 'Run a marathon', emoji: '🏃', check: (s) => LC(s, 'marathons') >= 1 },
   { id: 'g_judge', text: 'Become a judge', emoji: '🔨', check: (s) => !!M(s).career && M(s).career.id === 'judge' },
 ];
 
