@@ -108,6 +108,11 @@ const ACHIEVEMENTS = [
   { id: 'festive', name: 'Festive', emoji: '🎉', desc: 'Celebrate ten holidays in one life.', check: (s) => LC(s, 'holidays') >= 10 },
   { id: 'marathoner', name: 'Marathoner', emoji: '🏅', desc: 'Finish a marathon.', check: (s) => LC(s, 'marathons') >= 1 },
   { id: 'legal_eagle', name: 'Legal Eagle', emoji: '🦅', desc: 'Win 10 trials for your clients.', check: (s) => LC(s, 'clientWins') >= 10 },
+  { id: 'stage_parent', name: 'Stage Parent', emoji: '🎬', desc: 'Raise a child star.', check: (s) => LC(s, 'childStar') >= 1 },
+  { id: 'old_school_tie', name: 'Old School Tie', emoji: '🏛️', desc: 'Send a child to boarding school.', check: (s) => LC(s, 'boarding') >= 1 },
+  { id: 'matchmaker', name: 'Matchmaker', emoji: '💑', desc: 'Arrange a marriage for one of your children.', check: (s) => LC(s, 'arranged') >= 1 },
+  { id: 'succession', name: 'Succession', emoji: '🗝️', desc: 'Pass the family business to the heir you named.', check: (s) => LC(s, 'heirBusiness') >= 1 },
+  { id: 'family_way', name: 'Keep It in the Family', emoji: '🕴️', desc: 'Take over the crime family your parent left you.', check: (s) => LC(s, 'mobHeir') >= 1 },
 ];
 
 // Bucket-list goals: three random ones per life.

@@ -616,11 +616,12 @@ onChoice('genderId', (s, ctx, g) => {
 defAction({
   id: 'will', cat: 'legal', label: 'Write your will', emoji: '📜', desc: 'Who gets your money when you die.',
   when: (s) => !s.dead && A(s) >= 18,
-  sub: (s) => ({ equal: 'Split among family', spouse: 'All to my spouse', eldest: 'All to my eldest child', youngest: 'All to my youngest child', charity: 'All to charity' }[M(s).will] || ''),
+  sub: (s) => ({ equal: 'Split among family', spouse: 'All to my spouse', eldest: 'All to my eldest child', youngest: 'All to my youngest child', heir: 'All to my heir', charity: 'All to charity' }[M(s).will] || ''),
   run: (s) => {
     popup(s, {
       emoji: '📜', title: 'Your will', text: 'When you die, your estate goes to...', handler: 'will',
-      choices: [{ label: 'Split among family', value: 'equal' }, { label: 'All to my spouse', value: 'spouse' }, { label: 'All to my eldest child', value: 'eldest' }, { label: 'All to my youngest child', value: 'youngest' }, { label: 'All to charity', value: 'charity' }],
+      choices: [{ label: 'Split among family', value: 'equal' }, { label: 'All to my spouse', value: 'spouse' }, { label: 'All to my eldest child', value: 'eldest' }, { label: 'All to my youngest child', value: 'youngest' }]
+        .concat(namedHeir(s) ? [{ label: `All to my heir, ${namedHeir(s).first}`, value: 'heir' }] : [], [{ label: 'All to charity', value: 'charity' }]),
     });
   },
 });
