@@ -33,7 +33,7 @@ SHEETS.lineage = () => {
   const kids = myChildren(G, { dead: true });
   return {
     title: 'Family line',
-    html: `<div class="list">${rows}${me}</div>
+    html: `<div class="list">${rows}${me}</div><div class="list" style="margin-top:8px">${treeRow()}</div>
       ${kids.length ? `<div class="section-title">Your children</div><div class="list">${kids.map((k) => itemRow({ a: 'sheet', ds: { k: 'person', arg: k.id }, ico: avatarOf(k), round: true, t: esc(fullName(k)), s: k.alive ? `age ${ageOf(G, k)}${npcJobTitle(k) ? ' · ' + esc(npcJobTitle(k)) : ''}` : 'deceased', chev: true })).join('')}</div>` : ''}
       <div class="note">When you die, you can continue the story as one of your children. Their inheritance follows your will (Activities → Identity & Legal).</div>`,
   };

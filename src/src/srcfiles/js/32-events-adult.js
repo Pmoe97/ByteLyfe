@@ -357,7 +357,7 @@ EV('fam_grandkid_visit', { ages: [45, 110], emoji: '🧸', ctx: (s) => someone(s
 EV('fam_reunion', {
   ages: [8, 95], cooldown: 6, emoji: '👨‍👩‍👧‍👦', text: 'Your family is having a big reunion.',
   choices: [
-    ['Go', (s) => { relAll(s, FAMILY_KINDS, 4); add(s, { happy: 3 }); return pick(['Your uncle told the same story four times.', 'The potato salad was legendary.', 'There was a fierce game of touch football.']); }],
+    ['Go', (s) => { const met = ensureRelatives(s); relAll(s, FAMILY_KINDS, 4); add(s, { happy: 3 }); return (met.length ? `You met ${nOf(met.length, 'relative')} you barely knew. ` : '') + pick(['Your uncle told the same story four times.', 'The potato salad was legendary.', 'There was a fierce game of touch football.']); }],
     ['Skip it', (s) => { relAll(s, ['parent', 'grandparent'], -3); return 'You skipped the reunion. Grandma noticed.'; }],
   ],
 });
@@ -681,14 +681,6 @@ EV('fam_report_card', {
     ['Hire a tutor for the bad ones', (s, c) => { const cost = price(s, 400); M(s).money -= cost; s.people[c.pid].stats.smarts = clamp100(s.people[c.pid].stats.smarts + 4); addRel(s, c.pid, -2); return `A ${fmtMoney(cost)} tutor. ${nm(s, c.pid)} is grumbling, and improving.`; }],
   ],
 });
-EV('fam_sibling_wedding', {
-  ages: [18, 80], ctx: (s) => someone(s, ['sibling', 'halfsibling'], (p) => ageOf(s, p) >= 20 && !p.married),
-  emoji: '💒', text: (s, c) => `${nm(s, c.pid)} is getting married and wants you in the wedding party.`,
-  choices: [
-    ['Give a heartfelt speech', (s, c) => { addRel(s, c.pid, 12); addSkill(s, 'charisma', 2); return 'There was not a dry eye in the room. Even the caterers cried.'; }],
-    ['Give an embarrassing speech', (s, c) => { addRel(s, c.pid, -5); add(s, { happy: 3 }); return 'You told the story about the camping trip. Everyone laughed except the bride and groom.'; }],
-  ],
-});
 EV('fam_parent_dating', {
   ages: [18, 70], ctx: (s) => someone(s, ['parent'], (p) => !p.partner), emoji: '💐', text: (s, c) => `${nm(s, c.pid)} has started dating again.`,
   choices: [
@@ -880,9 +872,9 @@ EV('lv_meet_parents', {
   ages: [18, 60], emoji: '☕', when: (s) => hasRomance(s) && !spouseId(s) && free(s), ctx: partnerOf,
   text: (s, c) => `You are meeting ${nm(s, c.pid)}'s parents for the first time.`,
   choices: [
-    ['Bring flowers and compliment everything', (s, c) => { addRel(s, c.pid, 6); return 'Their mother hugged you at the door. Their father shook your hand for a long time.'; }],
-    ['Just be yourself', (s, c) => { if (chance(0.6)) { addRel(s, c.pid, 8); return 'They loved you. You are invited to every holiday now.'; } addRel(s, c.pid, -4); return 'You told the joke. They did not laugh.'; }],
-    ['Talk politics at dinner', (s, c) => { addRel(s, c.pid, -8); return 'Dessert was eaten in total silence.'; }],
+    ['Bring flowers and compliment everything', (s, c) => { flag(s, 'metfam_' + c.pid, true); for (const p of ensureInlaws(s, c.pid)) addRel(s, p.id, 10); addRel(s, c.pid, 6); return 'Their mother hugged you at the door. Their father shook your hand for a long time.'; }],
+    ['Just be yourself', (s, c) => { flag(s, 'metfam_' + c.pid, true); const met = ensureInlaws(s, c.pid); if (chance(0.6)) { for (const p of met) addRel(s, p.id, 12); addRel(s, c.pid, 8); return 'They loved you. You are invited to every holiday now.'; } for (const p of met) addRel(s, p.id, -6); addRel(s, c.pid, -4); return 'You told the joke. They did not laugh.'; }],
+    ['Talk politics at dinner', (s, c) => { flag(s, 'metfam_' + c.pid, true); for (const p of ensureInlaws(s, c.pid)) addRel(s, p.id, -12); addRel(s, c.pid, -8); return 'Dessert was eaten in total silence.'; }],
   ],
 });
 EV('lv_dance_lessons', {

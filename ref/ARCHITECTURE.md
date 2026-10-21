@@ -41,8 +41,9 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `42` | Courts (`42-courts.js`): lawsuits, settlements, trials and appeals, small claims, a judge's docket and appointments, lawyers' clients, courts events | No DOM. `ageUp` reaches `courtTick` through a wrapper. |
 | `43` | Story chains (`43-stories.js`): the `STORY` engine and multi-year stories | No DOM. `ageUp` reaches `storyTick` through a wrapper. Each story's opening is an `EV`. |
 | `44` | Holidays and seasons (`44-holidays.js`): `HOL`, country holidays, climate-aware seasonal events | Event content. |
-| `45–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1012-ui-courts.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `45` | The wider family (`45-family.js`): relatives made on demand, in-laws, family life, family events | No DOM. `ageUp` reaches `familyTick` through a wrapper; `marry`, `endRomance` and `continueAs` call into it at runtime. |
+| `46–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1013-ui-family.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -80,6 +81,17 @@ each line), and shows it next, ahead of anything already queued.
 one option at random (`vary`). Conditions are checked again when the player answers, so an
 event can't act on a job you lost in the meantime.
 
+**The wider family.** `45-family.js`. Relatives are made the first time something looks for
+them, never at birth: `ensureRelatives` (your aunts and uncles, their spouses and kids, your
+nieces and nephews), `ensureInlaws` (a partner's parents and siblings) and `ensureTreeFor` (anyone's
+family tree). `p.kin` marks a person whose parents and siblings have been made, `p.kids` an aunt or
+uncle whose children have. Your relatives join `M(s).rels` as `aunt`, `cousin` and `nibling`;
+in-laws, your siblings' spouses and your children's spouses as `inlaw`, and `kinTitle`
+(`13-people.js`) works out which in-law from the tree ("Future mother-in-law", "Son-in-law").
+Relatives made only for someone else's tree carry `p.tree = <their id>`, and `gcPeople` keeps them
+while it keeps that person. `familyTick` (after `npcTick`) runs siblings', cousins' and nieces' and
+nephews' promotions, weddings, babies and divorces. `continueAs` calls `rebuildExtended`.
+
 **Stories.** `STORY(id, { title, ages, w, when, ctx, chapters })` in `43-stories.js` is a chain of
 events across years. The `start` chapter is registered as an ordinary event (`st_<id>`, once per
 life), so it rolls with the year's events. A choice calls `nextChapter(s, st, 'name', lo, hi)` to
@@ -102,7 +114,7 @@ appears while every one of its tags is switched on in Settings (`META.settings.c
 `META.settings`. The Settings toggle is built from `CONTENT_TAGS`.
 
 **A year (`ageUp`).** Body → pregnancy → school → career → businesses and the market →
-prison → money → assets → fame → the people around you → royalty → the underworld →
+prison → money → assets → fame → the people around you → the wider family → royalty → the underworld →
 show business → sports → courts → pets → milestones → story chapters → random events → new illness → death check. The order
 is in `AGE_PHASES` (`25-ageup.js`).
 
@@ -268,7 +280,7 @@ never fired and actions that never ran, which usually means a `when` that can't 
 
 | Tool | What it does |
 | --- | --- |
-| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36. Prints a balance summary, including businesses and the courts, and lists events that never fired, actions that never ran and story chapters never reached. |
+| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36. Prints a balance summary, including businesses, the courts and the family, and lists events that never fired, actions that never ran and story chapters never reached. |
 | `dev/verify/tags.mjs` | Content tags: every tag in use is in `CONTENT_TAGS` with a Settings default, and the filters hide tagged events, choices and actions (checked on fixture content, so it works before anything is tagged). Prints how much content carries tags. |
 | `dev/verify/sim-business.mjs` | Business balance report (add an industry id as the third argument to run just that one): every industry run 20 years under a sensible owner (who also franchises and buys a small rival when flush) and a hands-off owner. Survival, profit, size, IPO readiness, franchising and acquisitions at years 1/5/10/20. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |
