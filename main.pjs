@@ -1,0 +1,12 @@
+$meta
+  title = ByteLyfe
+  description = A free text-based life simulator. Be born, grow up, fall in love, chase a career, get rich or go broke, and leave a legacy for your kids. No paywalls, no ads, every feature unlocked.
+  tags = life simulator, life sim, text game, simulation, rpg, choices, free game
+  header
+    mode = minimal
+
+kv = {import:kv-plugin}
+fullscreenButton = {import:fullscreen-button-plugin}
+
+// The game lives in the HTML panel (index.html) and the file tree (src/src/srcfiles/).
+// If you add an {import:...} here, add its name to the plugin bridge in index.html too.

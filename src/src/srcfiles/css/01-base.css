@@ -1,0 +1,63 @@
+/* ByteLyfe — base layout. */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background: var(--bg);
+  background-image: var(--bg-grad);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+input, select, textarea {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  width: 100%;
+  outline: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
+svg.av, svg.fig { display: block; flex: none; }
+/* Icons sit in running text too (trait notes, labels), so they are inline. */
+svg.ic { display: inline-block; vertical-align: -0.22em; flex: none; }
+.emo { display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex: none; }
+.emo-label { display: inline-flex; align-items: center; gap: 10px; }
+svg.av.dead { filter: grayscale(1) contrast(0.92) brightness(1.04); }
+
+.app {
+  position: relative;
+  max-width: 560px;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.boot { margin: auto; text-align: center; }
+.boot-logo { font: 800 44px/1 var(--display); letter-spacing: -0.035em; }
+.boot-logo span, .logo span { color: var(--accent-hi); }
+.boot-sub { color: var(--text-dim); margin-top: 8px; }
+
+.scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.muted { color: var(--text-dim); }
+.faint { color: var(--text-faint); }
+.good { color: var(--good-text); }
+.bad { color: var(--bad-text); }
+.center { text-align: center; }
+.row { display: flex; align-items: center; gap: 10px; }
+.grow { flex: 1; min-width: 0; }
+.hide { display: none !important; }
+.ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.display { font-family: var(--display); }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+:root[data-motion="reduce"] * { animation: none !important; transition: none !important; }

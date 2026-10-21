@@ -1,0 +1,261 @@
+# Roadmap
+
+The goal: everything you'd expect from a premium life sim plus its paid expansions,
+in one free generator, with original content throughout. This page tracks what's built and
+what's next. Inspired-by is about *systems*; names, text and events are written fresh.
+
+## Built (v0.1)
+
+**Life & stats.** Random or custom births in 18 countries, birthdays and zodiac signs,
+happiness / health / smarts / looks plus karma and fame (visible, not hidden), 20
+personality traits that change odds, 13 skills, a yearly life log with stat-change chips.
+
+**Family.** Parents (including two moms or two dads), older siblings, grandparents,
+in-laws, step-parents, grandchildren. Inheritance follows your will. When you die you can
+continue as any of your children, across unlimited generations, with a family-line view.
+
+**Relationships.** 30+ interactions (time together, gifts, arguments, pranks, hugs,
+asking for money...). Friends, best friends, enemies, classmates, coworkers, bosses,
+cellmates. Dating (find love, dating app, hookups) with orientation-aware matching and a
+hard teen/adult line. Proposals with ring tiers, four wedding sizes, affairs, cheating,
+breakups, divorce with asset splits. Babies (fertility by age, twins, miscarriage),
+adoption, sexuality and gender identity (he / she / they).
+
+**Pets.** 15 species, horses included: play, walk or ride, vet visits, rehoming, natural
+lifespans.
+
+**School.** Primary, middle and high school with grades, cliques and 12 clubs. Study, skip,
+talk to teachers, report cards, prom, dropping out, GED. University (30 majors), community
+college, trade school (10 trades), and grad school (law, medicine, dental, pharmacy, vet,
+MBA, master's, PhD). Paid for by parents, scholarships, loans or cash. Probation, expulsion,
+honors.
+
+**Careers.** 70+ career ladders across 16 fields, plus interviews, performance, raises,
+promotions, firing, retirement and pensions. Also 14 part-time jobs and 15 side gigs. Special tracks:
+- **Fame:** acting, music, modeling, writing, comedy (big breaks, tours, royalties).
+- **Sports:** pro athlete and fighter (seasons, injuries, fights).
+- **Military:** enlisted and officer ranks, deployments, medals.
+- **Politics:** elections, campaign budgets, re-election, town halls, scandals, bribes.
+
+**Money.** Country tax rates, lifestyle tiers, rent and upkeep. Loans: personal, student,
+mortgage, car, boat. Five investment types, voluntary and forced bankruptcy, trust funds for
+minors, sponsorship income.
+
+**Assets.** 12 home types (buy with cash or a mortgage, move in, rent out, renovate, throw
+parties). Rentals, 13 car classes, boats, aircraft, jewelry, instruments, art. Condition and
+market value change over time; cars can crash.
+
+**Health.** 40+ conditions, including hidden cancers that checkups catch early, plus
+injuries and STIs. Four treatment tiers, near-free care in countries with universal
+healthcare, therapy, plastic surgery, rehab, six addictions, diets, salons.
+
+**Crime.** 11 solo crimes plus assault and murder. Cold cases, trials with four lawyer
+tiers or a plea deal, sentencing, juvenile detention. Prison life: workouts, library, jobs,
+GED, gangs, riots, escapes, appeals, parole hearings. Fugitive status.
+
+**Activities.** Gym, running, meditation, library, reading, yoga, gardening, 12 classes.
+Social life: meeting people, nightlife, parties, concerts, volunteering, movies, theme
+parks, shopping. The lottery, a casino (blackjack, roulette, slots), charity, 12 vacations,
+emigration, driver's license, name changes. Social media: posts, going viral,
+verification, sponsorships. Fan meets and publicity stunts.
+
+**Events.** About 150 random events across every stage of life and in prison.
+
+**Business ownership (v0.2).** Start up to three companies across 22 industries, from food
+trucks and bakeries to tech startups, biotech, hotels and airlines. Medical, dental, law and
+biotech firms need the matching degree. Fund the start with savings, a personally guaranteed
+loan, an angel investor or family.
+- **Running it:** hire five kinds of staff in bulk (with recruiting costs and pay levels),
+  then handle raises, training, perks, layoffs, morale and turnover.
+- **Growing it:** open locations (with market saturation), launch products whose quality
+  depends on your R&D team, budget and skills, and set pricing tiers plus marketing and R&D budgets.
+- **Autopilot hiring** only hires when the forecast says each hire pays for itself. The
+  company sheet shows a projected P&L, how much one more hire would add, and plain-language
+  warnings.
+- **Investors:** funding rounds dilute your stake. Once investors own the majority, two
+  losing years can get you ousted, and you can fight to win your seat back.
+- **Money out:** business loans, your own salary, dividends.
+- **Going public:** IPOs with a ticker and a yearly share price. Sell shares, take buyout
+  offers, shut down, or go bankrupt (and owe what you guaranteed).
+- **Family business:** companies pass whole to your heir, with a trustee until they turn 18.
+- **Extras:** 22 business events (inspections, data breaches, unions, lawsuits, poaching,
+  activist investors, buyouts...), 10 achievements, 3 goals, and a Business Mogul legacy title.
+
+**Business depth.** A living market of 66 named rival companies (three per industry, from
+local shops to industry giants) that grow, shrink, go public and go bankrupt every year, and
+outlast you across generations.
+- **Competition:** each company page ranks you against your rivals by revenue and market
+  share. Rivals show up by name in events: hit launches, scandals, price wars, poaching,
+  stores opening next door. Big rivals make the buyout offers.
+- **Stock market:** buy and sell shares of listed rivals, browse by industry, biggest movers
+  or biggest companies. Prices follow a shared market (with booms and crashes), each
+  company's growth, and what it's really worth. Dividends, 15% tax on gains, and shares
+  that go to zero when a company fails. The index fund now tracks the same market.
+- **Acquisitions:** buy any company outright and run it yourself or keep its CEO, or merge a
+  rival into your company to absorb its locations and staff (paid from company cash, your
+  own money, or a loan). Owning most of a company lets you take over as CEO at any time.
+- **Franchising:** restaurant-style and service businesses (food trucks, cafés, bakeries,
+  restaurants, salons, gyms, real estate, hotels) can franchise once they have 3 locations,
+  reputation 55+ and a profitable year. Pick a 4%, 6% or 9% royalty. Outlets grow with your
+  reputation, and franchisee scandals can hurt the brand.
+- **Extras:** 5 new company events and 4 new achievements (Hostile Takeover, Franchise King,
+  Market Leader, Stock Picker).
+
+**Meta.** 93 achievements kept across lives, three bucket-list goals per life, legacy titles
+and epitaphs, the Hall of Lives, multiple save slots, export/import codes. God Mode (stats,
+money, skills, traits, instant careers and degrees, relationship editing) and a 10-year Time
+Machine, both free. Light/dark themes, text size, reduced motion.
+
+**Content tags.** Events, choices and actions can be tagged `chaos` (absurd and
+supernatural) or `mature` (harder crime and affair content). Each tag has an off-by-default
+switch in Settings, so players who want the game weirder or darker can opt in. So far, four
+toddler hazards are tagged `chaos`, and nothing is tagged `mature`.
+
+**Quick wins.** Petty actions: throw a tantrum to squeeze money out of your parents,
+toilet-paper someone's house, yell at people (detention at school, a write-up at work), spread
+rumors, give the silent treatment, and play ding-dong ditch. Seven toddler hazards where the
+risky choice can end your life early: three slapstick ones (a fork in the socket, climbing
+the fridge, the ceiling fan), plus four `chaos` ones (a glowing marble, single combat with a
+goose, floating off on party balloons, a beehive piñata). A prison economy:
+- **Trading:** a contraband dealer (noodles, candy, hooch, shivs, phones) with resale prices
+  that change every year. Gangs get better prices.
+- **Using your stash:** brew hooch, call home on a smuggled phone, eat or share contraband
+  snacks, and carry a shiv that wins fights.
+- **Risk:** cell searches, a crooked guard, and lockdowns that drive prices up. Getting caught
+  with a phone or a shiv can add a year to your sentence.
+- **Romance:** pen-pal relationships and weddings in the prison chapel.
+
+**Royalty.** Royal families in the United Kingdom, Spain, Sweden and Japan, each with a
+fictional royal house and palace. About 3% of random births there are royal, or pick
+"Royal family" on the custom-life screen. You're born the monarch's child or grandchild,
+somewhere in the line of succession.
+- **Titles and succession:** King or Queen (Emperor or Empress in Japan), Crown Prince or
+  Princess, Prince or Princess, consorts, and former monarchs. Monarchs get regnal numbers
+  (King Emil II), and the crown has a history of earlier reigns. The eldest line inherits
+  regardless of gender. When a monarch dies or abdicates, the crown passes, with a coronation
+  if it's you. With no heirs left, it goes to a distant cousin.
+- **Royal life:** royal engagements, charity patronages, royal tours, addressing the nation,
+  knighting people, a crown-funded royal wedding, a tell-all interview, giving up your title,
+  and abdicating.
+- **Standing:** public approval rises with duties and falls with scandals, idleness or prison.
+  Working royals get a yearly allowance and stay famous. A deeply unpopular monarch can face
+  a referendum that ends the monarchy.
+- **Extras:** 10 royal events (paparazzi, banquet gaffes, falling for a commoner, sibling
+  scandals, affair rumors, clashes with the prime minister, a Silver Jubilee...), 4
+  achievements, and Monarch and Royal legacy titles.
+
+**Organized crime.** A new Underworld menu.
+- **Crime families:** every country has three rival families named after local surnames. Get
+  in with one, and rise from Associate to Soldier, Capo, Underboss and Boss by earning
+  respect. Getting "made" means proving yourself on a dangerous job first. An underboss takes
+  over when the boss falls, or you can stage a coup. You can also break away and found your
+  own family, or walk away (they may never forgive you).
+- **Running things:** family jobs, a crew of soldiers on payroll, rackets that pay every year
+  (protection, gambling dens, chop shops, union kickbacks, smuggling, a casino skim), and turf
+  wars that can wipe out a rival family.
+- **Heists:** a warehouse, an armored truck, a museum masterpiece, a tycoon held for ransom, a
+  casino vault and an airport cargo hold. Go in loud, pay an inside man, or plan for months.
+- **Heat:** everything draws police attention. It cools over time (faster if you lay low or
+  run a museum) and turns into raids and arrests while it's high. Bribe a detective, deal with
+  a rat in your crew, or become an informant yourself, with witness protection if the family
+  finds out.
+- **Underworld careers:** hitman contracts, a loan-shark book with deadbeats to lean on, and
+  dealing from corner dealer up to cartel boss.
+- **Black market:** stolen art and antiquities that gain value over time. Sell them through a
+  fence or risk an auction. Open a private museum as a respectable front. Your collection and
+  loan book count toward net worth.
+- **Street racing:** bet on races in your own car, with crashes, police and challengers.
+- **Extras:** 8 underworld events, 6 achievements (Made, The Don, Kingpin, The Professional,
+  Curator of Crime, Street King) and The Don legacy title.
+
+**Fame depth.** Every fame career now makes named work: albums, books, comedy specials, films
+(new **film director** career), records for other artists (new **music producer** career),
+film and TV roles, and modeling campaigns.
+- **Releasing:** pick a genre (trends shift every year, and sticking with one builds mastery),
+  a budget, and a title. Critics score it, and it charts: the album chart, the bestseller list,
+  the streaming charts, or the box office. Hits earn promotions, and flops cost you fame.
+- **Deals:** record deals, publishers, streaming networks and studios. A major deal has big
+  reach and a small royalty, an indie sits in the middle, and staying independent pays the
+  most if anyone finds you. If you own a record label or film studio from the business
+  system, you can release through it and the money goes to your company. Agents (three tiers)
+  take a cut and open doors.
+- **After release:** a yearly award season at fictional award shows, back-catalog royalties
+  every year (classics keep selling), talk-show appearances, and the press: paparazzi, feuds,
+  dating rumors, leaks, presenting at award shows, superfans, and hosting your own show.
+- **Extras:** 7 events, 6 achievements and the Living Legend legacy title.
+
+**Sports depth.** Pro athletes pick one of six sports (soccer, basketball, American football,
+baseball, hockey, cricket), each with a fictional 12-team league named after your country's
+cities that lives on across generations.
+- **Seasons:** team records, standings, a playoff champion, and stat lines that fit the sport
+  ("17.1 points, 5.5 rebounds and 3.5 assists a game"), plus career totals. Rookie of the
+  Year, All-Star and MVP awards, and championships.
+- **Contracts:** free agency when your contract runs out (re-sign or chase a contender), trade
+  requests, and getting traded in a blockbuster deal.
+- **Fighters:** a weight class, a top-15 ranking, named opponents, training camps, title shots,
+  world title belts and defenses.
+- **Racing driver:** a new career from the Karting Championship through Junior Formula and
+  Formula Two to the Grand Prix World Series, simulated race by race against a 20-car field.
+  Wins, podiums, sponsor bonuses, crashes, faster teams signing you, and world titles.
+- **After your playing days:** new coaching (assistant to championship coach) and front-office
+  (scout to president of operations) careers, where your team's record gets you promoted or
+  fired. Retired pros get coaching offers and can be voted into the Hall of Fame.
+- **Owning a team:** a new Sports Franchise business type you can start (as an expansion team)
+  or buy from the market, with championship seasons of its own.
+- **Extras:** 6 events (endorsements, doping offers, press-conference trash talk, young fans...),
+  7 achievements and The GOAT legacy title.
+
+## Next up
+
+Roughly in priority order. Each one is a self-contained expansion. Many items include the most
+requested features from the BitLife community.
+
+1. **Courts.** Sue people and companies, get sued, and rule on cases as a judge.
+2. **More story.** 400+ events, multi-year story chains, holidays and seasonal events.
+3. **Livelier families.** Siblings' careers and weddings, cousins, aunts, uncles, nieces and
+    nephews, in-laws to win over before the wedding, a family tree diagram, and family trees
+    for friends and spouses. Relatives are created the first time you open them, so saves stay small.
+4. **Parenting.** Choose your kids' schools (public, private, boarding), push them into child
+    acting or music, arrange their marriages, and name an heir to the family business or crime
+    family while you're still alive.
+5. **Relationships 2.0.** Ask a partner to open the relationship, keep secret partners on the
+    side with odds of getting caught, and one-night stands that come back as recurring drama.
+6. **Cities.** A few cities per country, each with its own cost of living, job market and
+    events. Move within a country, pick a neighborhood, and rent from landlords who raise the
+    rent, skip repairs or evict you. The other side too: be a landlord with named tenants, set
+    the rent, handle repairs and evictions.
+7. **Real currencies** per country, with exchange when emigrating.
+8. **Chaos mode** (`chaos` tag). Random events that grant superpowers (laser eyes, flight...),
+    superhero and supervillain careers, ascending as an archangel or a demon lord. Vampire
+    lives: feeding, slow aging, hunters, and turning others.
+9. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
+    A daily challenge with streaks. Every challenge stays available, free.
+10. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
+11. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
+    (collect animals, build exhibits, breeding programs), both on the business engine.
+12. **Military depth.** Wars, desertion, veterans' benefits.
+13. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+    double agents, and getting burned.
+14. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+    dodge defectors, journalists and raids.
+15. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+    bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
+16. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+    stays and things going wrong in orbit.
+17. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+    purges, coups and declared wars. Builds on Royalty and Military depth.
+18. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+    snapshot every few years so saves stay small. A few extra color themes.
+19. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+20. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+
+## Someday
+
+**Historical eras.** Living through the Middle Ages, a revolution or the world wars would mean
+replacing nearly every data table (jobs, prices, assets, events, medicine). That makes it a
+spin-off for the distant future, not an expansion.
+
+## Not planned
+
+Romantic or sexual content between family members, and human trafficking as a crime path.
+Messy family drama that isn't sexual (custody battles, feuds, disownment) is fair game.

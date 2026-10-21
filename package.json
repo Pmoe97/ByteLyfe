@@ -1,0 +1,12 @@
+{
+  "name": "bytelyfe",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Dev tooling for the ByteLyfe Perchance generator (index.html + main.pjs + src/src/srcfiles/). The game itself needs no build step.",
+  "scripts": {
+    "dev": "node local-dev/server.mjs",
+    "verify": "node dev/verify/run-all.mjs",
+    "sim": "node dev/verify/sim-lives.mjs"
+  }
+}

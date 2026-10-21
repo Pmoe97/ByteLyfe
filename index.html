@@ -1,0 +1,102 @@
+<!-- ByteLyfe: Perchance HTML panel.
+     Paste this file into the HTML panel and main.pjs into the lists panel, then upload
+     the src/src folder into the generator's file tree (see README.md).
+     Keep this markup free of square and curly brackets outside script tags:
+     Perchance evaluates them in the HTML panel. Perchance's page shell supplies the
+     viewport meta tag. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Plus+Jakarta+Sans:wght@500..800&display=swap" rel="stylesheet">
+
+<script>
+  /* Theme boot: apply the saved theme before first paint. */
+  (function () {
+    try {
+      var t = localStorage.getItem('bytelyfe:theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+
+<link rel="stylesheet" href="src/src/srcfiles/css/00-tokens.css?v=3">
+<link rel="stylesheet" href="src/src/srcfiles/css/01-base.css?v=4">
+<link rel="stylesheet" href="src/src/srcfiles/css/02-components.css?v=4">
+<link rel="stylesheet" href="src/src/srcfiles/css/03-screens.css?v=4">
+
+<div id="app" class="app">
+  <div class="boot">
+    <div class="boot-logo">Byte<span>Lyfe</span></div>
+    <div class="boot-sub">Loading your life...</div>
+  </div>
+</div>
+<div id="sheet-root"></div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+  /* Perchance plugin bridge. Files loaded from src/ do not get Perchance's bare plugin
+     names, so copy the imports declared in main.pjs from root onto window. Keep this in
+     step with main.pjs. Locally, local-dev/perchance-shim.js has already set root.kv. */
+  (function () {
+    var r = window.root;
+    if (!r) return;
+    try { if (typeof window.kv === 'undefined' && r.kv) window.kv = r.kv; } catch (e) {}
+    try { if (typeof window.fullscreenButton === 'undefined' && r.fullscreenButton) window.fullscreenButton = r.fullscreenButton; } catch (e) {}
+  })();
+</script>
+
+<!-- Engine (pure, no DOM): 00-999. The Node verify harness loads exactly these. -->
+<script src="src/src/srcfiles/js/00-util.js?v=2"></script>
+<script src="src/src/srcfiles/js/01-data-world.js?v=2"></script>
+<script src="src/src/srcfiles/js/02-data-people.js?v=2"></script>
+<script src="src/src/srcfiles/js/03-data-edu.js?v=2"></script>
+<script src="src/src/srcfiles/js/04-data-careers.js?v=4"></script>
+<script src="src/src/srcfiles/js/05-data-assets.js?v=2"></script>
+<script src="src/src/srcfiles/js/06-data-health.js?v=4"></script>
+<script src="src/src/srcfiles/js/07-data-crime.js?v=4"></script>
+<script src="src/src/srcfiles/js/08-data-business.js?v=3"></script>
+<script src="src/src/srcfiles/js/10-state.js?v=3"></script>
+<script src="src/src/srcfiles/js/11-stats.js?v=2"></script>
+<script src="src/src/srcfiles/js/12-flow.js?v=3"></script>
+<script src="src/src/srcfiles/js/13-people.js?v=4"></script>
+<script src="src/src/srcfiles/js/14-school.js?v=2"></script>
+<script src="src/src/srcfiles/js/15-career.js?v=4"></script>
+<script src="src/src/srcfiles/js/16-money.js?v=4"></script>
+<script src="src/src/srcfiles/js/17-assets.js?v=2"></script>
+<script src="src/src/srcfiles/js/18-relationships.js?v=5"></script>
+<script src="src/src/srcfiles/js/19-health.js?v=4"></script>
+<script src="src/src/srcfiles/js/20-crime.js?v=3"></script>
+<script src="src/src/srcfiles/js/21-activities.js?v=6"></script>
+<script src="src/src/srcfiles/js/22-npc.js?v=4"></script>
+<script src="src/src/srcfiles/js/23-events.js?v=3"></script>
+<script src="src/src/srcfiles/js/24-newlife.js?v=4"></script>
+<script src="src/src/srcfiles/js/25-ageup.js?v=7"></script>
+<script src="src/src/srcfiles/js/26-death.js?v=6"></script>
+<script src="src/src/srcfiles/js/27-goals.js?v=7"></script>
+<script src="src/src/srcfiles/js/28-sandbox.js?v=2"></script>
+<script src="src/src/srcfiles/js/29-save.js?v=4"></script>
+<script src="src/src/srcfiles/js/30-events-young.js?v=3"></script>
+<script src="src/src/srcfiles/js/31-events-teen.js?v=3"></script>
+<script src="src/src/srcfiles/js/32-events-adult.js?v=2"></script>
+<script src="src/src/srcfiles/js/33-events-later.js?v=3"></script>
+<script src="src/src/srcfiles/js/34-business.js?v=2"></script>
+<script src="src/src/srcfiles/js/35-events-business.js?v=3"></script>
+<script src="src/src/srcfiles/js/36-looks.js?v=1"></script>
+<script src="src/src/srcfiles/js/37-market.js?v=2"></script>
+<script src="src/src/srcfiles/js/38-royalty.js?v=1"></script>
+<script src="src/src/srcfiles/js/39-underworld.js?v=1"></script>
+<script src="src/src/srcfiles/js/40-fame.js?v=1"></script>
+<script src="src/src/srcfiles/js/41-sports.js?v=1"></script>
+<!-- UI (DOM): 1000+. -->
+<script src="src/src/srcfiles/js/1000-ui-kit.js?v=4"></script>
+<script src="src/src/srcfiles/js/1001-ui-game.js?v=5"></script>
+<script src="src/src/srcfiles/js/1002-ui-menus.js?v=9"></script>
+<script src="src/src/srcfiles/js/1003-ui-people.js?v=5"></script>
+<script src="src/src/srcfiles/js/1004-ui-title.js?v=5"></script>
+<script src="src/src/srcfiles/js/1005-ui-system.js?v=6"></script>
+<script src="src/src/srcfiles/js/1006-ui-business.js?v=3"></script>
+<script src="src/src/srcfiles/js/1007-ui-art.js?v=4"></script>
+<script src="src/src/srcfiles/js/1008-ui-look.js?v=1"></script>
+<script src="src/src/srcfiles/js/1010-ui-fame.js?v=1"></script>
+<script src="src/src/srcfiles/js/1011-ui-sports.js?v=1"></script>
+<script src="src/src/srcfiles/js/1999-boot.js?v=2"></script>

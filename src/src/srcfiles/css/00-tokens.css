@@ -1,0 +1,116 @@
+/* ByteLyfe — design tokens ("Night Market"). Dark is the default look; light via the OS
+   or the in-game setting. Fonts: Bricolage Grotesque for names, ages and money;
+   Plus Jakarta Sans for everything you read. */
+
+/* Windows has no flag emoji. This font covers only the flag code points (unicode-range),
+   so everything else still uses the UI font and the system emoji font. */
+@font-face {
+  font-family: 'Twemoji Country Flags';
+  unicode-range: U+1F1E6-1F1FF, U+1F3F4, U+E0062-E0063, U+E0065, U+E0067, U+E006C, U+E006E, U+E0073-E0074, U+E0077, U+E007F;
+  src: url('https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1.8/dist/TwemojiCountryFlags.woff2') format('woff2');
+  font-display: swap;
+}
+
+:root {
+  --bg: #F5F3FC;
+  --bg-grad: radial-gradient(110% 46% at 50% -10%, rgba(124, 92, 255, 0.16), rgba(124, 92, 255, 0) 70%);
+  --surface: #FFFFFF;
+  --surface-2: #F2EFFB;
+  --surface-3: #E8E3F8;
+  --text: #1A1633;
+  --text-dim: #5A5480;
+  --text-faint: #716B94;
+  --border: #E6E1F5;
+  --line-2: #D6CFEF;
+  --accent: #6C4FF6;
+  --accent-ink: #FFFFFF;
+  --accent-hi: #5A3DE8;
+  --accent-soft: #ECE7FF;
+  --accent-2: #2CCFC0;
+  --good: #22C07F;
+  --good-text: #097A4C;
+  --good-soft: #DDF6EA;
+  --warn: #F5A524;
+  --mid-text: #9A5B00;
+  --bad: #F04866;
+  --bad-text: #CC2547;
+  --bad-soft: #FDE4E9;
+  --bar-track: #ECE8F7;
+  --shadow: 0 1px 2px rgba(40, 20, 90, 0.06), 0 10px 28px rgba(40, 20, 90, 0.09);
+  --shadow-lg: 0 24px 64px rgba(30, 10, 70, 0.28);
+  --overlay: rgba(26, 18, 60, 0.45);
+  --happy: #FFC83D;
+  --health: #FF5E7A;
+  --smarts: #4FA8FF;
+  --looks: #C77DFF;
+  --money: #34D399;
+  --karma: #2CCFC0;
+  --fame: #FFB547;
+  --radius: 22px;
+  --radius-sm: 14px;
+  --display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --font: 'Twemoji Country Flags', 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --fs: 15px;
+  --nav-h: 86px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F0C1E;
+    --bg-grad: radial-gradient(110% 46% at 50% -10%, rgba(124, 92, 255, 0.30), rgba(124, 92, 255, 0) 70%);
+    --surface: #1A1631;
+    --surface-2: #231E3F;
+    --surface-3: #2D2750;
+    --text: #F6F3FF;
+    --text-dim: #B8B1D8;
+    --text-faint: #8D86B0;
+    --border: #2C2649;
+    --line-2: #3B3364;
+    --accent: #6C4FF6;
+    --accent-hi: #A391FF;
+    --accent-soft: #2B2360;
+    --good: #3DDC97;
+    --good-text: #5BE3A6;
+    --good-soft: rgba(61, 220, 151, 0.14);
+    --warn: #FFB547;
+    --mid-text: #FFC56E;
+    --bad: #FF5E7A;
+    --bad-text: #FF8DA1;
+    --bad-soft: rgba(255, 94, 122, 0.15);
+    --bar-track: #2A2448;
+    --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 32px rgba(0, 0, 0, 0.36);
+    --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+    --overlay: rgba(7, 5, 16, 0.66);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F0C1E;
+  --bg-grad: radial-gradient(110% 46% at 50% -10%, rgba(124, 92, 255, 0.30), rgba(124, 92, 255, 0) 70%);
+  --surface: #1A1631;
+  --surface-2: #231E3F;
+  --surface-3: #2D2750;
+  --text: #F6F3FF;
+  --text-dim: #B8B1D8;
+  --text-faint: #8D86B0;
+  --border: #2C2649;
+  --line-2: #3B3364;
+  --accent: #6C4FF6;
+  --accent-hi: #A391FF;
+  --accent-soft: #2B2360;
+  --good: #3DDC97;
+  --good-text: #5BE3A6;
+  --good-soft: rgba(61, 220, 151, 0.14);
+  --warn: #FFB547;
+  --mid-text: #FFC56E;
+  --bad: #FF5E7A;
+  --bad-text: #FF8DA1;
+  --bad-soft: rgba(255, 94, 122, 0.15);
+  --bar-track: #2A2448;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 32px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --overlay: rgba(7, 5, 16, 0.66);
+  color-scheme: dark;
+}
+:root[data-text="small"] { --fs: 13.5px; }
+:root[data-text="large"] { --fs: 17px; }

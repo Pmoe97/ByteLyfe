@@ -1,0 +1,29 @@
+// Runs every headless check:  npm run verify
+//   1. syntax-check every shipped JS file
+//   2. the emoji audit (nothing newer than Emoji 12)
+//   3. content tags (known tags only, filters hide tagged content)
+//   4. the life simulator (300 lives) with its invariant checks
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const JS = path.join(ROOT, 'src', 'src', 'srcfiles', 'js');
+let failed = false;
+const run = (label, args) => {
+  process.stdout.write(`\n▶ ${label}\n`);
+  const r = spawnSync(process.execPath, args, { cwd: ROOT, stdio: 'inherit' });
+  if (r.status !== 0) { failed = true; console.log(`✖ ${label} failed`); }
+};
+
+for (const f of fs.readdirSync(JS).filter((x) => x.endsWith('.js'))) {
+  const r = spawnSync(process.execPath, ['--check', path.join(JS, f)], { encoding: 'utf8' });
+  if (r.status !== 0) { failed = true; console.log(`✖ syntax: ${f}\n${r.stderr}`); }
+}
+console.log('✓ syntax check done');
+run('emoji audit', ['dev/verify/emoji-audit.mjs']);
+run('content tags', ['dev/verify/tags.mjs']);
+run('life simulator', ['dev/verify/sim-lives.mjs', '300', String(Date.now() % 100000)]);
+console.log(failed ? '\n❌ Some checks failed.' : '\n✅ All checks passed.');
+process.exit(failed ? 1 : 0);

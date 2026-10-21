@@ -1,0 +1,117 @@
+/* =====================================================================
+ * 23-events.js — the random-event engine. Content lives in 30-3x files.
+ *
+ * EV(id, {
+ *   ages: [min, max],             player age range
+ *   w: 2 | (s) => number,         weight when eligible (default 1)
+ *   when: (s) => bool,            extra condition
+ *   ctx: (s) => ({ pid }) | null, pick who/what is involved (null = skip); must be JSON
+ *   emoji, title,
+ *   text: 'string with {a|b}' | (s, c) => string,
+ *   choices: [ ['Label', (s, c) => outcome], { label, sub, when, tags, fx } ],
+ *   auto: (s, c) => extra text,   no choices: just happens (logged)
+ *   popup: true,                  show an auto event as a popup too
+ *   tags: ['chaos'],              content tags (see CONTENT_TAGS in 12-flow.js);
+ *                                 on a choice, hides just that choice
+ *   once: true, cooldown: years (default 3), prison: true (only in prison)
+ * })
+ * ===================================================================== */
+
+const EVENTS = {};
+const EVENT_IDS = [];
+function EV(id, def) {
+  def.id = id;
+  EVENTS[id] = def;
+  EVENT_IDS.push(id);
+}
+
+function eventEligible(s, ev) {
+  const a = A(s);
+  if (ev.ages && (a < ev.ages[0] || a > ev.ages[1])) return false;
+  if (!!ev.prison !== inPrison(s)) return false;
+  if (!tagsOn(ev.tags)) return false;
+  const hist = M(s).evHist || (M(s).evHist = {});
+  if (ev.once && hist[ev.id]) return false;
+  if (hist[ev.id] && s.year - hist[ev.id] < (ev.cooldown ?? 3)) return false;
+  try {
+    if (ev.when && !ev.when(s)) return false;
+  } catch (e) {
+    console.error('[ByteLyfe] event when() failed:', ev.id, e);
+    return false;
+  }
+  return true;
+}
+function eventWeight(s, ev) { return typeof ev.w === 'function' ? ev.w(s) : (ev.w ?? 1); }
+
+function rollYearEvents(s) {
+  const a = A(s);
+  const n = a < 3 ? (chance(0.6) ? 1 : 0) : 1 + (chance(0.55) ? 1 : 0) + (chance(0.2) ? 1 : 0);
+  const pool = EVENT_IDS.map((id) => EVENTS[id]).filter((ev) => eventEligible(s, ev));
+  const used = new Set();
+  for (let i = 0; i < n; i++) {
+    const avail = pool.filter((e) => !used.has(e.id));
+    if (!avail.length) break;
+    const ev = weighted(avail, (e) => eventWeight(s, e));
+    if (!ev) break;
+    used.add(ev.id);
+    fireEvent(s, ev);
+    if (s.dead) break;
+  }
+}
+
+function fireEvent(s, ev) {
+  let c = {};
+  if (ev.ctx) {
+    c = ev.ctx(s);
+    if (!c) return false;
+  }
+  if (!M(s).evHist) M(s).evHist = {};
+  M(s).evHist[ev.id] = s.year;
+  const text = vary(typeof ev.text === 'function' ? ev.text(s, c) : ev.text);
+  if (ev.auto) {
+    const before = snapStats(s);
+    const r = ev.auto(s, c);
+    const extra = typeof r === 'string' ? r : (r && r.text) || '';
+    const full = vary((text + (extra ? ' ' + extra : '')).trim());
+    const deltas = diffStats(before, snapStats(s));
+    if (!s.dead || full) log(s, (ev.emoji ? ev.emoji + ' ' : '') + full, (r && r.tone === 'bad') ? 'bad' : (r && r.tone === 'good') ? 'good' : '', deltas);
+    if ((ev.popup || META.settings.autoPopups) && !s.dead) popup(s, { emoji: ev.emoji, title: ev.title || '', text: full, deltas, tone: r && r.tone });
+    return true;
+  }
+  const map = [];
+  const choices = [];
+  ev.choices.forEach((raw, i) => {
+    const o = Array.isArray(raw) ? { label: raw[0], fx: raw[1] } : raw;
+    if (!tagsOn(o.tags)) return;
+    if (o.when && !o.when(s, c)) return;
+    map.push(i);
+    choices.push({
+      label: typeof o.label === 'function' ? o.label(s, c) : o.label,
+      sub: o.sub ? (typeof o.sub === 'function' ? o.sub(s, c) : o.sub) : '',
+      value: map.length - 1,
+      tone: o.tone || '',
+    });
+  });
+  if (!choices.length) return false;
+  popup(s, { emoji: ev.emoji || '', title: ev.title || '', text, handler: 'event', ctx: { ev: ev.id, c, map }, choices, person: c && c.pid ? c.pid : null });
+  return true;
+}
+
+onChoice('event', (s, ctx, idx) => {
+  const ev = EVENTS[ctx.ev];
+  if (!ev) return;
+  const raw = ev.choices[ctx.map[idx]];
+  const o = Array.isArray(raw) ? { label: raw[0], fx: raw[1] } : raw;
+  if (!o || !o.fx) return;
+  // Things may have changed since the event fired (a firing, a breakup, prison...).
+  if (ctx.c && ctx.c.pid && (!s.people[ctx.c.pid] || !s.people[ctx.c.pid].alive)) return { text: 'The moment passed.', quiet: true, nolog: true };
+  if (!!ev.prison !== inPrison(s) || !tagsOn(ev.tags) || !tagsOn(o.tags) || (ev.when && !ev.when(s))) return { text: 'The moment passed.', quiet: true, nolog: true };
+  const r = o.fx(s, ctx.c || {});
+  if (typeof r === 'string') return vary(r);
+  if (r && r.text) r.text = vary(r.text);
+  return r;
+});
+
+// Helpers for event content.
+function someone(s, kinds, filter) { const pid = pickRel(s, kinds, filter); return pid ? { pid } : null; }
+function costChoice(usd) { return { sub: (s) => fmtMoney(price(s, usd)) }; }

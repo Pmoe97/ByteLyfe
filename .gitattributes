@@ -1,0 +1,2 @@
+# Keep LF line endings everywhere (the files are LF, and Perchance uploads them as-is).
+* text=auto eol=lf
