@@ -64,7 +64,7 @@ function epitaphFor(s, titles) {
 }
 
 /* ---- the estate ---------------------------------------------------- */
-// Companies are not split up: they pass whole to the child you continue as.
+// Companies are not split up: they pass whole to your named heir, or else to the child you continue as.
 function estateValue(s) { return Math.max(0, Math.round(netWorth(s) - companiesValue(s))); }
 function heirOptions(s) {
   return myChildren(s).filter((c) => !flag(s, 'disowned_' + c.id)).sort((a, b) => a.birthYear - b.birthYear);
@@ -77,6 +77,8 @@ function estateShares(s) {
   const sp = spouseId(s) && s.people[spouseId(s)] && s.people[spouseId(s)].alive ? spouseId(s) : null;
   const will = M(s).will;
   if (will === 'charity') return shares;
+  const heir = namedHeir(s);
+  if (will === 'heir' && heir) { shares[heir.id] = total; return shares; }
   if (will === 'spouse' && sp) { shares[sp] = total; return shares; }
   if ((will === 'eldest' || will === 'youngest') && kids.length) {
     shares[(will === 'eldest' ? kids[0] : kids[kids.length - 1]).id] = total;
@@ -89,10 +91,13 @@ function estateShares(s) {
 }
 
 /* ---- continue as your child ---------------------------------------- */
+// The heir you named (46-parenting.js) takes over your companies and crime family,
+// whichever child you go on as.
 function continueAs(s, pid) {
   const old = P(s), oldM = M(s);
   const heir = s.people[pid];
   if (!s.dead || !heir || !heir.alive) return false;
+  const named = namedHeir(s);
   const shares = estateShares(s);
   const estate = estateValue(s);
   for (const id in shares) if (id !== pid && s.people[id]) s.people[id].money += shares[id];
@@ -166,7 +171,9 @@ function continueAs(s, pid) {
   for (const k of SKILL_IDS) if (chance(0.3)) m.skills[k] = randInt(0, Math.min(55, age * 2));
   for (const pet of oldPets) pet.owner = pid;
   // The family business passes to the heir. A trustee runs it until they turn 18.
-  const inherited = (oldM.companies || []).filter((c) => !c.closed);
+  const open = (oldM.companies || []).filter((c) => !c.closed);
+  const handed = named && named.id !== pid ? open : [];
+  const inherited = handed.length ? [] : open;
   for (const co of inherited) {
     co.draw = 0;
     co.auto = true;
@@ -176,6 +183,7 @@ function continueAs(s, pid) {
   }
   m.companies = inherited;
   if (inherited.length) tally(s, 'inheritedCompanies', inherited.length);
+  if (inherited.length && named) tally(s, 'heirBusiness');
 
   assignGoals(s);
   s.log = [];
@@ -186,6 +194,10 @@ function continueAs(s, pid) {
   else if (estate > 0) log(s, `📜 ${old.first}'s will left you nothing.`, 'bad');
   if (heir.money > 0 && age >= 18) { m.money += heir.money; heir.money = 0; }
   for (const co of inherited) log(s, `🏢 You inherited ${pctStr(co.equity)} of ${co.name}${co.ceo === 'trustee' ? `. ${co.ceoName} will run it as trustee until you turn 18` : co.ceo === 'hired' ? `, run by ${co.ceoName}` : ''}.`, 'good');
+  if (handed.length) passBusiness(s, handed, named, old.first);
+  // Fame, a trust fund and know-how from childhood; then the crime family (46-parenting.js).
+  childLegacy(s, heir);
+  passMob(s, oldM, heir, named, old);
   // A monarch's death passes the crown, maybe to you (38-royalty.js).
   crownCheck(s);
   afterChange(s);

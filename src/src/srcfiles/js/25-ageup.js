@@ -6,12 +6,12 @@
 
 // businessTick (34-business.js), royalTick (38-royalty.js), uwTick (39-underworld.js),
 // showbizTick (40-fame.js), sportsTick (41-sports.js), courtTick (42-courts.js), storyTick
-// (43-stories.js) and familyTick (45-family.js) live in later files, so they're called through
-// wrappers. royalTick follows npcTick so a monarch
+// (43-stories.js), familyTick (45-family.js), parentingTick (46-parenting.js) and romanceTick
+// (47-romance.js) live in later files, so they're called through wrappers. royalTick follows npcTick so a monarch
 // who died this year is succeeded the same year.
 const AGE_PHASES = [
   bodyTick, pregnancyTick, schoolTick, careerTick, (s) => businessTick(s), prisonTick, financeTick,
-  assetTick, fameTick, npcTick, (s) => familyTick(s), (s) => royalTick(s), (s) => uwTick(s), (s) => showbizTick(s), (s) => sportsTick(s), (s) => courtTick(s), petTick, milestoneTick, (s) => storyTick(s), rollYearEvents, diseaseTick, deathCheck,
+  assetTick, fameTick, npcTick, (s) => familyTick(s), (s) => parentingTick(s), (s) => romanceTick(s), (s) => royalTick(s), (s) => uwTick(s), (s) => showbizTick(s), (s) => sportsTick(s), (s) => courtTick(s), petTick, milestoneTick, (s) => storyTick(s), rollYearEvents, diseaseTick, deathCheck,
 ];
 
 function ageUp(s) {

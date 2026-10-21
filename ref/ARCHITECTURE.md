@@ -42,8 +42,10 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `43` | Story chains (`43-stories.js`): the `STORY` engine and multi-year stories | No DOM. `ageUp` reaches `storyTick` through a wrapper. Each story's opening is an `EV`. |
 | `44` | Holidays and seasons (`44-holidays.js`): `HOL`, country holidays, climate-aware seasonal events | Event content. |
 | `45` | The wider family (`45-family.js`): relatives made on demand, in-laws, family life, family events | No DOM. `ageUp` reaches `familyTick` through a wrapper; `marry`, `endRomance` and `continueAs` call into it at runtime. |
+| `46` | Parenting (`46-parenting.js`): kids' schools, child acting and music, homework and discipline, arranged marriages, heirs and grooming, parenting events | No DOM. `ageUp` reaches `parentingTick` through a wrapper; `continueAs`, `estateShares` and the will call into it at runtime. |
+| `47` | Relationships 2.0 (`47-romance.js`): open relationships, affairs that can be found out, flings who come back, romance events | No DOM. `ageUp` reaches `romanceTick` through a wrapper; `startRomance`, the hookup action and `npcTick` call into it at runtime. |
 | `46–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1013-ui-family.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `1000+` | UI (`1000-ui-kit.js` … `1015-ui-romance.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -91,6 +93,30 @@ in-laws, your siblings' spouses and your children's spouses as `inlaw`, and `kin
 Relatives made only for someone else's tree carry `p.tree = <their id>`, and `gcPeople` keeps them
 while it keeps that person. `familyTick` (after `npcTick`) runs siblings', cousins' and nieces' and
 nephews' promotions, weddings, babies and divorces. `continueAs` calls `rebuildExtended`.
+
+**Parenting.** `46-parenting.js`. Choices are stored on the child: `p.school = { kind, name, paid, free }`
+(private, boarding or homeschool, ages 5 to 17; no `p.school` means public), `p.stage` (a child
+performer's fame, earnings, trust and where the pay goes), `p.groom` and `p.mobGroom` (years learning
+the business or the family trade) and `p.arranged`. At boarding school `p.flags.awayFromYou` is set,
+and `dependents` (`16-money.js`) skips them. `M(s).heir` is the named heir. `parentingTick` (right
+after `familyTick`) asks where a four-year-old will go to school, charges tuition onto this year's
+finance sheet, runs gigs and burnout, and drops an heir who has died. Parenting actions are ordinary
+person actions with `group: 'parent'`, and the person sheet lists them under Parenting. In
+`continueAs`, the named heir takes the companies even when you continue as another child
+(`passBusiness`, which turns them into market rivals with `companyToFirm`). A crime family goes to the
+heir or to an underboss (`passMob`; if you are the heir, a popup asks first). `childLegacy` carries
+fame, a trust fund, skills and the school into the new life.
+
+**Relationships 2.0.** `47-romance.js`. `M(s).open = { pid, since, by, jealous }` marks an open
+relationship; `openWith(s, pid)` is true only while pid is still your partner, so a breakup ends it
+without any cleanup. A lover's relationship record carries the affair: `sus` (how suspicious your
+partner is, which sets the yearly odds of getting caught), `known` (your partner knows, because you
+were open), and `hid` (when it became a secret). `startRomance` hands a second romance to
+`affairBegins`, `npcTick` runs `affairYear` for each lover, and the hookup action keeps the person as a
+`fling` (`makeFling`: the year you met, and the partner you cheated on, if any). Partner cheating
+events in `npcTick` skip an open relationship. `romanceTick` (after `parentingTick`) builds jealousy in
+open relationships and lets old flings fade. Romance actions, old and new, carry `group: 'romance'`,
+and the person sheet lists them under Romance.
 
 **Stories.** `STORY(id, { title, ages, w, when, ctx, chapters })` in `43-stories.js` is a chain of
 events across years. The `start` chapter is registered as an ordinary event (`st_<id>`, once per

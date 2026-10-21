@@ -17,7 +17,7 @@ function npcCause(age) {
   return pick(['old age', 'old age', 'heart failure', 'pneumonia', 'a stroke', 'natural causes']);
 }
 
-const REL_DECAY = { parent: 2, stepparent: 3, sibling: 3, halfsibling: 3, child: 2, grandparent: 3, grandchild: 3, partner: 5, fiance: 4, spouse: 4, lover: 6, friend: 6, bestie: 4, enemy: 0, classmate: 4, coworker: 4, boss: 3, ex: 3, exspouse: 2, cellmate: 4, inlaw: 3, aunt: 3, cousin: 4, nibling: 3 };
+const REL_DECAY = { parent: 2, stepparent: 3, sibling: 3, halfsibling: 3, child: 2, grandparent: 3, grandchild: 3, partner: 5, fiance: 4, spouse: 4, lover: 6, friend: 6, bestie: 4, enemy: 0, classmate: 4, coworker: 4, boss: 3, ex: 3, exspouse: 2, cellmate: 4, inlaw: 3, aunt: 3, cousin: 4, nibling: 3, fling: 3 };
 
 function npcTick(s) {
   const m = M(s);
@@ -57,7 +57,7 @@ function npcTick(s) {
           announce(s, { emoji: '💔', title: 'Dumped', text: `${p.first} broke up with you${r.kind === 'fiance' ? ' and called off the engagement' : ''}.`, tone: 'bad', person: pid });
         } else if (r.kind === 'partner' && r.rel >= 75 && s.year - r.since >= 2 && age >= 18 && A(s) >= 18 && chance(0.18)) {
           popup(s, { emoji: '💍', title: 'A proposal!', text: `${p.first} got down on one knee and asked you to marry them!`, handler: 'theyPropose', ctx: { pid }, person: pid, choices: [{ label: 'Say yes!', value: true }, { label: 'Say no', value: false }] });
-        } else if (r.rel < 35 && chance(0.06)) {
+        } else if (r.rel < 35 && !openWith(s, pid) && chance(0.06)) {
           popup(s, { emoji: '😱', title: 'Caught cheating', text: `You found out ${p.first} has been cheating on you.`, handler: 'cheated', ctx: { pid }, person: pid, tone: 'bad', choices: [{ label: 'Forgive them', value: 'forgive' }, { label: 'Break up', value: 'leave' }] });
         }
         break;
@@ -65,27 +65,14 @@ function npcTick(s) {
         if (r.rel < 12 && chance(0.3)) {
           const res = divorce(s, pid, false);
           announce(s, { emoji: '📝', title: 'Divorce', text: `${p.first} filed for divorce. ${res.text}`, tone: 'bad', log: `📝 ${p.first} divorced you.` });
-        } else if (r.rel < 30 && chance(0.05)) {
+        } else if (r.rel < 30 && !openWith(s, pid) && chance(0.05)) {
           popup(s, { emoji: '😱', title: 'Caught cheating', text: `You discovered your ${kinLabel('spouse', p).toLowerCase()} ${p.first} has been having an affair.`, handler: 'cheated', ctx: { pid }, person: pid, tone: 'bad', choices: [{ label: 'Forgive them', value: 'forgive' }, { label: 'File for divorce', value: 'leave' }] });
         }
         break;
-      case 'lover': {
-        const rom = romanticId(s);
-        if (rom && rom !== pid && chance(0.22)) {
-          addRel(s, rom, -40);
-          const rp = s.people[rom];
-          if (relKind(s, rom) === 'spouse' && relOf(s, rom).rel < 30) {
-            divorce(s, rom, false);
-            announce(s, { emoji: '💥', title: 'Busted', text: `${rp.first} found out about your affair with ${p.first} and divorced you.`, tone: 'bad' });
-          } else if (relOf(s, rom).rel < 30) {
-            endRomance(s, rom, 'ex');
-            announce(s, { emoji: '💥', title: 'Busted', text: `${rp.first} found out about your affair with ${p.first} and dumped you.`, tone: 'bad' });
-          } else {
-            announce(s, { emoji: '💥', title: 'Busted', text: `${rp.first} found out about your affair with ${p.first}. Things are very tense at home.`, tone: 'bad' });
-          }
-        }
+      case 'lover':
+        // A secret affair gets harder to hide every year (47-romance.js).
+        affairYear(s, pid);
         break;
-      }
       case 'child':
         if (age >= 22 && age <= 42 && chance(0.07) && p.children.length < 4) {
           const g = chance(0.5) ? 'm' : 'f';

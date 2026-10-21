@@ -104,9 +104,10 @@ SCREENS.death = () => {
     </section>
     ${ach.length ? `<div class="section-title" style="margin-bottom:0">Achievements this life</div><div class="chips">${ach.map((a) => `<span class="chip">${emo(a.emoji, 18)}${esc(a.name)}</span>`).join('')}</div>` : ''}
     <div class="section-title" style="margin-bottom:0">Continue the family line · generation ${rec.gen + 1}</div>
+    ${heirs.length ? heirNote() : ''}
     ${heirs.length ? `<div class="list">${heirs.map((h) => itemRow({
       a: 'heir', ds: { id: h.id }, ico: avatarOf(h, 52), round: true, cls: 'heir-row',
-      t: esc(fullName(h)), s: `${kinLabel('child', h)} · age ${ageOf(G, h)}${npcJobTitle(h) ? ' · ' + esc(npcJobTitle(h)) : ''}`,
+      t: esc(fullName(h)), s: `${kinLabel('child', h)} · age ${ageOf(G, h)}${npcJobTitle(h) ? ' · ' + esc(npcJobTitle(h)) : ''}${heirBadge(h)}`,
       end: shares[h.id] ? `<span class="faint" style="display:block;font-size:0.8em">Inherits</span>${fmtMoneyShort(shares[h.id])}` : '', chev: true,
     })).join('')}</div>` : '<div class="note">No living children to continue as.</div>'}
     <div class="title-actions" style="margin-top:6px">

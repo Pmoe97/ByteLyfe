@@ -72,12 +72,16 @@ SHEETS.person = (pid) => {
     ${p.alive ? `<div class="rel-bar"><div class="muted">Relationship · ${Math.round(r.rel)}%</div>${bar(r.rel)}</div>
     <div class="mini-stats">${statCell('health', p.stats.health)}${statCell('smarts', p.stats.smarts)}${statCell('looks', p.stats.looks)}${statCell('happy', p.stats.happy)}</div>` : ''}
     ${traits ? `<div class="chips" style="justify-content:center;margin-top:10px">${traits}</div>` : ''}
+    ${kidFacts(p)}${romanceFacts(p)}
   </div>`;
   const body = bodyCard(p, false);
   const sb = META.settings.sandbox && p.alive ? `<div class="section-title">Sandbox</div><div class="card"><div class="slider-row"><span>Relationship</span><input type="range" min="0" max="100" value="${r.rel}" data-in="sbRel" data-id="${pid}"><b id="sbRelV">${r.rel}</b></div></div>` : '';
-  const acts = actionRows('person', pid);
+  // Parenting (46-parenting.js) and romance (47-romance.js) get their own sections.
+  const acts = actionRows('person', pid, (a) => !a.group);
+  const parenting = actionRows('person', pid, (a) => a.group === 'parent');
+  const romance = actionRows('person', pid, (a) => a.group === 'romance');
   const tree = `<div class="list" style="margin-top:12px">${itemRow({ a: 'sheet', ds: { k: 'tree', arg: pid }, ico: '🌳', t: `${esc(p.first)}'s family tree`, chev: true })}</div>`;
-  return { title: fullName(p), html: card + tree + (body ? `<div class="section-title">Appearance</div>${body}` : '') + sb + (acts ? `<div class="section-title">Interact</div>${listOf(acts)}` : (p.alive ? '<div class="note">You can’t interact right now.</div>' : '')) };
+  return { title: fullName(p), html: card + tree + (body ? `<div class="section-title">Appearance</div>${body}` : '') + sb + (parenting ? `<div class="section-title">Parenting</div>${listOf(parenting)}` : '') + (romance ? `<div class="section-title">Romance</div>${listOf(romance)}` : '') + (acts ? `<div class="section-title">Interact</div>${listOf(acts)}` : (p.alive ? '<div class="note">You can’t interact right now.</div>' : '')) };
 };
 INPUT.sbRel = (el, ds) => { Sandbox.setRel(G, ds.id, Number(el.value)); const v = $('#sbRelV'); if (v) v.textContent = el.value; scheduleSave(); };
 
