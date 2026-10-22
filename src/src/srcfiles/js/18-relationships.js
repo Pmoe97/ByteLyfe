@@ -217,6 +217,7 @@ defAction({
       eduCur(s).grades = clamp100(eduCur(s).grades - 3);
       relAll(s, ['parent'], -2);
       addRel(s, pid, -randInt(4, 9));
+      schoolTrouble(s, 'detention', 'yelling at a classmate'); // 55-school-life.js
       return `You yelled at ${p.first} for ${over}. A teacher heard every word. Detention.`;
     }
     if (kind === 'boss' && M(s).career) {

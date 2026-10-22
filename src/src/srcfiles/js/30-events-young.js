@@ -331,7 +331,7 @@ EV('kid_window', {
   ages: [6, 13], emoji: '💥', text: "You broke the neighbor's window playing ball.",
   choices: [
     ['Confess', (s) => { add(s, { karma: 3 }); relAll(s, ['parent'], -2); return 'You confessed. Your parents paid for it, but they were proud you told the truth.'; }],
-    ['Run away', (s) => { add(s, { karma: -3 }); if (chance(0.35)) { relAll(s, ['parent'], -8); return 'The neighbor saw you. Your parents grounded you for a month.'; } return 'You got away with it. The guilt lingers.'; }],
+    ['Run away', (s) => { add(s, { karma: -3 }); if (chance(0.35)) { relAll(s, ['parent'], -8); groundFor(s, 'running off', true); return 'The neighbor saw you. Your parents were waiting at the door.'; } return 'You got away with it. The guilt lingers.'; }],
     { label: 'Blame your sibling', when: (s) => relPeople(s, ['sibling']).length > 0, fx: (s) => { const sib = pickRel(s, ['sibling']); addRel(s, sib, -12); add(s, { karma: -4 }); return `You blamed ${nm(s, sib)}. They got in trouble. They know it was you.`; } },
   ],
 });
@@ -390,16 +390,6 @@ EV('kid_secret', {
     ['Use it as blackmail', (s, c) => { addRel(s, c.pid, -8); add(s, { karma: -3, happy: 2 }); return `${nm(s, c.pid)} has been doing your chores for weeks.`; }],
   ],
 });
-EV('kid_report', {
-  ages: [6, 17], w: 1.5, when: isStudent, emoji: '📋', text: 'Report cards came home today.',
-  auto: (s) => {
-    const g = eduCur(s).grades;
-    const letter = g >= 90 ? 'straight As' : g >= 75 ? 'mostly Bs' : g >= 60 ? 'mostly Cs' : g >= 45 ? 'a few Ds' : 'an F or two';
-    if (g >= 75) { relAll(s, ['parent'], 3); add(s, { happy: 2 }); return `You got ${letter}. Your parents put it on the fridge.`; }
-    if (g < 50) { relAll(s, ['parent'], -4); add(s, { happy: -3 }); return `You got ${letter}. Your parents were disappointed.`; }
-    return `You got ${letter}.`;
-  },
-});
 EV('kid_snowday', { ages: [5, 15], when: isStudent, emoji: '❄️', text: 'School was canceled for a snow day!', auto: (s) => { add(s, { happy: 4 }); return vary('You built {a snowman|an epic snow fort|a snow dragon} and had {a snowball fight|hot cocoa|the best day ever}.'); } });
 EV('kid_petwish', {
   ages: [6, 13], when: (s) => !myPets(s).length, emoji: '🐶', text: 'You really, really want a pet.',
@@ -436,11 +426,18 @@ EV('kid_instrument', {
     ['Piano', (s) => instrumentPick(s, 'piano')],
     ['Guitar', (s) => instrumentPick(s, 'guitar')],
     ['Violin', (s) => instrumentPick(s, 'violin')],
-    ['Drums', (s) => { relAll(s, ['parent'], -2); return instrumentPick(s, 'drums') + ' Your parents regret this.'; }],
+    ['Drums', (s) => { relAll(s, ['parent'], -2); const r = instrumentPick(s, 'drums'); r.text += ' Your parents regret this.'; return r; }],
     ['Absolutely not', () => 'Your musical career is over before it began.'],
   ],
 });
-function instrumentPick(s, name) { addSkill(s, 'music', randFloat(4, 8)); return `You started ${name} lessons. ${skill(s, 'music') > 20 ? 'You are a natural.' : 'It sounds like a cat in a blender, but you are improving.'}`; }
+// Your parents sign you up and pay for the first year of real lessons (57-lessons.js), if they can.
+function instrumentPick(s, name) {
+  addSkill(s, 'music', randFloat(4, 8));
+  const fee = lessonFee(s, name), p = myParents(s).sort((a, b) => b.money - a.money)[0];
+  const how = skill(s, 'music') > 20 ? 'You are a natural.' : 'It sounds like a cat in a blender, but you are improving.';
+  if (p && p.money >= fee && activeLessons(s).length < MAX_LESSONS && !(lessonsOf(s)[name] && lessonsOf(s)[name].on)) { p.money -= fee; const r = enrollLesson(s, name); return { text: `${r.text} ${how}`, person: r.person }; }
+  return { text: `You started ${name} lessons. ${how}` };
+}
 EV('kid_haunted', {
   ages: [7, 14], emoji: '🏚️', text: 'The kids at school say the old house at the end of the street is haunted.',
   choices: [
@@ -545,7 +542,7 @@ EV('kid_board_game', {
 EV('kid_class_president', {
   ages: [8, 12], emoji: '🗳️', when: isStudent, text: 'Your class is electing a class president.',
   choices: [
-    ['Run and promise longer recess', (s) => { addSkill(s, 'charisma', 2); if (chance(0.35 + skill(s, 'charisma') / 200)) { add(s, { happy: 8 }); return 'You won in a landslide. Recess stayed exactly the same length.'; } add(s, { happy: -3 }); return 'You lost to the kid who promised a class pizza party.'; }],
+    ['Run and promise longer recess', (s) => { addSkill(s, 'charisma', 2); if (chance(0.25 + skill(s, 'charisma') / 200 + (schoolCur(s) ? schoolCur(s).pop / 300 : 0))) { add(s, { happy: 8 }); addPop(s, 3); return 'You won in a landslide. Recess stayed exactly the same length.'; } add(s, { happy: -3 }); return 'You lost to the kid who promised a class pizza party.'; }],
     ["Run your best friend's campaign", (s) => { addSkill(s, 'charisma', 2); relAll(s, K_FRIENDS, 5); return 'Your posters were the best in school.'; }],
     ['Stay out of politics', () => 'A wise choice at any age.'],
   ],
@@ -554,7 +551,7 @@ EV('kid_sibling_blame', {
   ages: [5, 14], emoji: '🏺', ctx: (s) => someone(s, ['sibling', 'halfsibling'], (p) => ageOf(s, p) < 18),
   text: (s, c) => `${nm(s, c.pid)} broke your parents' favorite vase. Your parents want to know who did it.`,
   choices: [
-    ['Take the blame', (s, c) => { addRel(s, c.pid, 15); add(s, { karma: 3 }); relAll(s, ['parent'], -2); return `You got grounded. ${nm(s, c.pid)} owes you forever.`; }],
+    ['Take the blame', (s, c) => { addRel(s, c.pid, 15); add(s, { karma: 3 }); relAll(s, ['parent'], -2); groundFor(s, 'something you didn’t do', true); return `You got grounded. ${nm(s, c.pid)} owes you forever.`; }],
     ['Tell the truth', (s, c) => { addRel(s, c.pid, -8); relAll(s, ['parent'], 2); return `${nm(s, c.pid)} got grounded and called you a snitch.`; }],
     ['Blame the dog', (s) => { add(s, { karma: -2 }); return 'The dog looked betrayed.'; }],
   ],

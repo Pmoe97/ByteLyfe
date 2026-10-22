@@ -27,7 +27,8 @@ SHEETS.actcat = (cat) => {
   const chaos = cat === 'super' ? chaosCard() : ''; // 1019-ui-chaos.js
   const gambling = cat === 'gamble' ? gambleCard() : ''; // 1021-ui-gambling.js
   const house = cat === 'turf' ? houseCard() : ''; // 1022-ui-house.js
-  return { title: c ? c.name : 'Activities', html: look + royal + mob + courts + chaos + gambling + house + listOf(actionRows(cat), 'Nothing available right now.') };
+  const home = cat === 'parents' ? homeCard() : cat === 'learn' ? lessonsCard() : ''; // 1023-ui-youth.js
+  return { title: c ? c.name : 'Activities', html: look + royal + mob + courts + chaos + gambling + house + home + listOf(actionRows(cat), 'Nothing available right now.') };
 };
 // The Underworld opens with your standing: family, rank, heat and everything you run (39-underworld.js).
 function underworldCard() {
@@ -99,7 +100,7 @@ SHEETS.work = () => {
       ${cur.clubs && cur.clubs.length ? kvRow('Activities', cur.clubs.map((c) => emo(SCHOOL_CLUBS[c].emoji, 18) + ' ' + esc(SCHOOL_CLUBS[c].name)).join(', ')) : ''}
       ${cur.funding && cur.cost ? kvRow('Tuition', fmtMoney(cur.cost) + '/yr · ' + ({ parents: 'parents', scholarship: 'scholarship', loan: 'student loans', cash: 'you', free: 'free' }[cur.funding] || '')) : ''}
       ${cur.probation ? '<div class="note bad">⚠️ Academic probation</div>' : ''}
-    </div>${listOf(actionRows('school'))}`;
+    </div>${schoolLifeHtml(cur)}<div class="section-title">What will you do?</div>${listOf(actionRows('school'))}`;
   }
   if (m.career) {
     const c = m.career, j = JOBS[c.id];

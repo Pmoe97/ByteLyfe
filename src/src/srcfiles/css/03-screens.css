@@ -187,3 +187,5 @@ button.tnode:hover { background: var(--surface-2); }
 .race-wrap svg { display: block; width: 100%; height: auto; }
 .race-call { margin: 10px 2px 8px; min-height: 1.4em; font-weight: 800; font-size: 1.05em; color: var(--text); text-align: center; }
 .race-board .kv b { font-weight: 700; }
+/* Progress toward a named next step (club ranks, lesson levels: 1023-ui-youth.js). */
+.meter.next b { width: auto; min-width: 34px; white-space: nowrap; font-weight: 700; }

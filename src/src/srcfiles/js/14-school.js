@@ -3,7 +3,9 @@
  *
  * M(s).edu = { degrees: [{ type, major, year, gpa, honors }], current, dropouts }
  * current = { kind: 'school'|'college'|'grad', stage|type|prog, major, year,
- *             years, grades, name, funding, cost, clique, clubs, probation }
+ *             years, grades, name, funding, cost, clique, clubs, probation, tier }
+ * School life on top of this (teachers, the report card, popularity, the school
+ * record, bullies, club seasons, college applications) is in 55-school-life.js.
  * ===================================================================== */
 
 const SCHOOL_ROOTS = ['Lincoln', 'Riverside', 'Oakwood', 'Westfield', 'Hillcrest', 'Maplewood', 'Northgate', 'Sunnyvale', 'Greenfield', 'Kingsbridge', 'Lakeview', 'Brookside', 'Cedar Park', 'Fairmont', 'Ashford', 'Pinecrest', 'St. Clair', 'Highland'];
@@ -53,6 +55,7 @@ function enrollSchool(s, stage) {
   };
   clearKind(s, 'classmate');
   makeClassmates(s, randInt(4, 7));
+  startSchoolLife(s, prev); // 55-school-life.js
   log(s, `${st.emoji} You started ${st.name} at ${name}.`);
 }
 
@@ -69,6 +72,7 @@ function schoolTick(s) {
   if (trait(s, 'ambitious')) target += 4;
   if (cur.clique === 'brains') target += 4;
   if (cur.clique === 'rebels') target -= 5;
+  if (cur.kind === 'school') target += schoolPull(s, cur);
   cur.grades = clamp100(cur.grades + (target - cur.grades) * 0.25 + randInt(-6, 6));
   for (const c of cur.clubs || []) {
     const club = SCHOOL_CLUBS[c];
@@ -79,6 +83,9 @@ function schoolTick(s) {
   }
   if (cur.kind === 'school') add(s, { smarts: randInt(0, 3) });
   else add(s, { smarts: randInt(1, 3) });
+  // The year's report card, club seasons, popularity and bullies (55-school-life.js).
+  if (cur.kind === 'school') { schoolYearLife(s, cur); if (M(s).edu.current !== cur) return; }
+  else { const budget = { n: 1 }; for (const id of (cur.clubs || []).slice()) clubSeason(s, cur, id, budget); }
 
   if (cur.kind !== 'school') {
     // College / grad: collect a stipend; flunking twice in a row gets you expelled.
@@ -99,6 +106,7 @@ function schoolTick(s) {
   cur.year++;
   if (cur.year <= cur.years) {
     if (cur.kind !== 'school') chargeTuition(s, cur); // tuition for the year that just started
+    else newTeacher(s, cur);
     return;
   }
   graduate(s, cur);
@@ -121,9 +129,11 @@ function graduate(s, cur) {
       return;
     }
     const honors = cur.grades >= 90;
+    highSchoolFinale(s, cur); // valedictorian, and college decisions
     e.degrees.push({ type: 'high', year: s.year, gpa: cur.grades, honors });
     e.current = null;
     clearKind(s, 'classmate');
+    endSchoolLife(s);
     tally(s, 'graduations');
     add(s, { happy: 8 });
     popup(s, {
@@ -137,7 +147,7 @@ function graduate(s, cur) {
   // College / grad.
   const type = cur.kind === 'college' ? COLLEGES[cur.type].degree : GRAD_PROGRAMS[cur.prog].degree;
   const honors = cur.grades >= 88;
-  e.degrees.push({ type, major: cur.major || null, year: s.year, gpa: cur.grades, honors });
+  e.degrees.push({ type, major: cur.major || null, year: s.year, gpa: cur.grades, honors, tier: cur.tier || null, school: cur.name });
   e.current = null;
   tally(s, 'graduations');
   add(s, { happy: 10, smarts: 3 });
@@ -149,35 +159,47 @@ function graduate(s, cur) {
 }
 
 function afterHighChoices(s) {
-  return [
-    { label: '🎓 Apply to university', value: 'university' },
+  const offers = eduRec(s).offers || [];
+  return (offers.length ? [{ label: '📬 Choose from your acceptances', value: 'offers', sub: offers.map((o) => o.name).join(', ') }] : []).concat([
+    { label: offers.length ? '🎓 Apply somewhere else' : '🎓 Apply to university', value: 'university' },
     { label: '🏛️ Community college', value: 'community' },
     { label: '🛠️ Trade school', value: 'trade' },
     { label: '💼 Start working', value: 'work' },
     { label: '🌴 Take a gap year', value: 'gap' },
-  ];
+  ]);
 }
 onChoice('afterHigh', (s, ctx, v) => {
+  if (v === 'offers') { offersPopup(s); return; }
+  eduRec(s).offers = null;
   if (v === 'work') return { text: 'You decided to join the workforce. Job listings are on the Occupation tab.', quiet: true };
   if (v === 'gap') { add(s, { happy: 6 }); return 'You took a gap year to figure things out.'; }
   openMajorPicker(s, v);
 });
 
 /* ---- college ------------------------------------------------------- */
-function openMajorPicker(s, type) {
+// offer: a college that accepted you (55-school-life.js), so there's no admissions roll.
+function openMajorPicker(s, type, offer) {
   const list = type === 'trade' ? TRADE_IDS.map((id) => ({ label: TRADES[id].name, value: id }))
     : MAJOR_IDS.map((id) => ({ label: MAJORS[id].name, value: id, sub: MAJORS[id].smarts > P(s).stats.smarts ? 'Competitive' : '' }));
   list.push({ label: 'Never mind', value: null });
   popup(s, {
     emoji: COLLEGES[type].emoji, title: COLLEGES[type].name,
     text: type === 'trade' ? 'Which trade do you want to learn?' : 'Pick a major.',
-    handler: 'pickMajor', ctx: { type }, choices: list,
+    handler: 'pickMajor', ctx: { type, offer: offer || null }, choices: list,
   });
 }
 onChoice('pickMajor', (s, ctx, major) => {
   if (!major) return;
-  const type = ctx.type;
+  const type = ctx.type, o = ctx.offer;
   const c = COLLEGES[type];
+  if (o) {
+    eduRec(s).offers = null;
+    const cost = nicePrice(tuition(s, o.cost) * (1 - (o.sch || 0)));
+    const info = { kind: 'college', type, major, name: o.name, cost, years: c.years, tier: o.tier };
+    if (!cost) { startCollege(s, info, 'scholarship'); return { text: `You're going to ${o.name} on a full ${o.schType} scholarship!`, emoji: '🎓', tone: 'good' }; }
+    openFunding(s, info);
+    return;
+  }
   const name = type === 'community' ? P(s).city + ' Community College' : type === 'trade' ? P(s).city + ' Technical Institute' : collegeName(s);
   if (type === 'university') {
     const last = M(s).edu.degrees.find((d) => d.type === 'high' || d.type === 'ged');
@@ -190,7 +212,7 @@ onChoice('pickMajor', (s, ctx, major) => {
     }
   }
   const cost = tuition(s, c.cost);
-  openFunding(s, { kind: 'college', type, major, name, cost, years: c.years });
+  openFunding(s, { kind: 'college', type, major, name, cost, years: c.years, tier: type === 'university' ? 'state' : null });
 });
 
 function openFunding(s, info) {
@@ -247,7 +269,7 @@ function startCollege(s, info, funding) {
   const cur = {
     kind: info.kind, type: info.type || null, prog: info.prog || null, major: info.major || null,
     year: 1, years: info.years, grades: clamp100(P(s).stats.smarts * 0.6 + randInt(10, 30)),
-    name: info.name, funding, cost: info.cost, clubs: [], clique: null, probation: false,
+    name: info.name, funding, cost: info.cost, clubs: [], clique: null, probation: false, tier: info.tier || null,
   };
   M(s).edu.current = cur;
   chargeTuition(s, cur);
@@ -303,14 +325,26 @@ defAction({
   id: 'study', cat: 'school', label: 'Study harder', emoji: '📖', desc: 'Raise your grades and smarts.',
   when: (s) => inSchool(s) && free(s),
   run: (s) => {
-    const n = bump(s, 'study');
     const cur = eduCur(s);
-    if (n > 4) { add(s, { happy: -2 }); return 'You tried to study again, but the words just swam on the page.'; }
-    cur.grades = clamp100(cur.grades + randInt(3, 8) / n);
-    add(s, { smarts: chance(0.7) ? randInt(1, 3) : 0, happy: -1 });
-    return vary('You {hit the books|studied late into the night|made flashcards for everything|joined a study group} and your grades improved.');
+    if (count(s, 'study') >= 4) { add(s, { happy: -2 }); return 'You tried to study again, but the words just swam on the page.'; }
+    if (cur.kind !== 'school' || !cur.subj) return studyNow(s, null);
+    popup(s, {
+      emoji: '📖', title: 'Study harder', text: 'What will you hit the books on?', handler: 'study',
+      choices: [{ label: '📚 A bit of everything', value: 'all' }].concat(SUBJECT_IDS.map((k) => ({ label: `${SUBJECTS[k].emoji} ${SUBJECTS[k].name}`, value: k, sub: `Now: ${letterGrade(subjectGrade(cur, k))}` }))),
+    });
   },
 });
+onChoice('study', (s, ctx, k) => studyNow(s, k === 'all' ? null : k));
+// One study session: the overall grade, and one subject a lot more if you picked it.
+function studyNow(s, k) {
+  const cur = eduCur(s);
+  if (!cur) return;
+  const n = bump(s, 'study');
+  cur.grades = clamp100(cur.grades + randInt(k ? 1 : 3, k ? 4 : 8) / n);
+  if (k && cur.subj) cur.subj[k] = clamp(cur.subj[k] + Math.round(randInt(3, 7) / n), -25, 25);
+  add(s, { smarts: chance(0.7) ? randInt(1, 3) : 0, happy: -1 });
+  return k ? `You spent the week on ${SUBJECTS[k].name.toLowerCase()}. ${pick(['It finally clicked.', 'Your notes are now color-coded.', 'You could teach it, almost.'])}` : vary('You {hit the books|studied late into the night|made flashcards for everything|joined a study group} and your grades improved.');
+}
 defAction({
   id: 'hooky', cat: 'school', label: 'Skip class', emoji: '🛹', desc: 'Have fun. Hurt your grades.',
   when: (s) => inSchool(s) && free(s),
@@ -320,6 +354,7 @@ defAction({
     add(s, { happy: randInt(2, 5) });
     if (cur.kind === 'school' && chance(0.3)) {
       for (const p of relPeople(s, ['parent'])) addRel(s, p.id, -6);
+      if (chance(0.5)) schoolTrouble(s, 'detention', 'skipping class');
       return 'You skipped class. The school called your parents. They were not amused.';
     }
     return vary('You skipped class and {went to the arcade|wandered the mall|slept in|hung out by the river}.');
@@ -328,11 +363,18 @@ defAction({
 defAction({
   id: 'teacher', cat: 'school', label: 'Talk to a teacher', emoji: '🎓', desc: 'Ask for help or extra credit.',
   when: (s) => inSchool(s) && free(s) && eduCur(s).kind === 'school',
+  sub: (s) => { const t = personIf(s, eduCur(s).teacher, 'teacher'); return t ? `${t.first} ${t.last}, ${SUBJECTS[t.teaches].name}` : 'Ask for help'; },
   run: (s) => {
     if (bump(s, 'teacher') > 2) return { text: 'Your teacher is starting to avoid you.', nolog: true };
-    const cur = eduCur(s);
-    if (chance(0.7)) { cur.grades = clamp100(cur.grades + randInt(2, 5)); add(s, { smarts: 1 }); return 'Your teacher stayed after class to help you. It actually made sense this time.'; }
-    return 'Your teacher told you to "just read the chapter again." Helpful.';
+    const cur = eduCur(s), t = personIf(s, cur.teacher, 'teacher');
+    if (t) relGain(s, t.id, randInt(2, 5));
+    if (chance(0.7)) {
+      cur.grades = clamp100(cur.grades + randInt(2, 5));
+      if (t && cur.subj) cur.subj[t.teaches] = clamp(cur.subj[t.teaches] + 2, -25, 25);
+      add(s, { smarts: 1 });
+      return `${t ? t.first : 'Your teacher'} stayed after class to help you. It actually made sense this time.`;
+    }
+    return `${t ? t.first : 'Your teacher'} told you to "just read the chapter again." Helpful.`;
   },
 });
 defAction({
@@ -370,8 +412,8 @@ defAction({
   run: (s) => {
     const cur = eduCur(s);
     popup(s, {
-      emoji: '🏅', title: 'Clubs & teams', text: 'You can be in up to two at a time. Tap one you are in to leave it.', handler: 'club',
-      choices: Object.keys(SCHOOL_CLUBS).map((id) => ({ label: SCHOOL_CLUBS[id].emoji + ' ' + SCHOOL_CLUBS[id].name, value: id, sub: (cur.clubs || []).includes(id) ? 'Member (tap to leave)' : '' })).concat([{ label: 'Never mind', value: null }]),
+      emoji: '🏅', title: 'Clubs & teams', text: 'You can be in up to three at a time. Tap one you are in to leave it.', handler: 'club',
+      choices: Object.keys(SCHOOL_CLUBS).filter((id) => stageOk(cur, SCHOOL_CLUBS[id])).map((id) => ({ label: SCHOOL_CLUBS[id].emoji + ' ' + SCHOOL_CLUBS[id].name, value: id, sub: (cur.clubs || []).includes(id) ? `${clubRank(cur, id)} (tap to leave)` : SCHOOL_CLUBS[id].tryout ? 'Tryouts' : '' })).concat([{ label: 'Never mind', value: null }]),
     });
   },
 });
@@ -381,9 +423,11 @@ onChoice('club', (s, ctx, id) => {
   cur.clubs = cur.clubs || [];
   const c = SCHOOL_CLUBS[id];
   if (cur.clubs.includes(id)) { cur.clubs = cur.clubs.filter((x) => x !== id); return `You quit the ${c.name}.`; }
-  if (cur.clubs.length >= 2) return { text: 'You are already in two activities. Leave one first.', nolog: true };
-  if (id === 'sports' && skill(s, 'athletics') < 10 && P(s).stats.health < 40 && chance(0.5)) return `You didn't make the cut for the ${c.name}.`;
+  if (cur.clubs.length >= 3) return { text: 'You are already in three activities. Leave one first.', nolog: true };
+  if (count(s, 'tryout_' + id)) return { text: `The ${c.name} won't hold tryouts again until next year.`, nolog: true };
+  if (c.tryout) { bump(s, 'tryout_' + id); if (!makesTeam(s, c)) { add(s, { happy: -3 }); return `You tried out for the ${c.name} and didn't make the cut. There's always next year.`; } }
   cur.clubs.push(id);
+  clubRec(cur, id);
   add(s, { happy: 3 });
   if (c.skill) addSkill(s, c.skill, 3);
   return `You joined the ${c.name}! ${c.emoji}`;
@@ -439,6 +483,7 @@ onChoice('dropout', (s, ctx, yes) => {
   M(s).edu.dropouts++;
   tally(s, 'dropouts');
   clearKind(s, 'classmate');
+  if (cur.kind === 'school') endSchoolLife(s);
   if (cur.kind === 'school') for (const p of relPeople(s, ['parent'])) addRel(s, p.id, -15);
   add(s, { happy: chance(0.5) ? 4 : -4 });
   return `You dropped out of ${cur.name}.`;

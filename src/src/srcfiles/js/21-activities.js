@@ -88,44 +88,7 @@ defAction({
     return trait(s, 'green') ? 'Your garden is thriving. Neighbors stop to admire your tomatoes.' : vary('You planted {herbs|tomatoes|sunflowers|a tiny cactus}. {It might survive.|Something already ate it.|It looks promising.}');
   },
 });
-const LESSONS = [
-  { id: 'music', name: 'Music lessons', emoji: '🎸', skill: 'music', cost: 60, minAge: 5 },
-  { id: 'art', name: 'Art class', emoji: '🎨', skill: 'art', cost: 50, minAge: 5 },
-  { id: 'acting', name: 'Acting class', emoji: '🎭', skill: 'acting', cost: 70, minAge: 7 },
-  { id: 'coding', name: 'Coding course', emoji: '💻', skill: 'coding', cost: 90, minAge: 9 },
-  { id: 'cooking', name: 'Cooking class', emoji: '🍳', skill: 'cooking', cost: 60, minAge: 10 },
-  { id: 'writing', name: 'Writing workshop', emoji: '✍️', skill: 'writing', cost: 60, minAge: 10 },
-  { id: 'speaking', name: 'Public speaking', emoji: '🗣️', skill: 'charisma', cost: 70, minAge: 12 },
-  { id: 'sports', name: 'Sports training', emoji: '🏀', skill: 'athletics', cost: 50, minAge: 5 },
-  { id: 'martial', name: 'Martial arts', emoji: '🥋', skill: 'martial', cost: 60, minAge: 5 },
-  { id: 'dance', name: 'Dance class', emoji: '💃', skill: 'fitness', cost: 50, minAge: 5 },
-  { id: 'business', name: 'Business seminar', emoji: '📊', skill: 'business', cost: 120, minAge: 15 },
-  { id: 'driving', name: 'Driving lessons', emoji: '🚗', skill: 'driving', cost: 80, minAge: 15 },
-];
-defAction({
-  id: 'lessons', cat: 'mind', label: 'Classes & lessons', emoji: '🎓', desc: 'Build a skill.',
-  when: (s) => free(s) && A(s) >= 5,
-  run: (s) => {
-    popup(s, {
-      emoji: '🎓', title: 'Classes & lessons', text: A(s) < 18 ? 'Your parents pay for lessons until you turn 18.' : 'Pick a class.', handler: 'lesson',
-      choices: LESSONS.filter((l) => A(s) >= l.minAge).map((l) => ({ label: l.emoji + ' ' + l.name, value: l.id, sub: `${SKILLS[l.skill].name} ${Math.round(skill(s, l.skill))}` + (A(s) >= 18 ? ' · ' + fmtMoney(price(s, l.cost)) : '') })).concat([{ label: 'Never mind', value: null }]),
-    });
-  },
-});
-onChoice('lesson', (s, ctx, id) => {
-  if (!id) return;
-  const l = LESSONS.find((x) => x.id === id);
-  const cost = A(s) >= 18 ? price(s, l.cost) : 0;
-  if (!pay(s, cost)) return cantAfford(cost);
-  const n = bump(s, 'lesson_' + id);
-  let gain = randFloat(3, 6) / n;
-  if (id === 'music' && M(s).assets.some((a) => a.kind === 'instrument')) gain *= 1.3;
-  addSkill(s, l.skill, gain);
-  if (id === 'martial' || id === 'dance') addSkill(s, 'fitness', randFloat(1, 2) / n);
-  add(s, { happy: 1 });
-  const lvl = skill(s, l.skill);
-  return `${l.emoji} ${l.name}: ${lvl < 20 ? 'You are getting the basics down.' : lvl < 50 ? 'You are getting pretty good.' : lvl < 80 ? 'Your teacher says you are a natural.' : 'You could teach this class.'}`;
-});
+// Classes and lessons (instruments, martial arts, dance, languages...) are in 57-lessons.js.
 
 /* ---- social life --------------------------------------------------- */
 function peerAgeRange(s) {

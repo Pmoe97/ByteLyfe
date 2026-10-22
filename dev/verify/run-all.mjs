@@ -10,6 +10,7 @@
 //   - challenges: starts, goals, the daily challenge and streaks (52-challenges.js)
 //   - gambling: venues, credit, races, season bets, debts, limits (53-gambling.js)
 //   - the house: the book, racehorses and breeding, the big races, casinos (54-house.js)
+//   - growing up: school life, clubs, college, home and lessons (55-57)
 //   - the life simulator (300 lives), split into shards across the cores, then merged
 // Each check is its own process; at most one per core runs at a time, longest first.
 // Output is held until a check finishes, so checks never interleave.
@@ -52,6 +53,7 @@ const tasks = [
   { label: 'challenge checks', args: ['dev/verify/challenges.mjs'] },
   { label: 'gambling checks', args: ['dev/verify/gambling.mjs'] },
   { label: 'house checks', args: ['dev/verify/house.mjs'] },
+  { label: 'youth checks', args: ['dev/verify/youth.mjs'] },
 ];
 function run(task) {
   return new Promise((resolve) => {

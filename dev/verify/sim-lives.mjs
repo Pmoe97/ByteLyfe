@@ -96,6 +96,14 @@ function check(s, where) {
     if (h && (!(h.spd >= 30 && h.spd <= 99 && h.sta >= 30 && h.sta <= 99) || !['yearling', 'racing', 'broodmare', 'stud', 'retired'].includes(h.state) || h.wins > h.starts)) fail(`bad racehorse ${JSON.stringify(h)} @${where}`, s);
   }
   if (m.book && !(m.book.punters >= 3)) fail(`book with ${m.book.punters} punters @${where}`, s);
+  // Growing up (55-57): popularity, subject offsets, club ranks and lesson levels stay in range.
+  const sc = m.edu.current;
+  if (sc && sc.kind === 'school' && sc.subj) {
+    if (!(sc.pop >= 0 && sc.pop <= 100)) fail(`popularity ${sc.pop} @${where}`, s);
+    for (const k in sc.subj) if (!(Math.abs(sc.subj[k]) <= 25)) fail(`subject ${k} offset ${sc.subj[k]} @${where}`, s);
+  }
+  if (sc && sc.club) for (const id in sc.club) { const d = sc.club[id]; if (!g('SCHOOL_CLUBS')[id] || !(d.r >= 0 && d.r <= 3) || !Number.isFinite(d.pts)) fail(`bad club record ${id} ${JSON.stringify(d)} @${where}`, s); }
+  for (const id in m.lessons || {}) { const r = m.lessons[id], L = g('LESSON_TYPES')[id]; if (!L || !(r.lvl >= 0 && r.lvl < g('LESSON_FAMS')[L.fam].levels.length) || !Number.isFinite(r.xp)) fail(`bad lesson ${id} ${JSON.stringify(r)} @${where}`, s); }
   // Real currencies (50-currency.js): a life that never lived in the US shows no plain "$123" anywhere.
   if (ctx.run('MONEY_FMT') && !(m.places || []).some((k) => k.startsWith('us:')) && p.country !== 'us') {
     const texts = s.pending.flatMap((pp) => [pp.text, pp.title, ...pp.choices.map((c) => c.label + ' ' + (c.sub || ''))]).concat(last ? last.lines.map((l) => l.t) : []);
@@ -139,6 +147,7 @@ function available(s) {
 
 const kin = { lives: 0, people: 0, maxPeople: 0 };
 const chal = { started: 0, done: 0, failed: 0 };
+const youth = { lessons: 0, medals: 0, blackBelts: 0, captains: 0, titles: 0, valedictorians: 0, elite: 0, fullRides: 0, detentions: 0, suspensions: 0, expulsions: 0, grounded: 0, bullied: 0 };
 const house = { books: 0, bookNet: 0, horses: 0, wins: 0, bigWins: 0, foals: 0, sold: 0, whales: 0, licenses: 0 };
 const cities = { moves: 0, places: 0, tenants: 0, maxTenants: 0, signed: 0, evicted: 0, wasEvicted: 0, beaten: 0, rent: 0 };
 const courts = { filed: 0, won: 0, lost: 0, settled: 0, sued: 0, beaten: 0, small: 0, rulings: 0, justices: 0, clientWins: 0 };
@@ -261,6 +270,20 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
         if (chance(0.8)) { const acts = ctx.actionList(s, 'gamble').map((a) => [a.id, undefined]).concat(ctx.venuesReach(s).map((v) => ['venue_visit', v.id])); const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'gamble:' + id); }
       } catch (e) { fail('gambling persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
     }
+    // Growing up (the courts persona, 9, before it's a judge): three Playtime, home, lessons,
+    // school or teacher actions a year until 18, with a bright kid every other time.
+    if (s.gen === 1 && i % 10 === 9 && !s.dead && !s.player.prison && age < 18) {
+      try {
+        if (age === 6 && i % 20 === 9) s.people[s.playerId].stats.smarts = Math.max(85, s.people[s.playerId].stats.smarts);
+        for (let k = 0; k < 3 && !s.dead; k++) {
+          const acts = ['play', 'parents', 'learn', 'school'].flatMap((c) => ctx.actionList(s, c).map((a) => [a.id, undefined]));
+          for (const pid in s.player.rels) for (const a of ctx.actionList(s, 'person', pid)) if (a.id.startsWith('sl_') || (['teacher', 'principal', 'bully', 'instructor'].includes(s.player.rels[pid].kind) && chance(0.2))) acts.push([a.id, pid]);
+          if (!acts.length) break;
+          const [id, t] = pick(acts);
+          ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'youth:' + id);
+        }
+      } catch (e) { fail('youth persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
     // And owns the house: half of them run a book from 23; the other half buy two racehorses at
     // 30 and open a casino at 35. Then a Track & Book, racehorse or casino action most years.
     if (s.gen === 1 && i % 10 === 7 && !s.dead && !s.player.prison && age >= 23) {
@@ -326,6 +349,7 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
   const lf = s.player.life; biz.founded += lf.companiesFounded || 0; biz.ipos += lf.ipos || 0; biz.exits += lf.exits || 0; biz.fails += lf.bizFails || 0;
   for (const [k, t] of [['moves', 'cityMoves'], ['signed', 'tenantsSigned'], ['evicted', 'tenantsEvicted'], ['wasEvicted', 'evicted'], ['beaten', 'evictionsBeaten'], ['rent', 'rentCollected']]) cities[k] += lf[t] || 0;
   cities.places += (s.player.places || []).length;
+  for (const [k, c] of [['lessons', 'lessonsStarted'], ['medals', 'lessonMedals'], ['blackBelts', 'blackBelts'], ['captains', 'captain'], ['titles', 'clubTitles'], ['valedictorians', 'valedictorian'], ['elite', 'eliteAdmit'], ['fullRides', 'fullRide'], ['detentions', 'detentions'], ['suspensions', 'suspensions'], ['expulsions', 'expulsions'], ['grounded', 'grounded'], ['bullied', 'bullied']]) youth[k] += lf[c] || 0;
   for (const [k, c] of [['books', 'booksStarted'], ['bookNet', 'bookNet'], ['horses', 'racehorses'], ['wins', 'ownerWins'], ['bigWins', 'bigRaceWins'], ['foals', 'foals'], ['sold', 'horsesSold'], ['whales', 'whaleBeaten'], ['licenses', 'licenseLost']]) house[k] += lf[c] || 0;
   if (s.challenge) { chal.started++; if (s.challenge.done) chal.done++; else if (s.challenge.failed || s.challenge.pid !== s.playerId) chal.failed++; }
   const nt = s.player.assets.reduce((n, a) => n + (a.tenants || []).length, 0); cities.tenants += nt; cities.maxTenants = Math.max(cities.maxTenants, nt);
@@ -333,7 +357,7 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
 }
 
 // One run's raw numbers. Shards write these; --merge adds them up.
-let agg = { lives: stats.lives, seed: SEED, maxSecs: (Date.now() - t0) / 1000, shards: 1, failures, fails, stats, biz, kin, courts, cities, chal, house, seen: [...g('STORY_SEEN')] };
+let agg = { lives: stats.lives, seed: SEED, maxSecs: (Date.now() - t0) / 1000, shards: 1, failures, fails, stats, biz, kin, courts, cities, chal, house, youth, seen: [...g('STORY_SEEN')] };
 if (opts.json) { fs.writeFileSync(opts.json, JSON.stringify(agg)); process.exit(0); }
 if (opts.merge) agg = opts.merge.map((f) => JSON.parse(fs.readFileSync(f, 'utf8'))).reduce(mergeAgg);
 // Numbers add up (keys starting with "max" take the larger), lists join, objects merge.
@@ -352,7 +376,7 @@ function mergeAgg(a, b) {
 }
 report(agg);
 
-function report({ stats, biz, kin, courts, cities, chal, house, failures, fails, seed, maxSecs, shards, seen }) {
+function report({ stats, biz, kin, courts, cities, chal, house, youth, failures, fails, seed, maxSecs, shards, seen }) {
 const avg = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0);
 const median = (a) => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[Math.floor(b.length / 2)] : 0; };
 const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k}:${v}`).join(', ');
@@ -376,6 +400,7 @@ console.log(`Family (last gen per life, average): ${['sibling', 'aunt', 'cousin'
 console.log(`Courts (last gen per life): ${courts.filed} lawsuits filed · ${courts.won} won, ${courts.lost} lost, ${courts.settled} settled · sued ${courts.sued} times, ${courts.beaten} beaten · ${courts.small} small-claims wins · ${courts.rulings} rulings, ${courts.justices} justices confirmed · ${courts.clientWins} trials won for clients`);
 console.log(`Cities (last gen per life): ${cities.moves} city moves · ${(cities.places / Math.max(1, kin.lives)).toFixed(1)} cities lived in on average · ${cities.signed} leases signed by tenants · ${cities.tenants} tenants at the end (max ${cities.maxTenants}) · ${cities.evicted} tenants evicted · player evicted ${cities.wasEvicted} times, ${cities.beaten} evictions beaten · ${Math.round(cities.rent).toLocaleString()} rent collected`);
 console.log(`Challenges: ${chal.started} started · ${chal.done} completed · ${chal.failed} failed`);
+console.log(`Growing up (last gen per life): ${youth.lessons} lessons started, ${youth.medals} medals, ${youth.blackBelts} black belts · ${youth.captains} captains, ${youth.titles} club titles · ${youth.valedictorians} valedictorians, ${youth.elite} elite admissions, ${youth.fullRides} full rides · ${youth.detentions} detentions, ${youth.suspensions} suspensions, ${youth.expulsions} expulsions · grounded ${youth.grounded} times · ${youth.bullied} bullied`);
 console.log(`The house (last gen per life): ${house.books} books started, ${Math.round(house.bookNet).toLocaleString()} kept · ${house.horses} racehorses, ${house.wins} race wins, ${house.bigWins} big-race wins, ${house.foals} foals, ${house.sold} sold · casinos ${biz.byInd.casino || 0} company-years, ${house.whales} whale-beating years, ${house.licenses} licenses lost`);
 console.log(`Content tags on: ${TAG_IDS.map((t) => `${t} in ${stats.tagLives[t] || 0} lives`).join(', ')}`);
 console.log(`Events never fired (${neverFired.length}/${evIds.length}): ${neverFired.join(', ') || 'none'}`);

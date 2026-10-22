@@ -93,6 +93,8 @@ onChoice('interview', (s, ctx, ai) => {
   if (j.skill) odds += skill(s, j.skill) / 400;
   if (trait(s, 'charming')) odds += 0.08;
   if (best && best.honors) odds += 0.06;
+  if (best && best.tier === 'elite') odds += 0.1;
+  else if (best && best.tier === 'selective') odds += 0.05;
   if (hasFelony(s)) odds -= 0.3;
   if (M(s).wanted) odds -= 0.2;
   if (!chance(clamp(odds, 0.05, 0.95))) {

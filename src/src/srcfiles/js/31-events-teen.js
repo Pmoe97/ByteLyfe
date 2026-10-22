@@ -46,13 +46,13 @@ EV('teen_prom', {
 });
 function promNight(s, line) {
   add(s, { happy: 7 });
-  if (chance(P(s).stats.looks / 400 + (eduCur(s) && eduCur(s).clique === 'populars' ? 0.15 : 0))) { add(s, { happy: 6 }); tally(s, 'promRoyalty'); return line + ` You were crowned prom ${genderWord(P(s), 'king', 'queen', 'royalty')}! 👑`; }
+  if (chance(P(s).stats.looks / 400 + (eduCur(s) && eduCur(s).clique === 'populars' ? 0.15 : 0) + (schoolCur(s) ? schoolCur(s).pop / 400 : 0))) { add(s, { happy: 6 }); tally(s, 'promRoyalty'); return line + ` You were crowned prom ${genderWord(P(s), 'king', 'queen', 'royalty')}! 👑`; }
   return line;
 }
 EV('teen_sneak', {
   ages: [13, 17], emoji: '🌙', text: 'Your friends are going to a party tonight, but you have a curfew.',
   choices: [
-    ['Sneak out', (s) => { add(s, { happy: 5 }); if (chance(0.35)) { relAll(s, ['parent'], -10); return 'You climbed back in through the window. Your mom was sitting on your bed. You are grounded.'; } return 'You snuck out, partied, and made it home undetected.'; }],
+    ['Sneak out', (s) => { add(s, { happy: 5 }); if (chance(0.35)) { relAll(s, ['parent'], -10); groundFor(s, 'sneaking out', true); return 'You climbed back in through the window. Your mom was sitting on your bed.'; } return 'You snuck out, partied, and made it home undetected.'; }],
     ['Ask permission', (s) => { if (parentsAgree(s)) { add(s, { happy: 4 }); return 'Your parents said yes, but you had to be home by midnight.'; } return 'They said no.'; }],
     ['Stay in', () => 'You stayed home.'],
   ],
@@ -60,7 +60,7 @@ EV('teen_sneak', {
 EV('teen_exam', {
   ages: [13, 25], when: (s) => inSchool(s), emoji: '📄', text: 'You have a huge exam tomorrow. A classmate is selling the answers.',
   choices: [
-    ['Buy the answers', (s) => { const cost = price(s, 40); add(s, { money: -cost, karma: -3 }); if (chance(0.25)) { eduCur(s).grades = clamp100(eduCur(s).grades - 15); return 'The teacher caught on. You got a zero and detention.'; } eduCur(s).grades = clamp100(eduCur(s).grades + 8); return 'You aced it. You feel a little gross about it.'; }],
+    ['Buy the answers', (s) => { const cost = price(s, 40); add(s, { money: -cost, karma: -3 }); if (chance(0.25)) { eduCur(s).grades = clamp100(eduCur(s).grades - 15); schoolTrouble(s, 'detention', 'buying test answers'); return 'The teacher caught on. You got a zero and detention.'; } eduCur(s).grades = clamp100(eduCur(s).grades + 8); return 'You aced it. You feel a little gross about it.'; }],
     ['Pull an all-nighter', (s) => { eduCur(s).grades = clamp100(eduCur(s).grades + randInt(2, 7)); add(s, { health: -1, smarts: 1 }); return 'You studied until sunrise. Exhausting, but it paid off.'; }],
     ['Wing it', (s) => { if (chance(P(s).stats.smarts / 120)) return 'You winged it and somehow passed.'; eduCur(s).grades = clamp100(eduCur(s).grades - 6); return 'You winged it. It did not go well.'; }],
   ],
@@ -265,9 +265,9 @@ EV('teen_run_away', {
 EV('teen_test', {
   ages: [15, 18], once: true, emoji: '📝', when: isStudent, text: 'The big college entrance exam is next month.',
   choices: [
-    ['Study every night', (s) => { add(s, { smarts: 4, happy: -2 }); return `You scored in the top ${pick(['5', '10', '15'])} percent. Your parents told everyone.`; }],
-    ['Take a prep course', (s) => { add(s, { smarts: 3 }); return 'Expensive, boring, effective.'; }],
-    ['Wing it', (s) => { add(s, { smarts: P(s).stats.smarts >= 70 ? 1 : -1 }); return P(s).stats.smarts >= 70 ? 'Somehow you did fine. Do not tell anyone how.' : 'You guessed C on everything. Statistics were not on your side.'; }],
+    ['Study every night', (s) => { add(s, { smarts: 2, happy: -2 }); return takeExam(s, 6); }],
+    ['Take a prep course', (s) => { examRec(s).prep = Math.min(2, examRec(s).prep + 1); add(s, { smarts: 1 }); const r = takeExam(s, 0); r.text = 'Expensive, boring, effective. ' + r.text; return r; }],
+    ['Wing it', (s) => takeExam(s, -4)],
   ],
 });
 EV('teen_robotics', {
@@ -281,7 +281,7 @@ EV('teen_thrift', { ages: [13, 25], emoji: '🧥', text: 'You found a vintage ja
 EV('teen_class_clown', {
   ages: [12, 17], emoji: '🤡', when: isStudent, text: 'The teacher turns to write on the board. The perfect moment for a joke.',
   choices: [
-    ['Crack the joke', (s) => { add(s, { happy: 4 }); relAll(s, ['classmate'], 3); if (chance(0.35)) { const cur = eduCur(s); if (cur) cur.grades = clamp100(cur.grades - 2); return 'The whole class laughed. You got detention. Worth it.'; } return 'The whole class laughed, even the teacher.'; }],
+    ['Crack the joke', (s) => { add(s, { happy: 4 }); relAll(s, ['classmate'], 3); if (chance(0.35)) { const cur = eduCur(s); if (cur) cur.grades = clamp100(cur.grades - 2); schoolTrouble(s, 'detention', 'clowning around in class'); addPop(s, 2); return 'The whole class laughed. You got detention. Worth it.'; } return 'The whole class laughed, even the teacher.'; }],
     ['Save it for lunch', () => 'Comedy is all about timing.'],
   ],
 });

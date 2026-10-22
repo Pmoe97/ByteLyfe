@@ -24,8 +24,8 @@ adoption, sexuality and gender identity (he / she / they).
 **Pets.** 15 species, horses included: play, walk or ride, vet visits, rehoming, natural
 lifespans.
 
-**School.** Primary, middle and high school with grades, cliques and 12 clubs. Study, skip,
-talk to teachers, report cards, prom, dropping out, GED. University (30 majors), community
+**School.** Primary, middle and high school with grades, cliques and 27 clubs and teams (see
+Growing up). Study, skip, talk to teachers, report cards, prom, dropping out, GED. University (30 majors), community
 college, trade school (10 trades), and grad school (law, medicine, dental, pharmacy, vet,
 MBA, master's, PhD). Paid for by parents, scholarships, loans or cash. Probation, expulsion,
 honors.
@@ -53,7 +53,8 @@ healthcare, therapy, plastic surgery, rehab, six addictions, diets, salons.
 tiers or a plea deal, sentencing, juvenile detention. Prison life: workouts, library, jobs,
 GED, gangs, riots, escapes, appeals, parole hearings. Fugitive status.
 
-**Activities.** Gym, running, meditation, library, reading, yoga, gardening, 12 classes.
+**Activities.** Gym, running, meditation, library, reading, yoga, gardening, 52 classes and
+lessons (see Growing up).
 Social life: meeting people, nightlife, parties, concerts, volunteering, movies, theme
 parks, shopping. The lottery, scratch cards, gambling (see Gambling), charity, 12 vacations,
 emigration, driver's license, name changes. Social media: posts, going viral,
@@ -489,6 +490,46 @@ goals, played by the character who starts it.
 - **Extras:** 11 achievements (Origin Story, Masked Hero, Evil Laugh, World Guardian, World-Ending
   Threat, Arch-Rival, Fangs Out, Two Hundred Candles, Sire, Heaven Sent, Throne of Ashes) and five
   legacy titles (Archangel, Demon Lord, Vampire, Superhero, Supervillain).
+
+**Growing up.** Childhood and school have real systems now, from your first year to graduation.
+- **School life:** a teacher every year and a principal, both people you can suck up to, argue with
+  about a grade, pitch ideas to or prank. A report card by subject (Math, Science, English, History, Art
+  & Music, P.E.) that leans toward what you're good at and toward a teacher who likes you, and studying
+  aimed at one subject. Popularity. Detentions, suspensions and expulsion on a school record that
+  colleges read. Bullies you can report, stand up to, fight or win over, or becoming the school bully
+  yourself. Midterms, substitute teachers, the lunch table in your first week, homecoming, yearbook
+  superlatives and the senior prank.
+- **Clubs and teams:** 27, from soccer, basketball, football, volleyball, swimming, track and cheer to
+  drama, band, choir, dance, art, the newspaper, yearbook, debate, Model UN, the math team, Science
+  Olympiad, robotics, chess, student council, volunteering, the eco club, cooking, martial arts, young
+  entrepreneurs and esports. Some hold tryouts. Practice to climb from member to captain or president
+  (the top rank only in your last two years; student body president by election). Every year has a
+  season (a win-loss record and a title game, the spring play, festival ratings, tournaments) and one
+  big moment where you choose the bold play, the team play or the safe one.
+- **College:** an entrance exam scored as a percentile (retake it, take a prep course), applications to
+  up to four of seven colleges from elite to open admission, an essay (or a bought one, which can get
+  you rejected everywhere), and decisions at graduation that weigh your grades, the exam, your
+  activities and your record. Academic, athletic, arts and need-based scholarships, up to a full ride.
+  Valedictorian and salutatorian. An elite or selective degree helps in job interviews.
+- **Home:** Playtime from your first year (cry for attention, babble, peekaboo, toys, bedtime stories,
+  drawing on the walls, pretend play and an imaginary friend, forts, the park, video games, a
+  collection). Parents from easygoing to very strict. Allowance and chores. Ask for a phone, a console, a
+  later curfew, a party, a tutor or help with a car. Getting grounded (no outings, parties or dates),
+  breaking curfew, sneaking out, and parties while your parents are away.
+- **Classes and lessons:** 52, for any age: music (piano, guitar, violin, cello, drums, saxophone,
+  trumpet, flute, ukulele, singing, DJing), martial arts and combat sports (karate, taekwondo, judo,
+  kung fu, Brazilian jiu-jitsu, boxing, Muay Thai, wrestling, fencing), dance (ballet, hip-hop, tap,
+  ballroom), sports (swimming, tennis, gymnastics, figure skating, horse riding, golf, rock climbing),
+  arts and crafts, six languages (never the one you already speak), chess, coding, writing, public
+  speaking, acting, stand-up, magic, cooking, business, driving and first aid. Each has its own ladder
+  (belts, music grades, chess ratings, language levels), a teacher you get to know, practice, a test
+  for the next level, and recitals, tournaments, meets and exhibitions with medals up to national
+  titles. Up to three at a time. Your parents pay while you live with them, if they agree; adults pay
+  their own way, and owning the instrument speeds up practice.
+- **Extras:** 21 events (strict parents signing you up for violin, stage fright, a sensei's advice, a
+  rival, a child-prodigy interview...), 17 achievements (Teacher's Pet, Straight As, Captain, Champions,
+  Valedictorian, Thick Envelope, Full Ride, Stood Up, Permanent Record, Grounded for Life, Parents Are
+  Away, Black Belt, Virtuoso, Polyglot, Grandmaster, National Champion, Prodigy), and 3 goals.
 
 **Real currencies.** Every country shows money in its own currency: dollars, pounds, euros,
 pesos, reais, kronor, yen, won, rupees (in lakhs and crores), naira, rand and more, 14 in all.
