@@ -50,8 +50,9 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `51` | Chaos mode (`51-chaos.js`): superpowers, hero and villain careers, vampires, ascension, and their events; everything tagged `chaos` | No DOM. `ageUp` reaches `chaosTick` through a wrapper; `commitCrime` calls `powerCrimeEdge`. |
 | `52` | Challenges (`52-challenges.js`): starting scenarios, goal kinds, hand-made challenges, the daily challenge and streaks | No DOM. `afterChange` calls `checkChallenge`. |
 | `53` | Gambling (`53-gambling.js`): venues per city, standing and tiers, table games, horse racing, season and fight bets, poker, credit and debt collection, recovery, Silver Mesa trips, gambling events | No DOM. `ageUp` reaches `gamblingTick` through a wrapper (after Chaos); `doAction` settles a race left running; the table games in `21-activities.js` call `tableLoss`. |
-| `54–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1021-ui-gambling.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `54` | Owning the house (`54-house.js`): your book, racehorses (pets with `p.race`) and breeding, the big races, and the casino layer of the business engine, and their events | No DOM. `ageUp` reaches `houseTick` through a wrapper (after gambling); `bizForecast` calls `casinoMods` (through `industryMods`) and `companyYear` calls `casinoYear`; `settleRace` hands a race with `r.own` to `settleOwnRace`; `netWorth` adds `stableValue`. |
+| `55–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1022-ui-house.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -211,12 +212,13 @@ built from `CONTENT_TAGS`, with the taboo master + subtypes grouped in their own
 **A year (`ageUp`).** Currencies → body → pregnancy → school → career → businesses and the market →
 prison → money → assets → cities (rent, landlords, tenants) → fame → the people around you → the wider family → parenting →
 romance → taboo family romance → royalty → the underworld →
-show business → sports → courts → chaos → gambling → pets → milestones → story chapters → random events → new illness → death check. The order
+show business → sports → courts → chaos → gambling → the house (your book and stable) → pets → milestones → story chapters → random events → new illness → death check. The order
 is in `AGE_PHASES` (`25-ageup.js`).
 
 **Health.** Health drifts toward a target set by age and fitness (`healthTarget`), and
 illness and habits pull it down. Yearly death odds come from `mortality(age, health)`.
 Both use `bodyAge(s, p)`, the age a body acts and looks: a vampire's stops at `p.frozenAge`.
+So does `diseaseTick`, which picks new illnesses for that age.
 Event age ranges, body drift and avatars use it too, so a 200-year-old vampire still gets
 the events of the 30-year-old they look like.
 A cause of death is the phrase after "died". `deathPhrase` adds "of" or "in" ("of a
@@ -233,7 +235,7 @@ and applies the penalty.
 upkeep, kids, pets, habits, loan payments out. Debt accrues interest, and hopeless debt
 triggers a forced bankruptcy. `M(s).lastFinance` keeps the breakdown for the Finances sheet.
 
-**Business.** `08-data-business.js` holds the 23 industries (the Sports Franchise's seasons and titles come from `41-sports.js`), `34-business.js` the engine
+**Business.** `08-data-business.js` holds the 24 industries (the Sports Franchise's seasons and titles come from `41-sports.js`, the casino's floor from `54-house.js`), `34-business.js` the engine
 and `35-events-business.js` the company events. Staff are *pools per role* (`team[role] =
 { n, skill, pay, morale }`), not people, so a company scales from one food truck to an
 airline without bloating saves. `bizForecast(s, co)` is the one P&L model. It runs the year
@@ -254,7 +256,7 @@ forecast improves).
   valuation, and a big network pulls the reputation target down a little.
 
 **Market.** `37-market.js` keeps `s.market` at the top level of the save, so it outlives each
-character: 66 rival firms (`firms[id] = { name, ind, rev, margin, rep, q, val, ticker, sh,
+character: 72 rival firms, three per industry (`firms[id] = { name, ind, rev, margin, rep, q, val, ticker, sh,
 price, beta, div, … }`) plus this year's market return (`ret`) and index. Firms are summary
 numbers, not companies, so they stay cheap to save. `marketTick` (from `businessTick`) rolls
 the year's return once (`marketYear`). Then each firm's revenue moves with the market and its
@@ -392,20 +394,52 @@ so a date always gives the same challenge. Results live in `META.challenges` (`d
 **Gambling.** `53-gambling.js`. Venues are summary records, not companies: `s.venues[id] = { kind,
 name, owner, glam, open, horses }`, indexed per city in `s.venueIdx['cc:city']`, made by `venuesIn` the
 first time anything looks at a city and shared by the family line. An owner is a crime family (`fam`), a
-market firm (`firm`, hotel companies for resorts) or a bookie's name (made a person, kind `bookie`, the
-first time you owe them: `bookieOf`). `VENUE_KINDS` sets each kind's games, limits and credit. Your side
+market firm (`firm`: casino companies for some casinos, hotel companies for resorts), your own casino
+company (`co`, 54-house.js) or a bookie's name (made a person, kind `bookie`, the first time you owe them:
+`bookieOf`). `VENUE_KINDS` sets each kind's games, limits and credit. Your side
 lives in `M(s).gamb`: `at[venueId]` (wagered, `tier` from `TIERS`, `banned`, counting `heat`), open season
 `bets`, `debts`, the pending `race`, `poker`, the self-exclusion year and this year's `trip`.
 - **Money in and out:** `stake` pays a bet in cash or on credit (`addDebt`), `wagered` records it and moves
   tiers and the habit. The old table games (`bjSettle`, roulette, `spinSlots`) settle their own wins and
   call `tableLoss`, which can offer a chase.
-- **Races:** `raceField` posts odds, `runRace` simulates the field step by step and returns the frames the
-  race screen draws (`1021-ui-gambling.js`), and the bet stores the race as `M(s).gamb.race` without paying.
+- **Races:** `raceField` posts odds (`raceOdds`, from each horse's `racePower`, less a 15% take). `runRace`
+  draws the finishing order from the same strengths, so the odds are fair, then each horse's path to the
+  line (front-runners go early, stayers come late, surges) as the frames the race screen draws
+  (`1021-ui-gambling.js`). The bet stores the race as `M(s).gamb.race` without paying.
   `settleRace` pays at the finish line; `settleRaceQuietly` (in `doAction` and `gamblingTick`) handles a race
   nobody watched.
 - **Debts:** `debtYear` adds interest and climbs `stage` 1–4 for unpaid bookie and mob debts (reminder,
   visit, `beating`, favor; family harm only with Mature on) and turns a year-old casino marker into a
   lawsuit through `getSued`.
+
+**The house.** `54-house.js`. Everything here belongs to the current character except the horses.
+- **The book:** `M(s).book` (`bk_start`) holds punters (a number, not people), prices (`vig`, a row of
+  `BOOK_VIG`), `credit`, `layoff`, `legal`, the family's `tax` or `threat`, `rep`, the `owed` slate and last
+  year's numbers. `bookYear` (in `houseTick`) grows or shrinks the punters toward `bookCap`, takes a handle,
+  keeps the hold plus a swing that laying off narrows, pays the 15% betting tax or the family's fifth, and
+  adds heat while unlicensed (`uwTick`'s raids charge `bookmaking`, a crime added here). It can raise up to
+  two popups a year: the family, a deadbeat, a sharp, or `bigGame`, whose outcomes come from `gameResults`
+  (the expected result is always the hold).
+- **Racehorses:** pets (species `horse`) with `p.race` (see the file header). `makeRacehorse` makes one;
+  `stableYear` grows the young toward `ps`/`pt` (`growHorse`, faster with a better trainer), runs a season
+  for each racer (`horseSeason`: ordinary races against the home track's horses and stakes against
+  `strongRivals`, places drawn by `simPlace` from the same strengths as the race screen), retires them at
+  nine, foals mares in foal (`foaling`), pays stud fees (`studYear`), and charges training fees, all into
+  the finance sheet. `horseValue` prices a horse with no randomness; `stableValue` adds it to `netWorth`.
+  `s.studBook` (the year's public stallions) is shared by the family line. `petTick` never lets a racehorse
+  run away.
+- **Big races:** `BIG_RACES` (Derby, Cup, Gold Cup); `bigRacesFor` says which a horse may enter this year.
+  Entering builds a field around `runnerOf(p)`, runs it with `runRace`, and stores it as `M(s).gamb.race`
+  with `own: { pid, key, name, purse, won }`; `settleRace` passes it to `settleOwnRace`, which pays the purse
+  and any bet and records the result on the horse.
+- **Casinos:** industry `casino` (`req: { clean: true }`, checked in `industryMissing`). `co.casino` holds
+  the house `edge`, the `vip` room, surveillance (`eye`), the `skim`, a family `threat`, `probation` and
+  `scandals`. `casinoMods` gives `bizForecast` (through `industryMods`) a revenue multiplier, a reputation
+  pull and the cost of cameras and the VIP room; `casinoYear`, called by `companyYear`, adds the whales'
+  result (`last.whales`, kept out of the valuation) and costs no forecast sees (`last.special`: cheats,
+  fines, the skim, arson), may audit the count room (`commission`, `revokeLicense`) and may offer a skim.
+  `casinoVenue` keeps the flagship as a venue with owner `{ co }`; `visitVenue` sends you to
+  `ownVenueVisit` instead of a table, and `houseTick` hands the venue on once the casino isn't yours.
 
 **Saving.** `29-save.js` wraps the Perchance `kv-plugin` (`root.kv`), falling back to
 `localStorage`, then memory. Folders: `saves` (one JSON state per life), `rewind` (the last
@@ -434,13 +468,14 @@ never fired and actions that never ran, which usually means a `when` that can't 
 
 | Tool | What it does |
 | --- | --- |
-| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36, a chaos persona (Chaos switched on) gets powers at 14, becomes a hero or a villain at 18 and, every other time, a vampire at 45 who feeds when hungry and walks into the sunrise at 130, one life in ten plays a challenge (hand-made, daily or random), and a city persona rents at 20, moves city at 26 and 41, and at 30 buys a duplex to live in plus two homes to rent out, then plays landlord and tenant every year. Also checks that no building holds more tenants than units, and that a life that never lived in the US never shows a plain "$123" (one life in seven shows US dollars by setting). Prints a balance summary, including businesses, the courts, the family and cities, and lists events that never fired, actions that never ran and story chapters never reached. The underworld persona gambles too, with a bookie tab at 25. Flags: `--shard k/n` plays lives k, k+n, …; `--json <file>` writes the raw numbers; `--merge <files>` adds shards up and prints one summary. |
+| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36, a chaos persona (Chaos switched on) gets powers at 14, becomes a hero or a villain at 18 and, every other time, a vampire at 45 who feeds when hungry and walks into the sunrise at 130, one life in ten plays a challenge (hand-made, daily or random), and a city persona rents at 20, moves city at 26 and 41, and at 30 buys a duplex to live in plus two homes to rent out, then plays landlord and tenant every year. Also checks that no building holds more tenants than units, and that a life that never lived in the US never shows a plain "$123" (one life in seven shows US dollars by setting). Prints a balance summary, including businesses, the courts, the family and cities, and lists events that never fired, actions that never ran and story chapters never reached. The underworld persona gambles too, with a bookie tab at 25, and owns the house: half of them run a book from 23, the other half buy two racehorses at 30 and open a casino at 35, then use Track & Book, racehorse or casino actions most years. Racehorses' numbers stay in range and a book always has punters. Flags: `--shard k/n` plays lives k, k+n, …; `--json <file>` writes the raw numbers; `--merge <files>` adds shards up and prints one summary. |
 | `dev/verify/tags.mjs` | Content tags: every tag in use is in `CONTENT_TAGS` with a Settings default, and the filters hide tagged events, choices and actions (checked on fixture content, so it works before anything is tagged). Prints how much content carries tags. |
 | `dev/verify/taboo.mjs` | Taboo gates: master + 7 subtype defaults OFF, per-kind gate matrix (master-only / subtype-only / wrong-subtype / teen-player / teen-partner all stay closed), tree persistence when a sibling becomes a partner, pedigree F (sibs 0.25, cousins 0.0625, second-gen 0.375), birth tallies, event gating (tag + real partner), dual kin label, no-leak on a generated family. |
 | `dev/verify/cities.mjs` | Cities: every city has a profile and four stable neighborhood names; pay, rents and home prices follow the city; tech hubs out-hire small cities; moving takes your spouse and kids and returns your deposit; Germany caps raises at 3%; an expired notice ends a lease; a duplex holds you plus one tenant; background checks reveal the same applicants; unpaid rent leads to eviction; old saves get tenants and landlords. |
 | `dev/verify/currency.mjs` | Currencies: every country has one; local formats (₹8,30,000 and ₹8.3L, 5,000 kr, -£250, ¥7.5M); the US-dollar setting; forty years of a Japanese life with no stray "$"; strengths stay in bounds and average about 1; emigrating converts at the strength ratio less 2% (nothing inside the eurozone, savings in the new currency come along free); foreign savings cost 1.5%, ride the currencies and keep their foreign amount; trips abroad cost more with weak money. |
 | `dev/verify/chaos.mjs` | Chaos mode: every Chaos event and action is tagged; with the switch off the menu is empty and the tick does nothing; powers never repeat and kids don't see the casino uses; going public makes you famous; picking a side names you and makes a nemesis with powers; reputation climbs the ranks; outed heroes earn sponsorships; a well-fed vampire reaches 150 with a 30-year-old body, can't have children, can't turn anyone under 18, and a cure resumes aging; ascending as an archangel ends the life with the Archangel title and the next generation hears from them. |
 | `dev/verify/challenges.mjs` | Challenges: every start and goal exists; a date always gives the same daily and another date another one; the starts (broke, royal, orphan, sickly, prodigy) set up what they say; goals complete when met and the challenge counts once; dying without it fails it; "die broke" only counts at death; daily streaks build, reset after a gap and ignore replays; the Chaos challenge hides while Chaos is off. |
+| `dev/verify/house.mjs` | Owning the house: a standard book keeps about 5% of what's bet; an unlicensed book draws heat and a licensed one none; a felony blocks the license and some countries have none; credit fills the slate; a family eventually asks for its fifth and takes it; a raid on a bookie is a bookmaking charge; prison ends an unlicensed book; the big game's expected result is the hold and laying off locks a profit; a yearling from the sale is a named pet with a pedigree that goes into training at two and grows toward its ceiling; great horses win far more than poor ones; at nine they retire to the broodmare band or stud; a mare bred to your stallion foals next year with both parents' blood; horses count toward net worth and never run away; only three-year-olds run the Derby, once; the Gold Cup needs a stakes win; a big race pays its purse at the finish and goes on the record; a champion wins the Derby often but not always; a casino needs a clean record, has a venue in its city you can't gamble in, moves its revenue with the house edge, wins more whale years than it loses, often loses its license over a skim, and casino chains own casinos in other cities. |
 | `dev/verify/gambling.mjs` | Gambling: every city has a bookie and Silver Mesa its casinos and resorts; venues persist and belong to crime families or hotel companies; wagering climbs to Whale and the jet is free; bookies lend and the app doesn't; race odds carry a take, every horse finishes once and never runs backwards, the payout waits for the finish and another action settles it; season bets pay when the season is played; debts escalate and grow; 400 beatings break bones far more often than they kill; family is untouched with Mature off; markers become lawsuits; the self-exclusion list shuts casinos but not bookies; counting cards bans you across the chain; the main event is only in Silver Mesa. |
 | `dev/verify/sim-business.mjs` | Business balance report (add an industry id as the third argument to run just that one): every industry run 20 years under a sensible owner (who also franchises and buys a small rival when flush) and a hands-off owner. Survival, profit, size, IPO readiness, franchising and acquisitions at years 1/5/10/20. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |

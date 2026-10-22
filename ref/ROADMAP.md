@@ -61,8 +61,8 @@ verification, sponsorships. Fan meets and publicity stunts.
 
 **Events.** Over 500 random events across every stage of life and in prison (see More story).
 
-**Business ownership (v0.2).** Start up to three companies across 22 industries, from food
-trucks and bakeries to tech startups, biotech, hotels and airlines. Medical, dental, law and
+**Business ownership (v0.2).** Start up to three companies across 24 industries, from food
+trucks and bakeries to tech startups, biotech, hotels, casinos and airlines. Medical, dental, law and
 biotech firms need the matching degree. Fund the start with savings, a personally guaranteed
 loan, an angel investor or family.
 - **Running it:** hire five kinds of staff in bulk (with recruiting costs and pay levels),
@@ -82,7 +82,7 @@ loan, an angel investor or family.
 - **Extras:** 22 business events (inspections, data breaches, unions, lawsuits, poaching,
   activist investors, buyouts...), 10 achievements, 3 goals, and a Business Mogul legacy title.
 
-**Business depth.** A living market of 66 named rival companies (three per industry, from
+**Business depth.** A living market of 72 named rival companies (three per industry, from
 local shops to industry giants) that grow, shrink, go public and go bankrupt every year, and
 outlast you across generations.
 - **Competition:** each company page ranks you against your rivals by revenue and market
@@ -417,6 +417,38 @@ nightlife, snowy, historic, industrial), shown on a new City page.
   to fix your game, a whale who needs a briefcase held, raids...), 9 achievements (High Roller, Long
   Shot, Photo Finish, Card Shark, Final Table, Champion of the Felt, In Too Deep, Still Standing, Clean
   Break), and the High Roller and Degenerate Gambler legacy titles.
+- **Fair odds:** a race's result is drawn from the same strengths as its tote-board odds, so a 20/1 shot
+  comes in about as often as 20/1 says. (This was fixed: favorites used to win far more often than their
+  odds said.)
+
+**Owning the house.** Be the house instead of the punter, in a new Track & Book menu.
+- **Your own book:** take bets from regulars and set your prices (a smaller cut draws more punters).
+  Let them bet on credit for more action and a slate of people who owe you. Balance the book by laying off
+  lopsided money, or keep the whole margin and the whole risk. Each year the big game puts most of the
+  money on one side: lay it off, shade the line, or let it ride and pray. Lean on deadbeats or send a crew,
+  limit the sharps who keep winning, and pay the local crime family its fifth, tell it no, or go to work
+  for it. An unlicensed book draws police heat, and a raid is a bookmaking charge. A bookmaker's license
+  (not in Japan, Korea or India, and not with a felony) makes it legal, taxed and bigger.
+- **Racehorses:** buy yearlings at the sale (by named sires, with the catalog's star rating) or claim a
+  proven runner after a race. Pick a trainer, watch them grow toward their potential, and run a season of
+  races and stakes for purses. Enter the big races and watch your own horse run on the race screen, with a
+  bet on top: the Derby (three-year-olds, once), the Cup, and the Silver Mesa Gold Cup (by invitation, the
+  richest race in the world). Win all three in one year for the Crown.
+- **Breeding:** retire mares to your broodmare band and stallions to stud, where they earn fees. Breed a
+  mare to your own stallion or a famous one; next spring's foal has both parents' speed and stamina, and you
+  name it. Racehorses are pets, so they live on your Pets list, count toward net worth and pass to your
+  heir. Injuries, buyers from abroad, a man who'll pay you to have your jockey hold back, and a vet with
+  something that "helps them breathe."
+- **Casinos:** a new Casino business type (the gaming license needs a clean record), with three rival
+  casino chains on the market that own casinos around the country. Set the house edge (loose games build a
+  following, tight ones earn more per bet), open a high-limit room for whales (some years they win), and pay
+  for surveillance to catch cheats. The crime families want a skim of the count room, the gaming
+  commission audits, and a skim that gets found costs you the license. Your casino is a real venue in its
+  city: you can walk the floor, but the house doesn't play against itself. Host poker tournaments, too.
+- **Extras:** 7 events and 3 casino events (a celebrity's party, a jackpot, a dealer palming chips), 10
+  achievements (Making Book, The House Always Wins, Saved by the Upset, Winner's Circle, Derby Day, The
+  Crown, Homebred Hero, Standing at Stud, The House, Whale Hunter), 2 goals, and the Racing Legend and
+  Casino Mogul legacy titles.
 
 **Challenges.** "Take a challenge" on the title screen. A challenge is a starting scenario plus
 goals, played by the character who starts it.
@@ -480,27 +512,24 @@ shows everything in US dollars instead.
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Owning the house.** Run a bookmaking operation (balance the book, pray for no upsets),
-    own and breed racehorses that race at the tracks, and run a casino on the business engine
-    (house edge, whales, cheating scandals, gaming licenses, the mob wanting a skim).
-2. **Pet depth.** Pet shows, exotic pets, breeding.
-3. **More business types.** A zoo (collect animals, build exhibits, breeding programs) on the
+1. **Pet depth.** Pet shows, exotic pets, breeding (racehorses already breed; see Owning the house).
+2. **More business types.** A zoo (collect animals, build exhibits, breeding programs) on the
     business engine.
-4. **Military depth.** Wars, desertion, veterans' benefits.
-5. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+3. **Military depth.** Wars, desertion, veterans' benefits.
+4. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
     double agents, and getting burned.
-6. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+5. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-7. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+6. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-8. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+7. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-9. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+8. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
     purges, coups and declared wars. Builds on Royalty and Military depth.
-10. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+9. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-11. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-12. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+10. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+11. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 

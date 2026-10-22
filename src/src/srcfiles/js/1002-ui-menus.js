@@ -26,7 +26,8 @@ SHEETS.actcat = (cat) => {
   const courts = cat === 'court' ? courtCard() : '';
   const chaos = cat === 'super' ? chaosCard() : ''; // 1019-ui-chaos.js
   const gambling = cat === 'gamble' ? gambleCard() : ''; // 1021-ui-gambling.js
-  return { title: c ? c.name : 'Activities', html: look + royal + mob + courts + chaos + gambling + listOf(actionRows(cat), 'Nothing available right now.') };
+  const house = cat === 'turf' ? houseCard() : ''; // 1022-ui-house.js
+  return { title: c ? c.name : 'Activities', html: look + royal + mob + courts + chaos + gambling + house + listOf(actionRows(cat), 'Nothing available right now.') };
 };
 // The Underworld opens with your standing: family, rank, heat and everything you run (39-underworld.js).
 function underworldCard() {

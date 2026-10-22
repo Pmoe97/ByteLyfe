@@ -8,7 +8,8 @@
  *   time anyone looks at a city (venuesIn), shared by the family line.
  *   venue = { id, cc, city, kind, name, owner, glam, open, since, horses? }
  *   owner: { fam } a crime family, { firm } a market company, { first, last, g,
- *   pid? } a bookie (made a person the first time you bet with them).
+ *   pid? } a bookie (made a person the first time you bet with them), { co } a casino
+ *   you own (54-house.js).
  * M(s).gamb = { at: { venueId: { wagered, tier, banned, heat, visits } },
  *   bets: open season bets, debts: [{ id, kind, vid, who, pid, amt, rate, since,
  *   stage, paid }], race: a race waiting for its finish, poker: { rating, cashes,
@@ -54,7 +55,11 @@ function tierName(s, id) { return TIERS[vStand(s, id).tier][0]; }
 function newVenue(s, cc, city, kind) {
   s.venueSeq = (s.venueSeq || 0) + 1;
   const v = { id: 'v' + s.venueSeq, cc, city, kind, open: true, since: s.year, glam: 50 };
-  if (kind === 'casino') { v.name = `${pick(CASINO_A)} ${pick(CASINO_B)} Casino`; v.glam = randInt(35, 65); if (chance(0.25)) { const f = pick(familiesIn(s, cc)); v.owner = { fam: f.id }; } }
+  if (kind === 'casino') {
+    v.name = `${pick(CASINO_A)} ${pick(CASINO_B)} Casino`; v.glam = randInt(35, 65);
+    const chains = industryRivals(s, 'casino');
+    if (chance(0.25)) { const f = pick(familiesIn(s, cc)); v.owner = { fam: f.id }; } else if (chains.length && chance(0.6)) v.owner = { firm: pick(chains).id };
+  }
   else if (kind === 'resort') { const hotels = industryRivals(s, 'hotel'); v.name = `The ${pick(RESORT_A)} ${pick(RESORT_B)}`; v.glam = randInt(75, 98); if (hotels.length) v.owner = { firm: pick(hotels).id }; }
   else if (kind === 'track') { v.name = `${city} ${pick(['Downs', 'Park', 'Racecourse', 'Raceway'])}`; v.glam = randInt(40, 70); v.horses = []; for (let i = 0; i < 12; i++) v.horses.push(newHorse(s)); }
   else if (kind === 'backroom') { const f = pick(familiesIn(s, cc)); v.owner = { fam: f.id }; v.name = `the back room of ${pick(BACKROOMS)}`; v.glam = randInt(5, 20); }
@@ -99,6 +104,7 @@ function ownerText(s, v) {
   if (!o) return v.kind === 'app' ? 'An app' : 'Independent';
   if (o.fam) { const f = underworldOf(s).families[o.fam]; return f ? `Run by ${f.name}` : 'Run by the mob'; }
   if (o.firm) { const f = firmById(s, o.firm); return f ? `Owned by ${f.name}${f.ticker ? ` (${f.ticker})` : ''}` : 'Corporate'; }
+  if (o.co) return company(s, o.co) ? 'Your casino' : 'Independent';
   return 'A bookie';
 }
 // The bookie becomes a person in your life the first time you bet with them.
@@ -173,6 +179,7 @@ onChoice('gChase', (s, ctx, yes) => {
 /* ---- visiting a venue -------------------------------------------------------------- */
 function visitVenue(s, v) {
   if (!v || !v.open) return;
+  if (v.owner && v.owner.co && company(s, v.owner.co)) return ownVenueVisit(s, v); // 54-house.js
   if (excluded(s) && v.kind !== 'bookie' && v.kind !== 'backroom') return { text: `Your name is on the self-exclusion list until ${gamb(s).excluded}. The door staff wished you well.`, nolog: true };
   const st = vStand(s, v.id);
   if (st.banned > s.year) return { text: `You're banned from ${v.name} until ${st.banned}.`, nolog: true };
@@ -265,17 +272,22 @@ onChoice('gBaccarat', (s, ctx, on) => {
 });
 
 /* ---- horse racing ---------------------------------------------------------------- */
-function newHorse(s) { return { id: uid(s, 'h'), name: `${pick(HORSE_A)} ${pick(HORSE_B)}`, spd: randInt(55, 92), sta: randInt(45, 95), form: randInt(-5, 5), wins: 0, starts: 0, born: s.year - randInt(2, 5) }; }
+function newHorse(s) {
+  const spd = randInt(55, 92), sta = randInt(45, 95), age = randInt(2, 5), starts = (age - 2) * randInt(3, 7);
+  return { id: uid(s, 'h'), name: `${pick(HORSE_A)} ${pick(HORSE_B)}`, spd, sta, form: randInt(-5, 5), wins: Math.round(starts * clamp((spd - 55) / 110 + gauss(0, 0.05), 0, 0.5)), starts, born: s.year - age };
+}
 // A race's field and the odds the track posts (with the track's 15% take).
-function raceField(s, v) {
-  const pool = v.horses.slice().sort(() => rand() - 0.5).slice(0, 8);
-  const power = pool.map((h) => h.spd * 0.62 + h.sta * 0.28 + h.form * 1.2);
-  const ex = power.map((p) => Math.exp(p / 6)), tot = sum(ex);
+function raceField(s, v) { return raceOdds(v.horses.slice().sort(() => rand() - 0.5).slice(0, 8)); }
+// Odds for any field of horses (the big races in 54-house.js bring their own).
+function raceOdds(pool) {
+  const ex = pool.map((h) => Math.exp(racePower(h) / 6)), tot = sum(ex);
   return pool.map((h, i) => {
     const p = ex[i] / tot, dec = clamp((1 / p) * 0.85, 1.2, 101);
     return { hid: h.id, name: h.name, no: i + 1, color: SILKS[i], p, dec: Math.round(dec * 10) / 10 };
   });
 }
+// A horse's strength on the day: the odds and the result both come from it.
+function racePower(h) { return h.spd * 0.62 + h.sta * 0.28 + h.form * 1.2; }
 // Fractional odds the way a tote board shows them: 1/3, 5/2, 11/2, 16/1, 33/1.
 function oddsText(dec) {
   const x = dec - 1;
@@ -284,24 +296,34 @@ function oddsText(dec) {
   const n = Math.round(x * 2) / 2;
   return Number.isInteger(n) ? `${n}/1` : `${n * 2}/2`;
 }
-// The race itself: each horse's position, step by step, for the race screen.
-function runRace(s, v, field) {
-  const horses = field.map((f) => v.horses.find((h) => h.id === f.hid));
-  const N = 60, pos = field.map(() => 0), frames = [], done = field.map(() => null);
-  for (let t = 0; t < N; t++) {
-    const late = t / N;
-    horses.forEach((h, i) => {
-      if (done[i] !== null) return;
-      const fade = late > 0.6 ? (h.sta - 70) / 60 : 0;
-      const surge = chance(0.06) ? randFloat(0.4, 1.2) : 0;
-      pos[i] += 1.55 + (h.spd - 70) / 55 + fade * 0.6 + h.form / 40 + surge + gauss(0, 0.35);
-      if (pos[i] >= 100) done[i] = t + (pos[i] - 100) / 3;
-    });
-    frames.push(pos.map((x) => Math.round(Math.min(x, 100) * 10) / 10));
-    if (done.every((x) => x !== null)) break;
+// The race itself. The finishing order is drawn from the same strengths the odds are,
+// so the odds are fair (a 20/1 shot wins about one race in twenty-one, less the take).
+// The frames, each horse's position step by step for the race screen, then show how it
+// got there: front-runners (more speed than stamina) go early, stayers come late, and
+// anyone can surge. pool is where the field's horses are looked up (the track's own,
+// unless given).
+function runRace(s, v, field, pool) {
+  const horses = field.map((f) => (pool || v.horses).find((h) => h.id === f.hid));
+  const order = [], left = horses.map((h, i) => i);
+  while (left.length) { const i = weighted(left, (k) => Math.exp(racePower(horses[k]) / 6)); order.push(i); left.splice(left.indexOf(i), 1); }
+  const done = [];
+  let t = randFloat(44, 50);
+  order.forEach((i, k) => { if (k) t += k === 1 ? Math.abs(gauss(0, 1.2)) + 0.05 : clamp(gauss(1.2, 0.8), 0.1, 4); done[i] = t; });
+  // Each horse's path: 20 knots of a curve, bent by its running style, with surges.
+  const K = 20, paths = horses.map((h) => {
+    const a = clamp(1 - (h.spd - h.sta) / 130 + gauss(0, 0.1), 0.72, 1.35), cum = [0];
+    let tot = 0;
+    for (let k = 1; k <= K; k++) { tot += Math.max(0.01, (Math.pow(k / K, a) - Math.pow((k - 1) / K, a)) * (1 + gauss(0, 0.25) + (chance(0.06) ? randFloat(0.4, 1) : 0))); cum.push(tot); }
+    return cum.map((x) => x / tot);
+  });
+  const frames = [];
+  for (let f = 0, N = Math.ceil(Math.max(...done)); f <= N; f++) {
+    frames.push(horses.map((h, i) => {
+      const x = Math.min(1, f / done[i]) * K, k = Math.floor(x), y = k >= K ? 1 : paths[i][k] + (paths[i][k + 1] - paths[i][k]) * (x - k);
+      return Math.round(y * 1000) / 10;
+    }));
   }
-  const order = field.map((f, i) => i).sort((a, b) => (done[a] ?? 1e9) - (done[b] ?? 1e9) || pos[b] - pos[a]);
-  const margin = done[order[1]] !== null && done[order[0]] !== null ? done[order[1]] - done[order[0]] : 1;
+  const margin = done[order[1]] - done[order[0]];
   order.forEach((i, place) => { const h = horses[i]; h.starts++; if (place === 0) { h.wins++; h.form = clamp(h.form + 2, -10, 10); } else if (place > 4) h.form = clamp(h.form - 1, -10, 10); });
   return { frames, order, margin };
 }
@@ -358,6 +380,7 @@ function settleRace(s) {
   g.race = null;
   const names = r.order.slice(0, 3).map((i) => `${r.field[i].name} (${r.field[i].odds})`);
   const head = `${names[0]} won${r.margin < 0.25 ? ' by a nose' : r.margin > 3 ? ' by a mile' : ''}, then ${names[1]} and ${names[2]}.`;
+  if (r.own) return settleOwnRace(s, r, head); // your own horse in a big race (54-house.js)
   const mine = r.field[r.mine].name;
   if (r.payout > 0) {
     add(s, { money: r.payout, happy: r.long ? 12 : 5 });
@@ -714,7 +737,7 @@ function gamblingTick(s) {
     if (v.horses) {
       for (const h of v.horses.slice()) if (s.year - h.born >= 8 || chance(0.06)) { v.horses = v.horses.filter((x) => x !== h); v.horses.push(newHorse(s)); if (h.wins >= 6) log(s, `🐎 ${h.name} retired from ${v.name} with ${h.wins} wins.`); }
     }
-    if (['casino', 'backroom', 'resort'].includes(v.kind) && chance(0.03)) {
+    if (['casino', 'backroom', 'resort'].includes(v.kind) && !(v.owner && v.owner.co) && chance(0.03)) {
       v.open = false;
       const why = v.kind === 'backroom' ? 'was raided by the police' : v.owner && v.owner.fam ? 'lost its gaming license over mob ties' : 'closed its doors';
       if (canGamble(s)) log(s, `🎰 ${cap(v.name)} ${why}.`);

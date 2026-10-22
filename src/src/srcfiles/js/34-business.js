@@ -12,7 +12,8 @@
  *   locations, team { ops|sales|marketing|rnd|manager: { n, skill, pay, morale } },
  *   products [{ id, name, q, year }], tier, mkt, rnd, draw,
  *   rep, val, last (last year's P&L), hist [{ y, r, p, v }], lossYears, lastRev, growth, closed,
- *   franchise: { outlets, fee, since } once you franchise (FRANCHISE_FEES), bought: year (37-market.js)
+ *   franchise: { outlets, fee, since } once you franchise (FRANCHISE_FEES), bought: year (37-market.js),
+ *   casino: the house edge, high-limit room, surveillance and skim of a casino (54-house.js)
  * }
  * Staff are pools per role (headcount + average skill/pay/morale), so a
  * company can grow from one food truck to an airline without bloating saves.
@@ -58,6 +59,7 @@ function industryMissing(s, id) {
   const out = [];
   if (r && r.degree && !hasDegree(s, r.degree)) out.push(DEGREE_NAMES[r.degree]);
   if (r && r.anyDegree && !r.anyDegree.some((d) => hasDegree(s, d))) out.push(r.anyDegree.map((d) => DEGREE_NAMES[d]).join(' or '));
+  if (r && r.clean && hasFelony(s)) out.push('a clean record');
   return out;
 }
 function cleanCompanyName(v) { return String(v || '').replace(/[<>{}\[\]]/g, '').trim().slice(0, 32); }
@@ -220,7 +222,8 @@ function bizForecast(s, co) {
   const eff = (0.8 + 0.2 * mgrCov * (0.5 + mgrSkill / 100)) * (0.8 + avgMorale(co) / 300) * ownerFactor(s, co);
   const q = effQuality(s, co);
   const demand = bizDemand(co, q, co.tier, boost);
-  const revenue = Math.round(units * price(s, I.unit) * demand * PRICE_TIERS[co.tier].price * eff);
+  const mods = industryMods(s, co);
+  const revenue = Math.round(units * price(s, I.unit) * demand * PRICE_TIERS[co.tier].price * eff * mods.rev);
   const salaries = Math.round(sum(BIZ_ROLE_IDS, (r) => t[r].n * t[r].pay));
   const rent = co.locations * price(s, I.rent);
   const mkt = co.mkt ? bizCost(s, co, MKT_SPEND[co.mkt]) : 0;
@@ -228,9 +231,12 @@ function bizForecast(s, co) {
   const cogs = Math.round(revenue * I.cogs);
   const draw = co.ceo === 'you' ? co.draw : 0;
   const interest = Math.round(Math.max(0, co.debt) * 0.09 + Math.max(0, -co.cash) * 0.12);
-  const fees = franchiseFees(s, co), support = Math.round(fees * 0.15);
-  return { revenue, fees, cogs, salaries, rent, mkt, rnd, draw, interest, support, profit: revenue + fees - cogs - salaries - rent - mkt - rnd - draw - interest - support, units, demand, q, eff, cap, staff, idle: Math.max(0, t.ops.n + t.sales.n - cap) };
+  const fees = franchiseFees(s, co), support = Math.round(fees * 0.15), extra = mods.cost;
+  return { revenue, fees, cogs, salaries, rent, mkt, rnd, draw, interest, support, extra, profit: revenue + fees - cogs - salaries - rent - mkt - rnd - draw - interest - support - extra, units, demand, q, eff, cap, staff, idle: Math.max(0, t.ops.n + t.sales.n - cap), rep: mods.rep };
 }
+// What an industry with its own layer adds to the forecast: a revenue multiplier, a
+// reputation pull and running costs. Only the casino has one (casinoMods, 54-house.js).
+function industryMods(s, co) { return co.ind === 'casino' ? casinoMods(s, co) : { rev: 1, rep: 0, cost: 0 }; }
 
 /* ---- franchising ----------------------------------------------------
  * Franchisees open outlets under your brand and pay a royalty on their sales.
@@ -292,7 +298,11 @@ function companyYear(s, co) {
   const noise = Math.max(0.3, gauss(1, (I.vol || 0.12) / (1 + headcount(co) / 150) + 0.04));
   const revenue = Math.max(0, Math.round(f.revenue * noise));
   const cogs = Math.round(revenue * I.cogs);
-  let profit = revenue + f.fees - cogs - f.salaries - f.rent - f.mkt - f.rnd - f.draw - f.interest - f.support;
+  let profit = revenue + f.fees - cogs - f.salaries - f.rent - f.mkt - f.rnd - f.draw - f.interest - f.support - f.extra;
+  // A casino's year brings what no forecast sees: whales, cheats, fines and the skim (54-house.js).
+  const ev = co.ind === 'casino' ? casinoYear(s, co, revenue) : null;
+  if (ev) profit += ev.whales - ev.cost;
+  if (co.closed || s.dead) return;
   const principal = co.debt > 0 ? Math.min(co.debt, Math.round(co.debt * 0.2)) : 0;
   co.debt -= principal;
   if (co.guaranteed) co.guaranteed = Math.min(co.guaranteed, co.debt);
@@ -300,13 +310,13 @@ function companyYear(s, co) {
   profit -= tax;
   co.cash += profit - principal;
   if (f.draw > 0) M(s).bizIncome.push(['Salary from ' + co.name, f.draw]);
-  co.last = { year: s.year, revenue, fees: f.fees, cogs, salaries: f.salaries, rent: f.rent, mkt: f.mkt, rnd: f.rnd, draw: f.draw, interest: f.interest, support: f.support, tax, profit, principal };
+  co.last = { year: s.year, revenue, fees: f.fees, cogs, salaries: f.salaries, rent: f.rent, mkt: f.mkt, rnd: f.rnd, draw: f.draw, interest: f.interest, support: f.support, extra: f.extra, whales: ev ? ev.whales : 0, special: ev ? ev.cost : 0, tax, profit, principal };
   if (profit > 0) tally(s, 'profitableYears');
 
   // Reputation settles toward what your products and marketing earn. A big franchise
   // network is harder to keep consistent.
   const mktRep = MKT_REP[co.mkt] + Math.min(8, co.team.marketing.n * (co.team.marketing.skill / 100) * 0.8);
-  const repTarget = clamp(f.q * 0.75 + mktRep * 2.5 + Math.min(5, co.years) - (co.franchise ? Math.min(6, co.franchise.outlets / 25) : 0), 0, 100);
+  const repTarget = clamp(f.q * 0.75 + mktRep * 2.5 + Math.min(5, co.years) + f.rep - (co.franchise ? Math.min(6, co.franchise.outlets / 25) : 0), 0, 100);
   co.rep = clamp100(co.rep + (repTarget - co.rep) * 0.3 + gauss(0, 3));
   teamYear(s, co, profit > 0);
 
@@ -320,7 +330,8 @@ function companyYear(s, co) {
   co.trend = co.trend == null ? growth : co.trend * 0.6 + clamp(growth, -0.5, 1.5) * 0.4;
   const mult = I.mult * clamp(1 + co.trend * 1.5, 0.4, 3) * (0.6 + co.rep / 125);
   const hype = I.hype ? f.q * 5000 * I.hype * Math.min(1, (headcount(co) + 1) / 10) * econ(s) : 0;
-  co.val = Math.max(0, Math.round(Math.max(0, co.cash - co.debt) + co.locations * price(s, I.locBuild) * 0.5 + Math.max((revenue + f.fees * 3) * mult, profit * 8, hype)));
+  const luck = ev ? Math.round(ev.whales * 0.8) : 0; // a lucky year with the whales doesn't make a casino worth more
+  co.val = Math.max(0, Math.round(Math.max(0, co.cash - co.debt) + co.locations * price(s, I.locBuild) * 0.5 + Math.max((revenue + f.fees * 3) * mult, (profit - luck) * 8, hype)));
   let stockLine = '';
   if (co.public) {
     const before = co.price;

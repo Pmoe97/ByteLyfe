@@ -93,6 +93,7 @@ SHEETS.pet = (id) => {
     title: pet.name,
     html: `<div class="card p-card"><div class="avatar" style="background:color-mix(in srgb, #D99A5B 22%, var(--surface-2))">${emo(S.emoji, 56)}</div><div class="p-name">${esc(pet.name)}</div><div class="p-meta">${esc(pet.breed)} ${esc(S.name.toLowerCase())} · ${petAge(G, pet)} years old</div>
       <div class="rel-bar"><div class="muted">Bond · ${Math.round(pet.rel)}%</div>${bar(pet.rel)}</div></div>
+      ${pet.race ? horseCard(pet) : ''}
       <div class="section-title">Interact</div>${listOf(actionRows('pet', id))}`,
   };
 };

@@ -95,12 +95,12 @@ SHEETS.race = () => {
   let html = `<div class="race-wrap"><svg id="race-svg" viewBox="0 0 360 ${H}" role="img" aria-label="The race at ${esc(r.track)}">${track}${horses}</svg></div>
     <div class="race-call" id="race-call" aria-live="polite">${a.done ? finishCall(r) : 'The horses are at the gate…'}</div>
     <div class="card race-board" id="race-board">${a.done ? boardHtml(r, pos) : ''}</div>
-    <div class="note">Your bet: ${fmtMoney(r.amt)} on <b style="color:${mine.color}">#${mine.no} ${esc(mine.name)}</b> to ${r.type}.</div>`;
+    <div class="note">${r.own ? `Your horse: <b style="color:${mine.color}">#${mine.no} ${esc(mine.name)}</b>, running for a ${fmtMoneyShort(r.own.purse)} purse${r.amt ? `, with ${fmtMoney(r.amt)} on to win` : ''}.` : `Your bet: ${fmtMoney(r.amt)} on <b style="color:${mine.color}">#${mine.no} ${esc(mine.name)}</b> to ${r.type}.`}</div>`;
   if (a.done) {
     const place = r.order.indexOf(r.mine);
     html += `<div class="section-title">Result</div><div class="card">${r.order.slice(0, 3).map((i, k) => kvRow(`${['🥇', '🥈', '🥉'][k]} <span style="color:${r.field[i].color}">●</span> ${esc(r.field[i].name)}`, esc(r.field[i].odds))).join('')}
       ${place > 2 ? kvRow(`Your horse`, `${ordinal(place + 1)}`) : ''}</div>
-      <button class="btn primary block" style="margin-top:12px" data-a="raceDone">${r.payout > 0 ? `Collect ${fmtMoney(r.payout)}` : 'Tear up the ticket'}</button>`;
+      <button class="btn primary block" style="margin-top:12px" data-a="raceDone">${r.payout + (r.own ? r.own.won : 0) > 0 ? `Collect ${fmtMoney(r.payout + (r.own ? r.own.won : 0))}` : r.own ? 'Back to the barn' : 'Tear up the ticket'}</button>`;
   } else html += `<button class="btn block" style="margin-top:12px" data-a="raceSkip">Skip to the finish</button>`;
   setTimeout(raceLoop, 30);
   return { title: r.track, html };

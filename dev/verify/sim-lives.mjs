@@ -90,6 +90,12 @@ function check(s, where) {
     for (const t of a.tenants) if (!(t.rent > 0) || t.mood < 0 || t.mood > 100 || !t.first) fail(`bad tenant ${JSON.stringify(t)} @${where}`, s);
   }
   if (m.housing.type === 'rent' && !(m.housing.rent > 0)) fail(`rent ${m.housing.rent} @${where}`, s);
+  // Owning the house (54-house.js): racehorses keep sane numbers, and a book always has punters.
+  for (const id in s.pets) {
+    const h = s.pets[id].race;
+    if (h && (!(h.spd >= 30 && h.spd <= 99 && h.sta >= 30 && h.sta <= 99) || !['yearling', 'racing', 'broodmare', 'stud', 'retired'].includes(h.state) || h.wins > h.starts)) fail(`bad racehorse ${JSON.stringify(h)} @${where}`, s);
+  }
+  if (m.book && !(m.book.punters >= 3)) fail(`book with ${m.book.punters} punters @${where}`, s);
   // Real currencies (50-currency.js): a life that never lived in the US shows no plain "$123" anywhere.
   if (ctx.run('MONEY_FMT') && !(m.places || []).some((k) => k.startsWith('us:')) && p.country !== 'us') {
     const texts = s.pending.flatMap((pp) => [pp.text, pp.title, ...pp.choices.map((c) => c.label + ' ' + (c.sub || ''))]).concat(last ? last.lines.map((l) => l.t) : []);
@@ -133,6 +139,7 @@ function available(s) {
 
 const kin = { lives: 0, people: 0, maxPeople: 0 };
 const chal = { started: 0, done: 0, failed: 0 };
+const house = { books: 0, bookNet: 0, horses: 0, wins: 0, bigWins: 0, foals: 0, sold: 0, whales: 0, licenses: 0 };
 const cities = { moves: 0, places: 0, tenants: 0, maxTenants: 0, signed: 0, evicted: 0, wasEvicted: 0, beaten: 0, rent: 0 };
 const courts = { filed: 0, won: 0, lost: 0, settled: 0, sued: 0, beaten: 0, small: 0, rulings: 0, justices: 0, clientWins: 0 };
 const biz = { founded: 0, ipos: 0, exits: 0, fails: 0, maxVal: 0, maxStaff: 0, profitable: 0, coYears: 0, byInd: {} };
@@ -254,6 +261,21 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
         if (chance(0.8)) { const acts = ctx.actionList(s, 'gamble').map((a) => [a.id, undefined]).concat(ctx.venuesReach(s).map((v) => ['venue_visit', v.id])); const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'gamble:' + id); }
       } catch (e) { fail('gambling persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
     }
+    // And owns the house: half of them run a book from 23; the other half buy two racehorses at
+    // 30 and open a casino at 35. Then a Track & Book, racehorse or casino action most years.
+    if (s.gen === 1 && i % 10 === 7 && !s.dead && !s.player.prison && age >= 23) {
+      try {
+        if (i % 20 === 7 && age === 23 && ctx.canGamble(s)) { s.player.money += 20000; ctx.doAction(s, 'bk_start'); resolveAll(s, 'house'); }
+        if (i % 20 === 17 && age === 30) { s.player.money += 3e6; for (let k = 0; k < 2; k++) { ctx.doAction(s, 'hs_buy'); resolveAll(s, 'house'); } }
+        if (i % 20 === 17 && age === 35 && !ctx.hasFelony(s) && ctx.companies(s).length < 3) { s.player.money += 8e6; ctx.foundCompany(s, 'casino', 'Sim Casino', { equity: 1, debt: 0 }).auto = true; }
+        if (chance(0.7)) {
+          const acts = ctx.actionList(s, 'turf').map((a) => [a.id, undefined]);
+          for (const p of ctx.racehorses(s)) for (const a of ctx.actionList(s, 'pet', p.id)) if (a.id.startsWith('hs_')) acts.push([a.id, p.id]);
+          for (const co of ctx.companies(s)) if (co.ind === 'casino') for (const a of ctx.actionList(s, 'company', co.id)) if (a.id.startsWith('cs_')) acts.push([a.id, co.id]);
+          if (acts.length) { const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'house:' + id); }
+        }
+      } catch (e) { fail('house persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
     const n = randInt(0, 5);
     for (let k = 0; k < n && !s.dead; k++) {
       const av = available(s).filter(([id]) => !RARE.has(id) || chance(0.04));
@@ -304,13 +326,14 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
   const lf = s.player.life; biz.founded += lf.companiesFounded || 0; biz.ipos += lf.ipos || 0; biz.exits += lf.exits || 0; biz.fails += lf.bizFails || 0;
   for (const [k, t] of [['moves', 'cityMoves'], ['signed', 'tenantsSigned'], ['evicted', 'tenantsEvicted'], ['wasEvicted', 'evicted'], ['beaten', 'evictionsBeaten'], ['rent', 'rentCollected']]) cities[k] += lf[t] || 0;
   cities.places += (s.player.places || []).length;
+  for (const [k, c] of [['books', 'booksStarted'], ['bookNet', 'bookNet'], ['horses', 'racehorses'], ['wins', 'ownerWins'], ['bigWins', 'bigRaceWins'], ['foals', 'foals'], ['sold', 'horsesSold'], ['whales', 'whaleBeaten'], ['licenses', 'licenseLost']]) house[k] += lf[c] || 0;
   if (s.challenge) { chal.started++; if (s.challenge.done) chal.done++; else if (s.challenge.failed || s.challenge.pid !== s.playerId) chal.failed++; }
   const nt = s.player.assets.reduce((n, a) => n + (a.tenants || []).length, 0); cities.tenants += nt; cities.maxTenants = Math.max(cities.maxTenants, nt);
   for (const [k, t] of [['filed', 'lawsuitsFiled'], ['won', 'lawsuitsWon'], ['lost', 'lawsuitsLost'], ['settled', 'settlements'], ['sued', 'timesSued'], ['beaten', 'suitsBeaten'], ['small', 'smallClaimsWon'], ['rulings', 'rulings'], ['justices', 'supremeCourt'], ['clientWins', 'clientWins']]) courts[k] += lf[t] || 0;
 }
 
 // One run's raw numbers. Shards write these; --merge adds them up.
-let agg = { lives: stats.lives, seed: SEED, maxSecs: (Date.now() - t0) / 1000, shards: 1, failures, fails, stats, biz, kin, courts, cities, chal, seen: [...g('STORY_SEEN')] };
+let agg = { lives: stats.lives, seed: SEED, maxSecs: (Date.now() - t0) / 1000, shards: 1, failures, fails, stats, biz, kin, courts, cities, chal, house, seen: [...g('STORY_SEEN')] };
 if (opts.json) { fs.writeFileSync(opts.json, JSON.stringify(agg)); process.exit(0); }
 if (opts.merge) agg = opts.merge.map((f) => JSON.parse(fs.readFileSync(f, 'utf8'))).reduce(mergeAgg);
 // Numbers add up (keys starting with "max" take the larger), lists join, objects merge.
@@ -329,7 +352,7 @@ function mergeAgg(a, b) {
 }
 report(agg);
 
-function report({ stats, biz, kin, courts, cities, chal, failures, fails, seed, maxSecs, shards, seen }) {
+function report({ stats, biz, kin, courts, cities, chal, house, failures, fails, seed, maxSecs, shards, seen }) {
 const avg = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0);
 const median = (a) => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[Math.floor(b.length / 2)] : 0; };
 const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k}:${v}`).join(', ');
@@ -353,6 +376,7 @@ console.log(`Family (last gen per life, average): ${['sibling', 'aunt', 'cousin'
 console.log(`Courts (last gen per life): ${courts.filed} lawsuits filed · ${courts.won} won, ${courts.lost} lost, ${courts.settled} settled · sued ${courts.sued} times, ${courts.beaten} beaten · ${courts.small} small-claims wins · ${courts.rulings} rulings, ${courts.justices} justices confirmed · ${courts.clientWins} trials won for clients`);
 console.log(`Cities (last gen per life): ${cities.moves} city moves · ${(cities.places / Math.max(1, kin.lives)).toFixed(1)} cities lived in on average · ${cities.signed} leases signed by tenants · ${cities.tenants} tenants at the end (max ${cities.maxTenants}) · ${cities.evicted} tenants evicted · player evicted ${cities.wasEvicted} times, ${cities.beaten} evictions beaten · ${Math.round(cities.rent).toLocaleString()} rent collected`);
 console.log(`Challenges: ${chal.started} started · ${chal.done} completed · ${chal.failed} failed`);
+console.log(`The house (last gen per life): ${house.books} books started, ${Math.round(house.bookNet).toLocaleString()} kept · ${house.horses} racehorses, ${house.wins} race wins, ${house.bigWins} big-race wins, ${house.foals} foals, ${house.sold} sold · casinos ${biz.byInd.casino || 0} company-years, ${house.whales} whale-beating years, ${house.licenses} licenses lost`);
 console.log(`Content tags on: ${TAG_IDS.map((t) => `${t} in ${stats.tagLives[t] || 0} lives`).join(', ')}`);
 console.log(`Events never fired (${neverFired.length}/${evIds.length}): ${neverFired.join(', ') || 'none'}`);
 console.log(`Actions never run (${neverRun.length}/${ACTION_ORDER.length}): ${neverRun.join(', ') || 'none'}`);

@@ -889,7 +889,7 @@ function petTick(s) {
       p.died = s.year;
       add(s, { happy: -randInt(6, 12) });
       announce(s, { emoji: '🌈', title: 'Goodbye, ' + p.name, text: `Your ${PET_SPECIES[p.species].name.toLowerCase()} ${p.name} passed away at age ${petAge(s, p)}.`, tone: 'bad' });
-    } else if (p.rel < 10 && chance(0.3)) {
+    } else if (p.rel < 10 && !p.race && chance(0.3)) { // racehorses live at the stables (54-house.js)
       p.alive = false;
       p.died = s.year;
       announce(s, { emoji: '🐾', title: p.name + ' ran away', text: `${p.name} ran away. Maybe they felt neglected.`, tone: 'bad' });

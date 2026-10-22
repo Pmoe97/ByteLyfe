@@ -12,7 +12,7 @@
  *   qpow      how much product quality drives demand (1 = normal, 2 = hits-driven)
  *   vol       yearly revenue swing                       hype      pre-revenue valuation for startup-y industries
  *   salesShare  share of headcount autopilot gives to sales
- *   req       founder requirements ({ degree } or { anyDegree: [...] })
+ *   req       founder requirements ({ degree }, { anyDegree: [...] } or { clean: true }, no felonies)
  *   franchise others can license the brand and open outlets (see FRANCHISE_FEES)
  *   rivalSizes  revenue ranges (in locations' worth) for its rival firms, when the default is too big
  *   roles     what each role is called here              place     what a location is called
@@ -146,6 +146,13 @@ const INDUSTRIES = {
     roles: { ops: 'Hotel Staff', sales: 'Sales Manager', marketing: 'Brand Manager', rnd: 'Experience Designer', manager: 'Hotel Manager' }, place: 'hotel', product: 'experience',
     prodA: ['Ocean', 'Garden', 'Skyline', 'Royal', 'Spa'], prodB: ['Suites', 'Wing', 'Package', 'Experience'],
     names: [['The Grand', 'Harbor', 'Silver Pine', 'Azure', 'Royal Oak'], ['Hotel', 'Resort', 'Inn', 'Suites']],
+  },
+  // The house edge, whales, cheats and the gaming commission are in 54-house.js.
+  casino: {
+    name: 'Casino', emoji: '🎰', start: 6000000, locBuild: 9000000, rent: 1200000, unit: 150000, perLoc: 50, cogs: 0.32, wage: 0.9, mult: 2.2, scale: 3, life: 8, skill: 'cards', vol: 0.15, salesShare: 0.15, req: { clean: true },
+    roles: { ops: 'Dealer', sales: 'Casino Host', marketing: 'Promotions Manager', rnd: 'Games Designer', manager: 'Pit Boss' }, place: 'casino', product: 'attraction',
+    prodA: ['High-Limit', 'Neon', 'Lucky', 'Golden', 'Diamond', 'Dragon', 'Starlight'], prodB: ['Slots', 'Poker Room', 'Baccarat Salon', 'Showroom', 'Jackpot', 'Lounge'],
+    names: [['Golden', 'Lucky', 'Silver', 'Royal', 'Diamond', 'Crimson', 'Neon'], ['Casino', 'Horseshoe', 'Palace', 'Club', 'Ace', 'Crown']],
   },
   airline: {
     name: 'Airline', emoji: '✈️', start: 40000000, locBuild: 30000000, rent: 4000000, unit: 335000, perLoc: 150, cogs: 0.6, wage: 1.6, mult: 1.3, scale: 20, life: 15, skill: 'business', vol: 0.25, salesShare: 0.1,

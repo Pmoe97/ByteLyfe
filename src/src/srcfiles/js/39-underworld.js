@@ -621,7 +621,7 @@ function uwTick(s) {
   u.heat = Math.round(clamp(u.heat - 8 - (lowYear ? 10 : 0), 0, 100));
   if (!u.rat && u.heat >= 30 && chance((u.heat - 20) / 250)) {
     u.heat = Math.max(0, u.heat - 35);
-    const crime = d && d.rank >= 2 ? 'trafficking' : fam ? 'racketeering' : u.book ? 'loansharking' : u.collection.length ? 'fencing' : 'racketeering';
+    const crime = d && d.rank >= 2 ? 'trafficking' : fam ? 'racketeering' : u.book ? 'loansharking' : m.book && !m.book.legal ? 'bookmaking' : u.collection.length ? 'fencing' : 'racketeering';
     announce(s, { emoji: '🚔', title: 'Raid', text: 'The police kicked in your door at dawn with a stack of warrants.', tone: 'bad' });
     const r = arrest(s, crime);
     if (r && r.text) log(s, r.text, 'bad');

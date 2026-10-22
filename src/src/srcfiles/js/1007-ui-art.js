@@ -895,16 +895,16 @@ const CAT_HUES = { gamble: '#34D399', super: '#8B6CFF', mind: '#FF8FC7', health:
 // Emoji used across the game's content, grouped by the drawn icon that stands in
 // for them. Anything not listed keeps its emoji, drawn inside the same tile.
 const EMOJI_GROUPS = {
-  rattle: "👶🍼🧸🧒", cake: "🎂🧁🍰", gradcap: "🎓", book: "📚📖📘📗📔📕📙", school: "🏫🎒✏️🖍️📐",
+  rattle: "👶🍼🧸🧒", cake: "🎂🧁🍰", gradcap: "🎓", book: "📚📖📘📗📔📕📙📒", school: "🏫🎒✏️🖍️📐",
   career: "💼👔", money: "💰💵💸🤑💲💳💱", piggy: "🏦🥫",
   assets: "🏠🏡🏘️🏚️🏙️🌆🏯🏰", building: "🏢🏭🏬🏪🏨🏗️🧱", car: "🚗🚙🚘🏎️🚕🚐🚌🚜🛵🏍️🏁🛣️🚇",
   plane: "✈️🛫🛩️🚁🧳🏖️🏝️🗺️🛳️🚤⛵🛥️🛶🏕️⛰️🌅🌊", globe: "🌍🌎🌏🛂🧭📍",
   ring: "💍💒💎💠", heartbreak: "💔", love: "💕💞💓💘💝💌💋😘🥰🌹💐🌷😏", health: "❤️❤🩸",
   medical: "🩺🏥💊💉🩹🚑🦷🦴😷👩‍⚕️👂👁️🦶🦵🦻", thermometer: "🤒🤧🤕🦠🥵🥶🤮🤢😵🚬",
   happy: "😊😁😀😄😇☀️🌤️😂🤗", sad: "😢😟😰😱😫😞😔😖🥱😴😬😒🌧️🙈", angry: "😡😤🤬😠💢🗯️👊✊",
-  paw: "🐾🐶🐕🐈🐱🐹🐇🦜🐠🐢🦎🐍🐎🐐🦮🐖🦊🐺🦦🦔🐝🐛🐜🦢🦈🦋🦄🦒🐭",
+  paw: "🐾🐶🐕🐈🐱🐹🐇🦜🐠🐢🦎🐍🐎🐴🏇🐐🦮🐖🦊🐺🦦🦔🐝🐛🐜🦢🦈🦋🦄🦒🐭🐣",
   party: "🎉🥳🎈🎊🕺💃🎡🎢🎠🤘", drink: "🍺🍻🍸🍶🥂🍷🍾☕",
-  plate: "🍽️🍳🍕🍔🍝🥘🌮🍜🍟🍿🍦🍫🍪🍭🍬🌭🥐🍎🍋🥗🥦🍩🌶️👨‍🍳",
+  plate: "🍽️🍳🍕🍔🍝🥘🌮🍜🍟🍿🍦🍫🍪🍭🍬🌭🥐🍎🍋🥗🥦🍩🌶️👨‍🍳🥕",
   trophy: "🏆🥇🏅🎖️💯🔝🏟️🎯", fame: "⭐🌟💫🤩🦸", looks: "✨💅💄💇💈", clover: "🍀🎰", dice: "🎲", cards: "🃏♠️♟️",
   music: "🎸🎻🎹🎷🎺🥁🎤🎶🎵🎼🎧🎙️🪕", palette: "🎨🖌️🖼️", clapper: "🎬🎭📺🎟️🎫📸📷🎥",
   controller: "🎮🕹️👾", phone: "📱📲📞☎️🤳📵", laptop: "💻🖥️⌨️👩‍💻🤖💿", flask: "🔬🧪🧬⚗️☢️", rocket: "🚀☄️",

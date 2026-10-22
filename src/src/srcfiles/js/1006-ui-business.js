@@ -56,6 +56,7 @@ SHEETS.company = (id) => {
     ${last ? kvRow(`Profit (${last.year})`, `<span class="${last.profit >= 0 ? 'good' : 'bad'}">${fmtMoney(last.profit)}</span>`) : ''}
     ${kvRow('This year, projected', `${fmtMoneyShort(f.revenue)} revenue · <span class="${f.profit >= 0 ? 'good' : 'bad'}">${fmtMoneyShort(f.profit)}</span> before tax`)}
   </div>`;
+  html += casinoSection(co); // 1022-ui-house.js
   const acts = actionRows('company', id);
   html += `<div class="section-title">Run the company</div>${acts ? listOf(acts) : '<div class="note">You have no say in day-to-day decisions right now.</div>'}`;
   if (godOn()) html += `<div class="section-title">God Mode</div><div class="chips">${[100000, 1000000, 100000000].map((v) => `<button class="chip" data-a="sbCoCash" data-id="${co.id}" data-v="${v}">+${fmtMoneyShort(v)} company cash</button>`).join('')}<button class="chip" data-a="sbCoRep" data-id="${co.id}">Max reputation</button></div>`;
@@ -73,7 +74,8 @@ SHEETS.company = (id) => {
     html += `<div class="section-title">Last year (${last.year})</div><div class="card">
       ${kvRow('Revenue', `<span class="good">+${fmtMoney(last.revenue)}</span>`)}
       ${last.fees ? kvRow('Franchise royalties', `<span class="good">+${fmtMoney(last.fees)}</span>`) : ''}
-      ${[['Goods & operating costs', last.cogs], ['Salaries', last.salaries], ['Rent & overhead', last.rent], ['Marketing', last.mkt], ['R&D', last.rnd], ['Franchise support', last.support], ['Your salary', last.draw], ['Interest', last.interest], ['Taxes', last.tax], ['Loan repayment', last.principal]].filter(([, v]) => v).map(([k, v]) => kvRow(k, `<span class="bad">-${fmtMoney(v)}</span>`)).join('')}
+      ${last.whales ? kvRow('High-limit room', `<span class="${last.whales > 0 ? 'good' : 'bad'}">${last.whales > 0 ? '+' : '-'}${fmtMoney(Math.abs(last.whales))}</span>`) : ''}
+      ${[['Goods & operating costs', last.cogs], ['Salaries', last.salaries], ['Rent & overhead', last.rent], ['Marketing', last.mkt], ['R&D', last.rnd], ['Franchise support', last.support], ['Surveillance & VIP room', last.extra], ['Cheats, fines & the skim', last.special], ['Your salary', last.draw], ['Interest', last.interest], ['Taxes', last.tax], ['Loan repayment', last.principal]].filter(([, v]) => v).map(([k, v]) => kvRow(k, `<span class="bad">-${fmtMoney(v)}</span>`)).join('')}
       ${kvRow('<b>Net profit</b>', `<span class="${last.profit >= 0 ? 'good' : 'bad'}">${fmtMoney(last.profit)}</span>`)}
     </div>`;
   }
