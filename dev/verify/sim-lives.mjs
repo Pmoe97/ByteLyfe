@@ -3,13 +3,28 @@
 //
 //   node dev/verify/sim-lives.mjs            (200 lives, seed 1)
 //   node dev/verify/sim-lives.mjs 1000 42    (1000 lives, seed 42)
+//
+// npm run verify splits the run across cores (dev/verify/run-all.mjs):
+//   --shard k/n       play only lives k, k+n, k+2n... (personas are picked by life number,
+//                     so every shard still gets every persona)
+//   --json <file>     write the raw numbers instead of the summary
+//   --merge <files>   add shards up and print one summary (exits 1 on any failure)
+import fs from 'node:fs';
 import { loadGame } from './loadgame.mjs';
 
-const N = Number(process.argv[2]) || 200;
-const SEED = Number(process.argv[3]) || 1;
+const opts = { shard: [0, 1], json: null, merge: null, pos: [] };
+for (let i = 2; i < process.argv.length; i++) {
+  const a = process.argv[i];
+  if (a === '--shard') opts.shard = process.argv[++i].split('/').map(Number);
+  else if (a === '--json') opts.json = process.argv[++i];
+  else if (a === '--merge') { opts.merge = process.argv.slice(i + 1); break; }
+  else opts.pos.push(a);
+}
+const N = Number(opts.pos[0]) || 200;
+const SEED = Number(opts.pos[1]) || 1;
 const ctx = loadGame({ quiet: true });
 const g = (name) => ctx.run(name);
-ctx.seedRng(SEED);
+ctx.seedRng(SEED + opts.shard[0] * 7919);
 const rand = ctx.rand, pick = ctx.pick, chance = ctx.chance, randInt = ctx.randInt;
 const ACTIONS = g('ACTIONS'), ACTION_ORDER = g('ACTION_ORDER'), HANDLERS = g('HANDLERS'), JOBS = g('JOBS'), JOB_IDS = g('JOB_IDS');
 const EVENTS = g('EVENTS'), META = g('META'), TAG_IDS = Object.keys(g('CONTENT_TAGS'));
@@ -122,7 +137,8 @@ const courts = { filed: 0, won: 0, lost: 0, settled: 0, sued: 0, beaten: 0, smal
 const biz = { founded: 0, ipos: 0, exits: 0, fails: 0, maxVal: 0, maxStaff: 0, profitable: 0, coYears: 0, byInd: {} };
 const stats = { lives: 0, deaths: [], worth: [], gens: [], titles: {}, causes: {}, careers: {}, actionsRun: {}, prison: 0, degrees: {}, maxAge: 0, events: {}, tagLives: {} };
 const t0 = Date.now();
-for (let i = 0; i < N; i++) {
+for (let i = 0; i < (opts.merge ? 0 : N); i++) {
+  if (i % opts.shard[1] !== opts.shard[0]) continue;
   for (const t of TAG_IDS) { META.settings[t] = chance(0.5); if (META.settings[t]) stats.tagLives[t] = (stats.tagLives[t] || 0) + 1; }
   META.settings.currency = chance(0.15) ? 'usd' : 'local';
   // The chaos persona (i % 10 = 4) needs Chaos on.
@@ -285,16 +301,37 @@ for (let i = 0; i < N; i++) {
   for (const [k, t] of [['filed', 'lawsuitsFiled'], ['won', 'lawsuitsWon'], ['lost', 'lawsuitsLost'], ['settled', 'settlements'], ['sued', 'timesSued'], ['beaten', 'suitsBeaten'], ['small', 'smallClaimsWon'], ['rulings', 'rulings'], ['justices', 'supremeCourt'], ['clientWins', 'clientWins']]) courts[k] += lf[t] || 0;
 }
 
+// One run's raw numbers. Shards write these; --merge adds them up.
+let agg = { lives: stats.lives, seed: SEED, maxSecs: (Date.now() - t0) / 1000, shards: 1, failures, fails, stats, biz, kin, courts, cities, chal, seen: [...g('STORY_SEEN')] };
+if (opts.json) { fs.writeFileSync(opts.json, JSON.stringify(agg)); process.exit(0); }
+if (opts.merge) agg = opts.merge.map((f) => JSON.parse(fs.readFileSync(f, 'utf8'))).reduce(mergeAgg);
+// Numbers add up (keys starting with "max" take the larger), lists join, objects merge.
+function mergeAgg(a, b) {
+  const out = Array.isArray(a) ? a.concat(b) : {};
+  if (Array.isArray(a)) return out;
+  for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) {
+    const x = a[k], y = b[k];
+    if (k === 'seed') out[k] = x ?? y;
+    else if (x === undefined) out[k] = y;
+    else if (y === undefined) out[k] = x;
+    else if (typeof x === 'number') out[k] = k.startsWith('max') ? Math.max(x, y) : x + y;
+    else out[k] = mergeAgg(x, y);
+  }
+  return out;
+}
+report(agg);
+
+function report({ stats, biz, kin, courts, cities, chal, failures, fails, seed, maxSecs, shards, seen }) {
 const avg = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0);
 const median = (a) => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[Math.floor(b.length / 2)] : 0; };
 const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k}:${v}`).join(', ');
 const evIds = g('EVENT_IDS');
 const neverFired = evIds.filter((id) => !stats.events[id]);
 const neverRun = ACTION_ORDER.filter((id) => !stats.actionsRun[id]);
-const STORIES = g('STORIES'), SEEN = g('STORY_SEEN');
+const STORIES = g('STORIES'), SEEN = new Set(seen);
 const chapters = g('STORY_IDS').flatMap((id) => Object.keys(STORIES[id].chapters).map((ch) => id + ':' + ch));
 const unread = chapters.filter((k) => !SEEN.has(k));
-console.log(`\nByteLyfe sim: ${stats.lives} lives, seed ${SEED}, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+console.log(`\nByteLyfe sim: ${stats.lives} lives, seed ${seed}, ${maxSecs.toFixed(1)}s${shards > 1 ? ` (${shards} shards in parallel)` : ''}`);
 console.log(`Deaths: ${stats.deaths.length} · avg age ${avg(stats.deaths)} · median ${median(stats.deaths)} · max ${stats.maxAge}`);
 console.log(`Net worth at death: median ${median(stats.worth)} · avg ${avg(stats.worth)}`);
 console.log(`Causes: ${top(stats.causes, 10)}`);
@@ -313,8 +350,9 @@ console.log(`Events never fired (${neverFired.length}/${evIds.length}): ${neverF
 console.log(`Actions never run (${neverRun.length}/${ACTION_ORDER.length}): ${neverRun.join(', ') || 'none'}`);
 console.log(`Story chapters never reached (${unread.length}/${chapters.length}): ${unread.join(', ') || 'none'}`);
 if (failures) {
-  console.log(`\n❌ ${failures} invariant failures. First ${fails.length}:`);
-  for (const f of fails) console.log('  - ' + f);
+  console.log(`\n❌ ${failures} invariant failures. First ${Math.min(25, fails.length)}:`);
+  for (const f of fails.slice(0, 25)) console.log('  - ' + f);
   process.exit(1);
 }
 console.log('\n✅ No invariant failures.');
+}
