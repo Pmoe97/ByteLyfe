@@ -234,4 +234,5 @@ function afterChange(s) {
   if (!s || !s.player) return;
   checkAchievements(s);
   checkGoals(s);
+  checkChallenge(s); // 52-challenges.js
 }

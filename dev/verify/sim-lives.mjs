@@ -116,6 +116,7 @@ function available(s) {
 }
 
 const kin = { lives: 0, people: 0, maxPeople: 0 };
+const chal = { started: 0, done: 0, failed: 0 };
 const cities = { moves: 0, places: 0, tenants: 0, maxTenants: 0, signed: 0, evicted: 0, wasEvicted: 0, beaten: 0, rent: 0 };
 const courts = { filed: 0, won: 0, lost: 0, settled: 0, sued: 0, beaten: 0, small: 0, rulings: 0, justices: 0, clientWins: 0 };
 const biz = { founded: 0, ipos: 0, exits: 0, fails: 0, maxVal: 0, maxStaff: 0, profitable: 0, coYears: 0, byInd: {} };
@@ -127,8 +128,11 @@ for (let i = 0; i < N; i++) {
   // The chaos persona (i % 10 = 4) needs Chaos on.
   if (i % 10 === 4 && !META.settings.chaos) { META.settings.chaos = true; stats.tagLives.chaos = (stats.tagLives.chaos || 0) + 1; }
   let s;
-  // One life in ten is born royal, so royal life gets played (random births rarely are).
-  try { s = ctx.createLife(i % 10 === 0 ? { country: pick(['uk', 'es', 'se', 'jp']), royal: true } : {}); } catch (e) { fail('createLife threw: ' + e.stack); continue; }
+  // One life in ten is born royal, and one plays a challenge (hand-made, daily or random).
+  try {
+    if (i % 10 === 6) { const all = g('CHALLENGES').filter((c) => !c.chaos || META.settings.chaos); s = ctx.startChallenge(chance(0.6) ? pick(all) : chance(0.5) ? ctx.dailyChallenge(`2026-01-${String(1 + (i % 28)).padStart(2, '0')}`) : ctx.randomChallenge()); }
+    else s = ctx.createLife(i % 10 === 0 ? { country: pick(['uk', 'es', 'se', 'jp']), royal: true } : {});
+  } catch (e) { fail('createLife threw: ' + e.stack); continue; }
   check(s, 'birth');
   stats.lives++;
   let steps = 0;
@@ -276,6 +280,7 @@ for (let i = 0; i < N; i++) {
   const lf = s.player.life; biz.founded += lf.companiesFounded || 0; biz.ipos += lf.ipos || 0; biz.exits += lf.exits || 0; biz.fails += lf.bizFails || 0;
   for (const [k, t] of [['moves', 'cityMoves'], ['signed', 'tenantsSigned'], ['evicted', 'tenantsEvicted'], ['wasEvicted', 'evicted'], ['beaten', 'evictionsBeaten'], ['rent', 'rentCollected']]) cities[k] += lf[t] || 0;
   cities.places += (s.player.places || []).length;
+  if (s.challenge) { chal.started++; if (s.challenge.done) chal.done++; else if (s.challenge.failed || s.challenge.pid !== s.playerId) chal.failed++; }
   const nt = s.player.assets.reduce((n, a) => n + (a.tenants || []).length, 0); cities.tenants += nt; cities.maxTenants = Math.max(cities.maxTenants, nt);
   for (const [k, t] of [['filed', 'lawsuitsFiled'], ['won', 'lawsuitsWon'], ['lost', 'lawsuitsLost'], ['settled', 'settlements'], ['sued', 'timesSued'], ['beaten', 'suitsBeaten'], ['small', 'smallClaimsWon'], ['rulings', 'rulings'], ['justices', 'supremeCourt'], ['clientWins', 'clientWins']]) courts[k] += lf[t] || 0;
 }
@@ -302,6 +307,7 @@ console.log(`Company-years by industry: ${top(biz.byInd, 22)}`);
 console.log(`Family (last gen per life, average): ${['sibling', 'aunt', 'cousin', 'nibling', 'inlaw'].map((k) => `${((kin[k] || 0) / Math.max(1, kin.lives)).toFixed(1)} ${k}`).join(' · ')} · ${Math.round(kin.people / Math.max(1, kin.lives))} people in the save (max ${kin.maxPeople})`);
 console.log(`Courts (last gen per life): ${courts.filed} lawsuits filed · ${courts.won} won, ${courts.lost} lost, ${courts.settled} settled · sued ${courts.sued} times, ${courts.beaten} beaten · ${courts.small} small-claims wins · ${courts.rulings} rulings, ${courts.justices} justices confirmed · ${courts.clientWins} trials won for clients`);
 console.log(`Cities (last gen per life): ${cities.moves} city moves · ${(cities.places / Math.max(1, kin.lives)).toFixed(1)} cities lived in on average · ${cities.signed} leases signed by tenants · ${cities.tenants} tenants at the end (max ${cities.maxTenants}) · ${cities.evicted} tenants evicted · player evicted ${cities.wasEvicted} times, ${cities.beaten} evictions beaten · ${Math.round(cities.rent).toLocaleString()} rent collected`);
+console.log(`Challenges: ${chal.started} started · ${chal.done} completed · ${chal.failed} failed`);
 console.log(`Content tags on: ${TAG_IDS.map((t) => `${t} in ${stats.tagLives[t] || 0} lives`).join(', ')}`);
 console.log(`Events never fired (${neverFired.length}/${evIds.length}): ${neverFired.join(', ') || 'none'}`);
 console.log(`Actions never run (${neverRun.length}/${ACTION_ORDER.length}): ${neverRun.join(', ') || 'none'}`);

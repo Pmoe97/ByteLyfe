@@ -102,7 +102,7 @@ outlast you across generations.
 - **Extras:** 5 new company events and 4 new achievements (Hostile Takeover, Franchise King,
   Market Leader, Stock Picker).
 
-**Meta.** 133 achievements kept across lives, three bucket-list goals per life, legacy titles
+**Meta.** 136 achievements kept across lives, three bucket-list goals per life, legacy titles
 and epitaphs, the Hall of Lives, multiple save slots, export/import codes. God Mode (stats,
 money, skills, traits, instant careers and degrees) and a 10-year Time Machine, both free.
 Light/dark themes, text size, reduced motion.
@@ -385,6 +385,22 @@ nightlife, snowy, historic, industrial), shown on a new City page.
   (City Hopper, Big City Dreams, Landlord, House Hacker, Tenant Power, Slumlord), 2 goals and the
   Real Estate Baron legacy title.
 
+**Challenges.** "Take a challenge" on the title screen. A challenge is a starting scenario plus
+goals, played by the character who starts it.
+- **19 hand-made challenges** from easy to brutal: Born Broke, Retire Rich; Rags to Riches; Self-Made
+  Mogul; Landlord of the Year; Nothing to Office; Silver Spoon Saint; Black Sheep (rich, ten years in
+  prison, die broke); Heir Apparent; Royal Rebel; Full House (an orphan raising six kids); Against the
+  Odds (born sickly, live to 90); Prodigy; Glow-Up; Globetrotter; Spotless; Heartbreaker; Made; Influencer;
+  and Forever Young (live to 200), which only shows with Chaos on.
+- **Starts:** any life, born broke, silver spoon, born royal, orphan, born sickly, child prodigy or
+  born plain.
+- **Daily challenge:** generated from the date, so it's the same for everyone that day: a start and two
+  goals. Finishing days in a row builds a streak (shown on the title screen), with a best streak kept.
+  "Surprise me" rolls a random one any time.
+- **Tracking:** progress sits at the top of Goals & achievements and on the death screen, a popup
+  celebrates the moment it's done, and results are kept across lives. 3 achievements (Challenge
+  Accepted, On a Roll, Completionist).
+
 **Chaos mode** (behind the Chaos switch, off by default). A new Supernatural menu.
 - **Superpowers:** flight, super strength, laser eyes, invisibility, telepathy, super speed, a
   healing factor, weather control, telekinesis and shapeshifting. You get them from a meteorite,
@@ -431,26 +447,24 @@ shows everything in US dollars instead.
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
-    A daily challenge with streaks. Every challenge stays available, free.
-2. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
-3. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
+1. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
+2. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
     (collect animals, build exhibits, breeding programs), both on the business engine.
-4. **Military depth.** Wars, desertion, veterans' benefits.
-5. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+3. **Military depth.** Wars, desertion, veterans' benefits.
+4. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
     double agents, and getting burned.
-6. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+5. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-7. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+6. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-8. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+7. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-9. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+8. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
     purges, coups and declared wars. Builds on Royalty and Military depth.
-10. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+9. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-11. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-12. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+10. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+11. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 

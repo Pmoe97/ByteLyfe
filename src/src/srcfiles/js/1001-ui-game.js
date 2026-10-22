@@ -102,6 +102,7 @@ SCREENS.death = () => {
       ${fact('trophy', 'Life goals', rec.goals)}
       ${fact('karma', 'Karma', rec.karma)}
     </section>
+    ${challengeCard(G)}
     ${ach.length ? `<div class="section-title" style="margin-bottom:0">Achievements this life</div><div class="chips">${ach.map((a) => `<span class="chip">${emo(a.emoji, 18)}${esc(a.name)}</span>`).join('')}</div>` : ''}
     <div class="section-title" style="margin-bottom:0">Continue the family line · generation ${rec.gen + 1}</div>
     ${heirs.length ? heirNote() : ''}

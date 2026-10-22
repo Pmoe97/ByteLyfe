@@ -4,7 +4,7 @@
  *
  *   kv folder 'saves'  : life id -> JSON string of the state
  *   kv folder 'rewind' : life id -> JSON array of snapshots
- *   kv folder 'meta'   : 'index' (save list), 'achievements', 'graveyard', 'settings'
+ *   kv folder 'meta'   : 'index' (save list), 'achievements', 'graveyard', 'settings', 'challenges'
  *
  * META is the in-memory copy of everything in 'meta' except the index.
  * ===================================================================== */
@@ -13,6 +13,7 @@ const META = {
   settings: { theme: 'auto', textSize: 'medium', showHidden: true, autoPopups: false, confirmAge: false, reduceMotion: false, currency: 'local', godMode: true, chaos: false, mature: false, taboo: false, taboo_parent: false, taboo_step: false, taboo_sibling: false, taboo_child: false, taboo_grand: false, taboo_extended: false, taboo_inlaw: false },
   achievements: {}, // id -> first unlock time
   graveyard: [], // past lives, newest first
+  challenges: { done: {}, daily: { last: null, streak: 0, best: 0 }, history: [] }, // 52-challenges.js
 };
 
 const Store = (() => {
@@ -73,10 +74,11 @@ async function getJSON(f, k, fallback) {
 function setJSON(f, k, v) { return Store.set(f, k, JSON.stringify(v)); }
 
 async function loadMeta() {
-  const [settings, ach, grave] = await Promise.all([getJSON('meta', 'settings', null), getJSON('meta', 'achievements', null), getJSON('meta', 'graveyard', null)]);
+  const [settings, ach, grave, chal] = await Promise.all([getJSON('meta', 'settings', null), getJSON('meta', 'achievements', null), getJSON('meta', 'graveyard', null), getJSON('meta', 'challenges', null)]);
   if (settings) Object.assign(META.settings, settings);
   if (ach) META.achievements = ach;
   if (Array.isArray(grave)) META.graveyard = grave;
+  if (chal && chal.daily) META.challenges = Object.assign(META.challenges, chal);
 }
 let _metaTimer = null;
 function saveMetaSoon() {
@@ -86,6 +88,7 @@ function saveMetaSoon() {
     setJSON('meta', 'settings', META.settings);
     setJSON('meta', 'achievements', META.achievements);
     setJSON('meta', 'graveyard', META.graveyard.slice(0, 200));
+    setJSON('meta', 'challenges', META.challenges);
   }, 400);
 }
 // Engine hooks. Return true when an achievement is new across all lives.

@@ -7,7 +7,8 @@
 //   6. currencies: formats, exchange when emigrating, foreign savings (50-currency.js)
 //   7. God Mode: the per-person editor's rules (28-sandbox.js)
 //   8. Chaos mode: gating, powers, capes, vampires, ascension (51-chaos.js)
-//   9. the life simulator (300 lives) with its invariant checks
+//   9. challenges: starts, goals, the daily challenge and streaks (52-challenges.js)
+//  10. the life simulator (300 lives) with its invariant checks
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,6 +35,7 @@ run('cities checks', ['dev/verify/cities.mjs']);
 run('currency checks', ['dev/verify/currency.mjs']);
 run('God Mode checks', ['dev/verify/godmode.mjs']);
 run('Chaos checks', ['dev/verify/chaos.mjs']);
+run('challenge checks', ['dev/verify/challenges.mjs']);
 run('life simulator', ['dev/verify/sim-lives.mjs', '300', String(Date.now() % 100000)]);
 console.log(failed ? '\n❌ Some checks failed.' : '\n✅ All checks passed.');
 process.exit(failed ? 1 : 0);

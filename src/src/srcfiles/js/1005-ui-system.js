@@ -20,7 +20,7 @@ SHEETS.goals = () => {
   const mine = M(G).achievements.map((id) => ACHIEVEMENTS.find((a) => a.id === id)).filter(Boolean);
   return {
     title: 'Goals & achievements',
-    html: `<div class="section-title">This life's goals</div>${goalsList()}
+    html: `${challengeCard(G)}<div class="section-title">This life's goals</div>${goalsList()}
       <div class="section-title">Earned this life (${mine.length})</div>${mine.length ? `<div class="chips">${mine.map((a) => `<span class="chip">${emo(a.emoji, 18)}${esc(a.name)}</span>`).join('')}</div>` : '<div class="note">None yet.</div>'}
       <div class="section-title">All achievements</div><button class="btn block" data-a="sheet" data-k="achievements">🏅 ${Object.keys(META.achievements).length}/${ACHIEVEMENTS.length} unlocked</button>`,
   };

@@ -37,6 +37,7 @@ SCREENS.title = () => {
       ${last ? `<button class="continue-card" data-a="loadLife" data-id="${esc(last.id)}">${last.look ? avatarSVG(last.look, { age: last.age, frame: 'squircle', size: 52, label: last.name }) : icon('logo', 52)}<span class="grow"><span class="k">Continue</span><div class="nm">${esc(last.name)}</div><div class="sb">Age ${last.age}${last.job ? ' · ' + esc(last.job) : ''} · Gen ${last.gen}</div></span><span class="faint">${icon('ui-chev', 22)}</span></button>` : ''}
       <button class="btn primary block" data-a="newRandom">${icon('dice', 28)}Start a new life</button>
       <button class="btn block" data-a="sheet" data-k="custom">${icon('wand', 28)}Design a custom life</button>
+      <button class="btn block" data-a="sheet" data-k="challenges">${icon('flame', 28)}Take a challenge${streakAlive() && meta().daily.streak ? ` <span class="faint">· 🔥 ${meta().daily.streak}</span>` : ''}</button>
       <div class="title-tiles" style="grid-template-columns:repeat(${tiles.length}, minmax(0, 1fr))">${tiles.map(([k, ic, l, n]) => `<button data-a="sheet" data-k="${k}">${icon(ic, 32)}<span>${l}${n !== '' ? ` <span class="faint">${n}</span>` : ''}</span></button>`).join('')}</div>
     </div>
     <div class="title-foot">Everything is free and unlocked, including God Mode and the Time Machine. Saved in your browser · ${esc(Store.kind() === 'kv' ? 'Perchance storage' : Store.kind() === 'local' ? 'local storage' : 'memory only')}</div>
