@@ -128,7 +128,7 @@ function happyDrift(s) {
 }
 
 function diseaseTick(s) {
-  const p = P(s), age = A(s);
+  const p = P(s), age = bodyAge(s, p); // a vampire catches what the age they look catches
   let odds = 0.28;
   if (trait(s, 'sickly')) odds *= 1.6;
   if (trait(s, 'resilient')) odds *= 0.5;

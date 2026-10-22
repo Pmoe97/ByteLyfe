@@ -157,6 +157,7 @@ const CLUES = ['a string of late-night texts from', 'a hotel receipt and a note 
 function caughtPopup(s, pid, rom) {
   if (s.pending.some((pp) => pp.handler === 'affairCaught')) return;
   const p = s.people[pid], q = s.people[rom];
+  if (!p || !q) return; // the lover or the partner is gone by the time it comes out
   tally(s, 'caughtCheating');
   popup(s, {
     emoji: '😳', title: 'Caught', tone: 'bad', person: rom, handler: 'affairCaught', ctx: { pid, rom },

@@ -85,7 +85,14 @@ for (const id in ACTIONS) if (ACTIONS[id].cat === 'super' || id === 'vp_turn') o
   const me = s.people[s.playerId];
   ctx.makeVampire(s, me);
   ok(me.frozenAge === 30 && me.vamp, 'turned at 30');
-  for (let i = 0; i < 120 && !s.dead; i++) { s.player.blood.hunger = 0; s.player.blood.hunt = 0; drain(s); ctx.ageUp(s); }
+  // This is about aging, not luck: a 30-year-old body can still die suddenly or catch cancer in
+  // 120 years, which made this check pass or fail by the seed. So the vampire is kept well and the
+  // death roll for a 30-year-old body is switched off: it dies only if its odds stop following
+  // the body it has.
+  const mortality = ctx.mortality;
+  ctx.mortality = (age, health) => (age === 30 ? 0 : mortality(age, health));
+  for (let i = 0; i < 120 && !s.dead; i++) { s.player.blood.hunger = 0; s.player.blood.hunt = 0; s.player.diseases = []; me.stats.health = 100; drain(s); ctx.ageUp(s); }
+  ctx.mortality = mortality;
   drain(s);
   ok(!s.dead || /hunter|sunrise|starv/.test(me.cause || ''), `a well-fed vampire doesn’t die of old age (cause: ${me.cause})`);
   ok(ctx.bodyAge(s, me) === 30 && ctx.ageOf(s, me) >= 140, `a 150-year-old vampire still has a 30-year-old body (${ctx.bodyAge(s, me)})`);
