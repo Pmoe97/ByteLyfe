@@ -143,6 +143,10 @@ function ensureRelatives(s) {
 function ensureInlaws(s, pid) {
   const p = s.people[pid];
   if (!p) return [];
+  // Taboo blood romance: their parents/siblings are already your family — don't overwrite.
+  try {
+    if ((typeof isTabooFamily === 'function' && isTabooFamily(s, pid)) || (relOf(s, pid) && relOf(s, pid).taboo)) return [];
+  } catch (e) {}
   const met = [];
   for (const sib of ensureSiblings(s, p)) if (addKin(s, sib, 'inlaw', 35, 65)) met.push(sib);
   for (const par of p.parents.map((id) => s.people[id]).filter(Boolean)) if (addKin(s, par, 'inlaw', 30, 65)) met.unshift(par);
@@ -152,7 +156,14 @@ function ensureInlaws(s, pid) {
 function dropInlaws(s, pid) {
   const p = s.people[pid];
   if (!p) return;
-  for (const q of [...p.parents.map((id) => s.people[id]), ...siblingsOf(s, p)]) if (q && relKind(s, q.id) === 'inlaw') dropRel(s, q.id);
+  for (const q of [...p.parents.map((id) => s.people[id]), ...siblingsOf(s, p)]) {
+    if (!q || relKind(s, q.id) !== 'inlaw') continue;
+    // Never drop blood: a taboo partner's family is your own family.
+    try {
+      if (typeof bloodKinshipInfo === 'function' && bloodKinshipInfo(s, q.id)) continue;
+    } catch (e) {}
+    dropRel(s, q.id);
+  }
 }
 // Whatever someone's family tree needs. Family and partners join your relationships;
 // anyone else's relatives are tree-only (p.tree).
@@ -219,7 +230,13 @@ onChoice('meetFamily', (s, ctx, v) => {
 });
 defAction({
   id: 'p_blessing', cat: 'person', target: 'person', label: 'Ask for their blessing', emoji: '🙏',
-  when: (s, pid) => reachable(s, pid) && parentInlaw(s, pid) && isKind(s, romanticId(s), ['partner', 'fiance']) && !blessed(s, romanticId(s)),
+  when: (s, pid) => {
+    if (!reachable(s, pid) || !parentInlaw(s, pid) || !isKind(s, romanticId(s), ['partner', 'fiance']) || blessed(s, romanticId(s))) return false;
+    try {
+      if ((typeof isTabooFamily === 'function' && isTabooFamily(s, romanticId(s))) || (relOf(s, romanticId(s)) && relOf(s, romanticId(s)).taboo)) return false;
+    } catch (e) {}
+    return true;
+  },
   run: (s, pid) => {
     if (bump(s, 'blessing_' + pid) > 1) return { text: 'Give them some time to think.', nolog: true };
     const mate = romanticId(s), r = relOf(s, pid).rel;

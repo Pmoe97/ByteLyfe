@@ -93,6 +93,14 @@ function runWithResult(s, fn, src) {
 const CONTENT_TAGS = {
   chaos: { name: 'Chaos', emoji: '🌀', desc: 'Absurd and supernatural happenings: freak accidents, superpowers, stranger things.' },
   mature: { name: 'Mature', emoji: '💀', desc: 'Harder crime and messier affairs than the standard game.' },
+  taboo: { name: 'Taboo romance (master)', emoji: '🔞', desc: 'Consensual adult-only romance with family members (18+ both, never teens). Everything stays exactly as now while this is off. Turn on subtypes below for who is eligible.' },
+  taboo_parent: { name: 'Taboo: parents', emoji: '👩', desc: 'Adult romance with a parent (18+ both, consensual). Requires the master switch too.' },
+  taboo_step: { name: 'Taboo: step-parents', emoji: '🏠', desc: 'Adult romance with a step-parent (18+ both, consensual). Requires the master switch too.' },
+  taboo_sibling: { name: 'Taboo: siblings', emoji: '👫', desc: 'Adult romance with a sibling or half-sibling (18+ both, consensual). Requires the master switch too.' },
+  taboo_child: { name: 'Taboo: children', emoji: '👶', desc: 'Adult romance with an adult child (18+ both, consensual). Never teens. Requires the master switch too.' },
+  taboo_grand: { name: 'Taboo: grandparents / grandchildren', emoji: '👴', desc: 'Adult romance with a grandparent or adult grandchild (18+ both). Requires the master switch too.' },
+  taboo_extended: { name: 'Taboo: extended family', emoji: '👪', desc: 'Adult romance with aunts, uncles, cousins, nieces, nephews (18+ both). Requires the master switch too.' },
+  taboo_inlaw: { name: 'Taboo: in-laws', emoji: '💍', desc: 'Adult romance with in-laws (18+ both). Requires the master switch too.' },
 };
 function tagsOn(tags) {
   if (!tags || !tags.length) return true;

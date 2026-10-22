@@ -389,8 +389,15 @@ function askOutOdds(s, p) {
 defAction({
   id: 'p_askout', cat: 'person', group: 'romance', target: 'person', label: 'Ask out', emoji: '💘',
   when: (s, pid) => {
-    if (!reachable(s, pid) || !isKind(s, pid, [...K_ACQ, ...K_FRIENDS]) || relKind(s, pid) === 'boss') return false;
+    if (!reachable(s, pid) || relKind(s, pid) === 'boss') return false;
     const p = tgt(s, pid);
+    if (!p || p.partner) return false;
+    // Family: only when the opt-in taboo toggles allow it, strictly 18+ both.
+    if (typeof isTabooFamily === 'function' && isTabooFamily(s, pid)) {
+      if (typeof tabooRomanceAllowed !== 'function' || !tabooRomanceAllowed(s, pid)) return false;
+      return attractedTo(P(s), p) && A(s) >= 18 && ageOf(s, p) >= 18;
+    }
+    if (!isKind(s, pid, [...K_ACQ, ...K_FRIENDS])) return false;
     return attractedTo(P(s), p) && ageOk(A(s), ageOf(s, p)) && !p.partner;
   },
   run: (s, pid) => {
@@ -404,6 +411,22 @@ defAction({
 function startRomance(s, pid) {
   const p = tgt(s, pid);
   const current = romanticId(s);
+  // Family romance: still goes through affair/open rules, but only if opted in (48-taboo.js).
+  if (typeof isTabooFamily === 'function' && isTabooFamily(s, pid)) {
+    if (typeof tabooRomanceAllowed !== 'function' || !tabooRomanceAllowed(s, pid)) return { text: `That's not something you do in this life.`, nolog: true };
+    const origKind = relKind(s, pid);
+    if (current && current !== pid) {
+      const out = affairBegins(s, pid, current);
+      if (typeof tabooOnRomanceStart === 'function') tabooOnRomanceStart(s, pid, origKind);
+      return out;
+    }
+    setRel(s, pid, 'partner', Math.max(relOf(s, pid) ? relOf(s, pid).rel : 55, 60));
+    p.partner = P(s).id;
+    tally(s, 'partners');
+    add(s, { happy: 8 });
+    if (typeof tabooOnRomanceStart === 'function') tabooOnRomanceStart(s, pid, origKind);
+    return { text: `${p.first} said yes! You're dating now. 💕`, tone: 'good', person: pid };
+  }
   // Already with someone: an affair, or a second partner in an open relationship (47-romance.js).
   if (current && current !== pid) return affairBegins(s, pid, current);
   setRel(s, pid, 'partner', Math.max(relOf(s, pid) ? relOf(s, pid).rel : 55, 60));
@@ -415,7 +438,17 @@ function startRomance(s, pid) {
 defAction({
   id: 'p_date', cat: 'person', group: 'romance', target: 'person', label: 'Go on a date', emoji: '🌹',
   // A secret lover gets a secret rendezvous instead (47-romance.js).
-  when: (s, pid) => reachable(s, pid) && isKind(s, pid, K_ROMANCE) && A(s) >= 13 && !(relKind(s, pid) === 'lover' && romanticId(s) && !relOf(s, pid).known),
+  // Taboo: strictly 18+ both, even though normal dating allows 13+.
+  when: (s, pid) => {
+    if (!reachable(s, pid) || !isKind(s, pid, K_ROMANCE)) return false;
+    try {
+      const r = relOf(s, pid);
+      if ((r && r.taboo) || (typeof isTabooFamily === 'function' && isTabooFamily(s, pid))) {
+        return A(s) >= 18 && tAge(s, pid) >= 18 && !(relKind(s, pid) === 'lover' && romanticId(s) && !relOf(s, pid).known);
+      }
+    } catch (e) {}
+    return A(s) >= 13 && !(relKind(s, pid) === 'lover' && romanticId(s) && !relOf(s, pid).known);
+  },
   sub: (s) => fmtMoney(price(s, A(s) < 18 ? 20 : 120)),
   run: (s, pid) => {
     const cost = price(s, A(s) < 18 ? 20 : 120);
@@ -458,14 +491,24 @@ onChoice('propose', (s, ctx, i) => {
 // Make it official. Also used by the prison chapel wedding (33-events-later.js).
 function marry(s, pid) {
   const p = tgt(s, pid);
+  const wasTaboo = (typeof isTabooFamily === 'function' && isTabooFamily(s, pid)) || (relOf(s, pid) && relOf(s, pid).taboo);
+  const prevTaboo = relOf(s, pid) && relOf(s, pid).taboo;
+  const prevWasFam = relOf(s, pid) && relOf(s, pid).wasFam;
   setRel(s, pid, 'spouse');
+  if (prevTaboo) relOf(s, pid).taboo = prevTaboo;
+  if (prevWasFam) relOf(s, pid).wasFam = prevWasFam;
+  else if (wasTaboo && typeof tabooTagFor === 'function') {
+    const t = tabooTagFor(s, pid);
+    if (t) relOf(s, pid).taboo = t;
+  }
   p.partner = P(s).id;
   p.married = true;
   P(s).partner = p.id;
   P(s).married = true;
   tally(s, 'marriages');
-  // Your spouse's parents and siblings become your in-laws (45-family.js).
-  ensureInlaws(s, pid);
+  // Your spouse's parents and siblings become your in-laws (45-family.js) — skipped for blood.
+  if (!wasTaboo) ensureInlaws(s, pid);
+  if (wasTaboo && typeof tabooOnMarry === 'function') tabooOnMarry(s, pid);
   return p;
 }
 defAction({
@@ -497,7 +540,12 @@ onChoice('wedding', (s, ctx, i) => {
 function endRomance(s, pid, kind) {
   const p = tgt(s, pid);
   if (!p) return;
+  const prev = relOf(s, pid);
+  const prevTaboo = prev && prev.taboo;
+  const prevWasFam = prev && prev.wasFam;
   setRel(s, pid, kind, Math.max(5, relOf(s, pid).rel - 30));
+  if (prevTaboo) relOf(s, pid).taboo = prevTaboo;
+  if (prevWasFam) relOf(s, pid).wasFam = prevWasFam;
   if (p.partner === P(s).id) { p.partner = null; p.married = false; }
   if (P(s).partner === pid) { P(s).partner = null; P(s).married = false; }
   dropInlaws(s, pid); // their family goes with them (45-family.js)
@@ -548,7 +596,13 @@ defAction({
 });
 defAction({
   id: 'p_rekindle', cat: 'person', group: 'romance', target: 'person', label: 'Rekindle romance', emoji: '🔥',
-  when: (s, pid) => reachable(s, pid) && isKind(s, pid, K_EXES) && !hasRomance(s) && ageOk(A(s), tAge(s, pid)) && !tgt(s, pid).partner,
+  when: (s, pid) => {
+    if (!reachable(s, pid) || !isKind(s, pid, K_EXES) || hasRomance(s) || tgt(s, pid).partner) return false;
+    if (typeof isTabooFamily === 'function' && (isTabooFamily(s, pid) || (relOf(s, pid) && relOf(s, pid).wasFam))) {
+      return typeof tabooRomanceAllowed === 'function' && tabooRomanceAllowed(s, pid) && attractedTo(P(s), tgt(s, pid));
+    }
+    return ageOk(A(s), tAge(s, pid));
+  },
   run: (s, pid) => {
     if (bump(s, 'rekindle_' + pid) > 1) return { text: 'Give it some time.', nolog: true };
     if (chance(clamp(relOf(s, pid).rel / 100, 0.05, 0.8))) return startRomance(s, pid);
@@ -604,6 +658,18 @@ function pregnancyTick(s) {
   M(s).pregnancy = null;
   const partner = s.people[preg.partnerId];
   if (preg.carrier === 'me' && chance(0.04)) { add(s, { happy: -15, health: -5 }); announce(s, { emoji: '💔', title: 'Miscarriage', text: 'You lost the pregnancy. Take care of yourself.', tone: 'bad' }); return; }
+  // Taboo: extra realistic loss scaled by pedigree inbreeding (first-gen low, later gens rise).
+  if (partner && typeof tabooMiscarriageOdds === 'function') {
+    try {
+      const extra = tabooMiscarriageOdds(s, preg.partnerId);
+      if (extra > 0 && chance(extra)) {
+        add(s, { happy: -15, health: -5 });
+        tally(s, 'tabooLoss');
+        announce(s, { emoji: '💔', title: 'Miscarriage', text: 'You lost the pregnancy. The doctor said these things happen, especially when parents share blood. Take care of yourself.', tone: 'bad' });
+        return;
+      }
+    } catch (e) {}
+  }
   const twins = chance(0.03);
   for (let i = 0; i < (twins ? 2 : 1); i++) {
     const g = chance(0.5) ? 'm' : 'f';
@@ -632,6 +698,16 @@ function bornChild(s, partnerId, first, g) {
   }
   setRel(s, kid.id, 'child', 85);
   tally(s, 'kids');
+  // Taboo genetics: pedigree F stored on the child; first-gen low, later gens rise fast.
+  try {
+    if (partner && typeof tabooBirthAdjust === 'function' && (isTabooFamily(s, partnerId) || tabooInbreeding(s, me.id, partnerId) > 0.005)) {
+      const res = tabooBirthAdjust(s, kid, me, partner);
+      if (res && res.defect) log(s, `👶 ${kid.first} was born with health challenges the doctor says run higher when parents share blood.`, 'bad');
+    } else if (partner) {
+      kid.inbred = 0;
+      kid.tabooDepth = 0;
+    }
+  } catch (e) {}
   return kid;
 }
 defAction({

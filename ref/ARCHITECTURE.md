@@ -44,8 +44,10 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `45` | The wider family (`45-family.js`): relatives made on demand, in-laws, family life, family events | No DOM. `ageUp` reaches `familyTick` through a wrapper; `marry`, `endRomance` and `continueAs` call into it at runtime. |
 | `46` | Parenting (`46-parenting.js`): kids' schools, child acting and music, homework and discipline, arranged marriages, heirs and grooming, parenting events | No DOM. `ageUp` reaches `parentingTick` through a wrapper; `continueAs`, `estateShares` and the will call into it at runtime. |
 | `47` | Relationships 2.0 (`47-romance.js`): open relationships, affairs that can be found out, flings who come back, romance events | No DOM. `ageUp` reaches `romanceTick` through a wrapper; `startRomance`, the hookup action and `npcTick` call into it at runtime. |
-| `46–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1015-ui-romance.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `48` | Taboo family romance (`48-taboo.js`): opt-in adult-only (18+ both, master + subtype toggles, all default OFF), pedigree inbreeding (F stored as `p.inbred`), birth fallout, discovery events | No DOM. `ageUp` reaches `tabooTick` through a wrapper; `startRomance/marry/bornChild/pregnancyTick` call into it at runtime. |
+| `49` | Cities (`49-cities.js`): city profiles (cost of living, pay, job hubs, traits), neighborhoods, local housing markets, moving, landlords, tenants, city and landlord events | No DOM. `ageUp` reaches `cityTick` through a wrapper; `financeTick`, `salaryFor`, `jobBoard`, the rentals and real-estate listings, `moveInto`, `assetTick`, emigration and job transfers call into it at runtime. |
+| `50–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1016-ui-cities.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -118,6 +120,46 @@ events in `npcTick` skip an open relationship. `romanceTick` (after `parentingTi
 open relationships and lets old flings fade. Romance actions, old and new, carry `group: 'romance'`,
 and the person sheet lists them under Romance.
 
+**Taboo family romance.** `48-taboo.js`. Strictly opt-in and adult-only: the master
+`taboo` switch plus one subtype switch (`taboo_parent`, `taboo_step`, `taboo_sibling`,
+`taboo_child`, `taboo_grand`, `taboo_extended`, `taboo_inlaw`, all default OFF) must both
+be on, and both partners must be 18+. Teens are blocked everywhere (eligibility, `startRomance`,
+dates, rekindles). `tabooTagFor` maps a person to their subtype from their stored `taboo`
+flag, their relationship kind, or the blood tree (`bloodKinshipInfo` reads
+`p.parents`/`p.children`, so a sibling who became a partner is still recognised); dual
+labels render as "Sister · Girlfriend" (`kinTitle`). Inbreeding is a real pedigree kinship
+(`tabooKinship` recursion): unrelated 0, cousin 0.0625, sibling or parent-child 0.25, and
+repeat inbred matings climb fast. The result is stored as `p.inbred` (+ `p.tabooDepth`) on
+each child; births apply extra miscarriage odds and a defect chance that is low the first
+generation and rises sharply later. Romance start, marriage and yearly `tabooTick` apply
+neutral-sim fallout (karma/fame dings, family disapproval, blocked parental blessing,
+blood-safe in-law handling) plus gated discovery events.
+
+**Cities.** `49-cities.js`. `CITY_INFO[cc][city]` is pure data parsed from `CITY_ROWS`: `size`
+(metro, big, mid, small), `col` (cost of living against the country average), `wage` (pay against
+the country average), `hubs` (`JOB_CATS` that hire a lot) and `traits` (capital, coast, tourist...).
+Prices stay country-based (`price`); the city multiplies on top: `rentMult` for rents, `houseMult` for
+home prices, `colLiving` for lifestyle costs (`livingCost`), `wageOf` inside `salaryFor`, and
+`jobOpenOdds` for the job board. `s.cityMarket['cc:city'] = { idx, g, tiers }` lives at the top of the
+save, made the first time a city is touched: `cityMarketYear` moves `idx` (rents and prices) around 1
+each year, `houseGrowth` adds that year's `g` to a home's value, and `tiers` holds each of the four
+neighborhoods' current tier (they gentrify). Neighborhood names come from `hoodNames(cc, city)`,
+hashed from the city's name, so nothing about them is saved; `P(s).hood` is where you live now.
+- **Renting:** a lease in `M(s).housing` also holds `city`, `hood`, `rtype`, `since`, `deposit` and the
+  landlord `ll = { name, style, mood, stars, corp }`, plus `issue`, `withheld`, `owed`, `notice` and
+  `inspected` while those apply. `landlordOf` makes a landlord for leases from older saves.
+  `renterYear` (in `cityTick`) runs repairs, the yearly raise (capped by `tenantLaw`) and eviction
+  notices; `signLease` and `leaveRental` handle moving in and out (deposits), and `rentToPay` is what
+  `financeTick` charges.
+- **Owning:** a house asset carries `cc`, `city`, `hood`, `units`, `rentLvl`, `mgr` and `tenants`
+  (plain records, not people). `tenantsOf` turns a pre-Cities rental into one tenant. `rentRoll` is the
+  rent `financeTick` collects (late payers, professional non-payers, payment plans, the manager's 8%);
+  `propertyYear` runs moods, damage, move-outs, lease renewals, repair requests and evictions.
+  `cityTick` allows at most two landlord or tenant popups a year; the rest resolve on their own.
+- **Moving:** `relocate` moves you, your spouse and dependents (and maybe a partner), and records the
+  city in `M(s).places`; `cityGo` adds the job transfer and the new home. Emigration and witness
+  protection call `cityArrive`, and the `job_transfer` event calls `transferTo`.
+
 **Stories.** `STORY(id, { title, ages, w, when, ctx, chapters })` in `43-stories.js` is a chain of
 events across years. The `start` chapter is registered as an ordinary event (`st_<id>`, once per
 life), so it rolls with the year's events. A choice calls `nextChapter(s, st, 'name', lo, hi)` to
@@ -132,15 +174,20 @@ the countries that celebrate it (`null` = everywhere), with a two-year cooldown.
 holidays you celebrate. Seasonal events use climate lists (`SNOWY`, `STORMY`, `SOUTHERN`).
 
 **Content tags.** Events, single event choices, company events and actions can carry
-`tags: ['chaos']` or `['mature']` (`CONTENT_TAGS` in `12-flow.js`). Tagged content only
-appears while every one of its tags is switched on in Settings (`META.settings.chaos` /
-`.mature`, global across lives, both off by default). `tagsOn(tags)` is the one check:
-`eventEligible`, `fireEvent` (per choice), the answer re-check, `rollBizEvent` and
-`actionAvailable` all call it. A new tag needs a `CONTENT_TAGS` entry and a boolean default in
-`META.settings`. The Settings toggle is built from `CONTENT_TAGS`.
+`tags: ['chaos']`, `['mature']`, or `['taboo', 'taboo_sibling']` (`CONTENT_TAGS` in `12-flow.js`).
+`taboo` is the master switch for consensual adult-only family romance (18+ both, never
+teens); the seven subtype tags (`taboo_parent`, `taboo_step`, `taboo_sibling`,
+`taboo_child`, `taboo_grand`, `taboo_extended`, `taboo_inlaw`) control who is eligible.
+Tagged content only appears while every one of its tags is switched on in Settings
+(`META.settings.chaos` / `.mature` / `.taboo` + subtype, global across lives, all off by
+default). `tagsOn(tags)` is the one check: `eventEligible`, `fireEvent` (per choice), the
+answer re-check, `rollBizEvent` and `actionAvailable` all call it. A new tag needs a
+`CONTENT_TAGS` entry and a boolean default in `META.settings`. The Settings toggles are
+built from `CONTENT_TAGS`, with the taboo master + subtypes grouped in their own section.
 
 **A year (`ageUp`).** Body → pregnancy → school → career → businesses and the market →
-prison → money → assets → fame → the people around you → the wider family → royalty → the underworld →
+prison → money → assets → cities (rent, landlords, tenants) → fame → the people around you → the wider family → parenting →
+romance → taboo family romance → royalty → the underworld →
 show business → sports → courts → pets → milestones → story chapters → random events → new illness → death check. The order
 is in `AGE_PHASES` (`25-ageup.js`).
 
@@ -294,10 +341,12 @@ trial `practice`.
   (`req: { edu, majors, degree, trade, smarts, looks, sk, license, clean, drink, age, maxAge }`).
 - **An activity:** `defAction` in `21-activities.js` with a `cat` from `ACT_CATS`.
 - **An illness, crime, pet, car class, house type, vacation:** add a row to the data file.
-- **Absurd/supernatural or extra-dark content:** give the event, choice or action
-  `tags: ['chaos']` or `tags: ['mature']`. Standard BitLife-level content (affairs, murder,
+- **Absurd/supernatural, extra-dark, or taboo content:** give the event, choice or action
+  `tags: ['chaos']`, `tags: ['mature']`, or `tags: ['taboo']` (+ the matching subtype tag,
+  e.g. `['taboo', 'taboo_sibling']`). Standard BitLife-level content (affairs, murder,
   addiction) stays untagged. Romantic content still needs its own adult-only `when`, because
-  tags don't check age.
+  tags don't check age — taboo content additionally requires 18+ both in its `when` via
+  `tabooRomanceAllowed`.
 
 Run `npm run verify` after any engine or content change. The simulator reports events that
 never fired and actions that never ran, which usually means a `when` that can't be true.
@@ -306,9 +355,11 @@ never fired and actions that never ran, which usually means a `when` that can't 
 
 | Tool | What it does |
 | --- | --- |
-| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36. Prints a balance summary, including businesses, the courts and the family, and lists events that never fired, actions that never ran and story chapters never reached. |
+| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36, and a city persona rents at 20, moves city at 26 and 41, and at 30 buys a duplex to live in plus two homes to rent out, then plays landlord and tenant every year. Also checks that no building holds more tenants than units. Prints a balance summary, including businesses, the courts, the family and cities, and lists events that never fired, actions that never ran and story chapters never reached. |
 | `dev/verify/tags.mjs` | Content tags: every tag in use is in `CONTENT_TAGS` with a Settings default, and the filters hide tagged events, choices and actions (checked on fixture content, so it works before anything is tagged). Prints how much content carries tags. |
+| `dev/verify/taboo.mjs` | Taboo gates: master + 7 subtype defaults OFF, per-kind gate matrix (master-only / subtype-only / wrong-subtype / teen-player / teen-partner all stay closed), tree persistence when a sibling becomes a partner, pedigree F (sibs 0.25, cousins 0.0625, second-gen 0.375), birth tallies, event gating (tag + real partner), dual kin label, no-leak on a generated family. |
+| `dev/verify/cities.mjs` | Cities: every city has a profile and four stable neighborhood names; pay, rents and home prices follow the city; tech hubs out-hire small cities; moving takes your spouse and kids and returns your deposit; Germany caps raises at 3%; an expired notice ends a lease; a duplex holds you plus one tenant; background checks reveal the same applicants; unpaid rent leads to eviction; old saves get tenants and landlords. |
 | `dev/verify/sim-business.mjs` | Business balance report (add an industry id as the third argument to run just that one): every industry run 20 years under a sensible owner (who also franchises and buys a small rival when flush) and a hands-off owner. Survival, profit, size, IPO readiness, franchising and acquisitions at years 1/5/10/20. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |
-| `dev/verify/run-all.mjs` | Syntax check + emoji audit + content tags + 300-life sim (`npm run verify`). |
+| `dev/verify/run-all.mjs` | Syntax check + emoji audit + content tags + taboo checks + cities checks + 300-life sim (`npm run verify`). |
 | `dev/verify/ui-smoke.js` | Paste into the browser console: plays 60 years through the real UI, opening every sheet. |

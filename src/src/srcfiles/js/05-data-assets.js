@@ -1,7 +1,8 @@
 /* =====================================================================
  * 05-data-assets.js — homes, rentals, vehicles, valuables, pets,
  * vacations and investments. Prices are US-baseline dollars.
- * Brand names are invented on purpose.
+ * Brand names are invented on purpose. Multi-unit homes (units > 1) house
+ * you and tenants at once (49-cities.js); their beds are per unit.
  * Pure data.
  * ===================================================================== */
 
@@ -13,6 +14,9 @@ const HOUSE_TYPES = [
   { id: 'house', name: 'House', emoji: '🏠', base: 380000, beds: [3, 4], w: 14 },
   { id: 'farmhouse', name: 'Farmhouse', emoji: '🌾', base: 320000, beds: [3, 5], w: 5 },
   { id: 'family', name: 'Family Home', emoji: '🏡', base: 560000, beds: [4, 5], w: 9 },
+  { id: 'duplex', name: 'Duplex', emoji: '🏘️', base: 470000, beds: [2, 3], w: 5, units: 2 },
+  { id: 'fourplex', name: 'Fourplex', emoji: '🏘️', base: 880000, beds: [2, 2], w: 3, units: 4 },
+  { id: 'apartments', name: 'Apartment Building', emoji: '🏢', base: 2600000, beds: [1, 2], w: 1.5, units: 10 },
   { id: 'beach', name: 'Beach House', emoji: '🏖️', base: 950000, beds: [3, 5], w: 4 },
   { id: 'luxury', name: 'Luxury Home', emoji: '🏛️', base: 1500000, beds: [4, 6], w: 4 },
   { id: 'penthouse', name: 'Penthouse', emoji: '🌆', base: 3200000, beds: [3, 5], w: 2 },

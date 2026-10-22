@@ -34,7 +34,7 @@ function missingReqs(s, req) {
 
 function salaryFor(s, id, level) {
   const lad = JOBS[id].ladder;
-  return nicePrice(lad[Math.min(level, lad.length - 1)][1] * econ(s));
+  return nicePrice(lad[Math.min(level, lad.length - 1)][1] * econ(s) * wageOf(s));
 }
 function careerTitle(s) {
   const c = M(s).career;
@@ -56,11 +56,12 @@ function jobTitle(s) {
   return 'Unemployed';
 }
 
-// This year's job board: which careers are hiring.
+// This year's job board: which careers are hiring. Your city's size and industries
+// decide the odds (jobOpenOdds in 49-cities.js).
 function jobBoard(s) {
   let l = s.listings.jobs;
   if (!l || l.year !== s.year) {
-    l = s.listings.jobs = { year: s.year, open: JOB_IDS.filter(() => chance(0.78)) };
+    l = s.listings.jobs = { year: s.year, open: JOB_IDS.filter((id) => chance(jobOpenOdds(s, id))) };
   }
   return JOB_IDS.map((id) => ({ id, open: l.open.includes(id) || !!JOBS[id].special, missing: missingReqs(s, JOBS[id].req) }));
 }

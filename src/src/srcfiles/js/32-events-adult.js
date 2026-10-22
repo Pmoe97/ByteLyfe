@@ -573,7 +573,7 @@ EV('job_typo', { ages: [18, 75], w: 0.7, emoji: '✏️', when: regularJob, text
 EV('job_transfer', {
   ages: [22, 60], w: 0.6, emoji: '🏙️', when: regularJob, text: 'Your company offers you a transfer to another city, with a raise.',
   choices: [
-    ['Take it', (s) => { const C = country(s); P(s).city = pick(C.cities.filter((c) => c !== P(s).city)) || P(s).city; M(s).career.salary = Math.round(M(s).career.salary * 1.12); relAll(s, K_FRIENDS, -8); add(s, { happy: 3 }); return `You moved to ${P(s).city} with a 12% raise. You miss your friends.`; }],
+    ['Take it', (s) => transferTo(s, pick(country(s).cities.filter((c) => c !== P(s).city)) || P(s).city)],
     ['Stay put', () => 'Your roots are here.'],
   ],
 });
@@ -756,13 +756,6 @@ EV('money_audit', {
   choices: [
     ['Hire an accountant', (s) => { const c = price(s, 1500); M(s).money -= c; return `${fmtMoney(c)} later, everything checked out.`; }],
     ['Handle it yourself', (s) => { if (chance(0.4)) { const c = price(s, randInt(1000, 10000)); M(s).money -= c; add(s, { happy: -4 }); return `You missed some deductions and owe ${fmtMoney(c)} in back taxes.`; } add(s, { smarts: 1 }); return 'You survived the audit armed with a shoebox of receipts.'; }],
-  ],
-});
-EV('money_rent_hike', {
-  ages: [18, 90], emoji: '🏢', when: (s) => M(s).housing.type === 'rent', text: 'Your landlord is raising the rent by 15%.',
-  choices: [
-    ['Pay it', (s) => { M(s).housing.rent = Math.round(M(s).housing.rent * 1.15); add(s, { happy: -3 }); return `Your rent is now ${fmtMoney(M(s).housing.rent)} a year.`; }],
-    ['Negotiate', (s) => { addSkill(s, 'charisma', 1); if (chance(0.4 + skill(s, 'charisma') / 250)) { M(s).housing.rent = Math.round(M(s).housing.rent * 1.04); return 'You talked them down to 4%.'; } M(s).housing.rent = Math.round(M(s).housing.rent * 1.15); return 'They did not budge.'; }],
   ],
 });
 EV('money_small_inheritance', { ages: [20, 90], w: 0.4, emoji: '✉️', text: 'A distant cousin you barely remember left you something in their will.', auto: (s) => { const amt = price(s, randInt(500, 25000)); add(s, { money: amt }); return `A check for ${fmtMoney(amt)} and a ceramic cat.`; } });

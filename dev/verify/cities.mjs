@@ -1,0 +1,176 @@
+// Cities verification:  node dev/verify/cities.mjs
+//
+// Covers 49-cities.js:
+//   1. data — every city in COUNTRIES has a profile (size, cost of living, pay, hubs,
+//      traits that exist) and four distinct, stable neighborhood names
+//   2. money — salaries follow the city's pay; rents and home prices its cost of living
+//   3. jobs — tech hubs post more tech jobs than small cities
+//   4. moving — your spouse and kids come along, the city is recorded, the job
+//      transfers or ends, and the old lease's deposit comes back
+//   5. renting — a lease has a landlord; strong tenant laws cap raises at 3%;
+//      a notice that runs out puts you on the street
+//   6. owning — a duplex holds you plus one tenant, never more; rent is collected;
+//      an eviction for unpaid rent clears the unit
+//   7. old saves — a home rented out before Cities gets a tenant, a lease gets a landlord
+import { loadGame } from './loadgame.mjs';
+
+const ctx = loadGame({ quiet: true });
+const g = (name) => ctx.run(name);
+ctx.seedRng(4242);
+let failures = 0;
+const ok = (cond, msg) => { if (!cond) { failures++; console.log('  ✖ ' + msg); } };
+
+const COUNTRIES = g('COUNTRIES'), CITY_INFO = g('CITY_INFO'), JOB_CATS = g('JOB_CATS'), CITY_TRAITS = g('CITY_TRAITS'), CITY_SIZES = g('CITY_SIZES');
+const adultLife = (country, city, o = {}) => {
+  const s = ctx.createLife({ country, city, year: 2000 });
+  s.year = 2030; // 30 years old, no ageUp needed
+  s.pending = [];
+  Object.assign(s.player, { money: 5e6 }, o);
+  return s;
+};
+// Take an action with nothing queued (the engine won't act while a popup is waiting).
+const act = (s, id, t) => { s.pending = []; return ctx.doAction(s, id, t); };
+// Answer a popup by its choice value (or the first enabled choice).
+const answer = (s, value) => {
+  const pp = s.pending[0];
+  if (!pp) return false;
+  let idx = pp.choices.findIndex((c) => c.value === value);
+  if (idx < 0) idx = pp.choices.findIndex((c) => !c.disabled);
+  return ctx.resolvePopup(s, pp.id, idx);
+};
+
+/* 1. data ------------------------------------------------------------------ */
+for (const cc in COUNTRIES) {
+  for (const city of COUNTRIES[cc].cities) {
+    const info = CITY_INFO[cc] && CITY_INFO[cc][city];
+    ok(!!info, `${cc}:${city} has no city profile`);
+    if (!info) continue;
+    ok(!!CITY_SIZES[info.size], `${city}: unknown size ${info.size}`);
+    ok(info.col > 0.4 && info.col < 2.5 && info.wage > 0.6 && info.wage < 1.6, `${city}: odd cost ${info.col} / pay ${info.wage}`);
+    for (const h of info.hubs) ok(!!JOB_CATS[h], `${city}: hub "${h}" is not a job category`);
+    for (const t of info.traits) ok(!!CITY_TRAITS[t], `${city}: trait "${t}" is not in CITY_TRAITS`);
+    const names = ctx.hoodNames(cc, city);
+    ok(names.length === 4 && new Set(names).size === 4, `${city}: neighborhoods ${names}`);
+    ok(names.join() === ctx.hoodNames(cc, city).join(), `${city}: neighborhoods change between calls`);
+  }
+  for (const city in CITY_INFO[cc] || {}) ok(COUNTRIES[cc].cities.includes(city), `${cc}: profile for unknown city ${city}`);
+}
+
+/* 2. money ------------------------------------------------------------------ */
+{
+  const ny = adultLife('us', 'New York'), px = adultLife('us', 'Phoenix');
+  const sNY = ctx.salaryFor(ny, 'software', 0), sPX = ctx.salaryFor(px, 'software', 0);
+  ok(sNY > sPX * 1.25, `New York pay ${sNY} should beat Phoenix ${sPX} by ~37%`);
+  const avg = (s, key, f) => { let t = 0; for (let i = 0; i < 30; i++) { s.listings = {}; const l = ctx.listing(s, key); t += l.reduce((n, x) => n + f(x), 0) / l.length; } return t / 30; };
+  const rNY = avg(ny, 'rentals', (r) => r.rent), rPX = avg(px, 'rentals', (r) => r.rent);
+  ok(rNY > rPX * 1.6, `New York rent ${Math.round(rNY)} should be about twice Phoenix ${Math.round(rPX)}`);
+  const hNY = avg(ny, 'houses', (h) => h.value), hPX = avg(px, 'houses', (h) => h.value);
+  ok(hNY > hPX * 1.6, `New York homes ${Math.round(hNY)} should cost far more than Phoenix ${Math.round(hPX)}`);
+  ok(ctx.livingCost(ny, 22000) > ctx.livingCost(px, 22000), 'living costs follow the city');
+}
+
+/* 3. jobs ------------------------------------------------------------------- */
+{
+  const sea = adultLife('us', 'Seattle'), sligo = adultLife('ie', 'Sligo');
+  ok(ctx.jobOpenOdds(sea, 'software') > 0.9, `Seattle should almost always hire developers (${ctx.jobOpenOdds(sea, 'software')})`);
+  ok(ctx.jobOpenOdds(sligo, 'software') < 0.5, `Sligo should rarely hire developers (${ctx.jobOpenOdds(sligo, 'software')})`);
+}
+
+/* 4. moving ------------------------------------------------------------------ */
+{
+  const s = adultLife('us', 'Chicago');
+  const me = s.people[s.playerId];
+  const sp = ctx.makeAdultNear(s, {});
+  ctx.setRel(s, sp.id, 'spouse', 80); me.partner = sp.id; sp.partner = me.id; me.married = sp.married = true;
+  const kid = ctx.bornChild(s, sp.id, 'Kit', 'f'); kid.birthYear = s.year - 6;
+  const fr = ctx.makeAdultNear(s, {}); ctx.setRel(s, fr.id, 'friend', 70);
+  s.listings = {};
+  act(s, 'find_rental');
+  answer(s, s.pending[0].choices[0].value);
+  ok(s.player.housing.type === 'rent' && !!s.player.housing.ll, 'renting a place comes with a landlord');
+  ctx.hire(s, 'software', 1);
+  const before = s.player.money;
+  act(s, 'city_move');
+  answer(s, 'Seattle');
+  ok(s.pending[0] && s.pending[0].handler === 'cityGo', 'choosing a city asks for confirmation');
+  answer(s, true);
+  ok(me.city === 'Seattle' && sp.city === 'Seattle' && kid.city === 'Seattle', 'you, your spouse and your kid all live in Seattle now');
+  ok(s.player.places.includes('us:Chicago') && s.player.places.includes('us:Seattle'), 'both cities are recorded');
+  ok(s.player.rels[fr.id].rel < 70, 'friends left behind miss you');
+  ok(!s.player.career || s.player.career.salary > 0, 'the job transferred or ended cleanly');
+  ok(s.player.money > before - 20000, 'the old deposit came back (moving costs only a few thousand)');
+  ok(s.pending.some((p) => p.handler === 'rent'), 'a new city starts with the rentals there');
+}
+
+/* 5. renting ----------------------------------------------------------------- */
+{
+  const s = adultLife('de', 'Berlin');
+  s.listings = {};
+  act(s, 'find_rental');
+  answer(s, s.pending[0].choices[0].value);
+  const h = s.player.housing;
+  h.since = s.year - 3; h.ll.style = 'greedy';
+  let maxRaise = 0;
+  for (let i = 0; i < 40; i++) {
+    const r0 = h.rent;
+    h.notice = null; h.issue = null; s.pending = [];
+    ctx.renterYear(s, { n: 5 });
+    if (s.pending.some((p) => p.handler === 'llRaise')) answer(s, 'pay');
+    if (h.type !== 'rent') break;
+    maxRaise = Math.max(maxRaise, h.rent / r0 - 1);
+  }
+  ok(maxRaise <= 0.031, `German rent raises are capped at 3% (saw ${(maxRaise * 100).toFixed(1)}%)`);
+  // A notice that runs out puts you out.
+  h.notice = { why: 'sale', year: s.year - 1 }; s.pending = [];
+  ctx.renterYear(s, { n: 2 });
+  ok(['homeless', 'parents'].includes(s.player.housing.type), 'an expired notice ends the lease');
+}
+
+/* 6. owning ------------------------------------------------------------------ */
+{
+  const s = adultLife('us', 'Denver');
+  const a = ctx.makeHouse(s, 'duplex');
+  s.player.assets.push(a);
+  act(s, 'asset_movein', a.id);
+  ok(s.player.housing.assetId === a.id, 'you moved into your duplex');
+  act(s, 'asset_rentout', a.id);
+  ok(s.pending[0] && s.pending[0].handler === 'tnPick', 'renting it out opens tenant screening');
+  const names = s.pending[0].choices.slice(0, 3).map((c) => c.label).join();
+  answer(s, 'check');
+  ok(s.pending[0] && s.pending[0].choices[0].sub.startsWith('Background check'), 'background checks show the truth');
+  ok(s.pending[0].choices.slice(0, 3).map((c) => c.label).join() === names, 'background checks are on the same three applicants');
+  answer(s, 0);
+  ok(a.tenants.length === 1 && ctx.freeUnits(s, a) === 0, 'a duplex holds you plus one tenant');
+  ok(!ctx.actionList(s, 'asset', a.id).some((x) => x.id === 'll_find'), 'no "find a tenant" while every unit is full');
+  const t = a.tenants[0];
+  t.kind = 'model';
+  const roll = ctx.rentRoll(s, a);
+  ok(roll && roll[1] === t.rent, `a model tenant pays the full rent (${roll && roll[1]} vs ${t.rent})`);
+  t.kind = 'pro'; t.since = s.year - 3;
+  ctx.rentRoll(s, a);
+  ok(t.owed >= t.rent, 'a professional non-payer stops paying');
+  ctx.startEviction(s, a, t);
+  ok(t.evict && t.evict.why === 'arrears', 'unpaid rent is grounds for eviction');
+  let tries = 0;
+  while (a.tenants.includes(t) && tries++ < 30) { t.evict = { year: s.year - 1, why: 'arrears' }; ctx.propertyYear(s, a, { n: 0 }); }
+  ok(!a.tenants.includes(t), 'the eviction eventually clears the unit');
+  ok(s.player.assets.every((x) => (x.tenants || []).length <= x.units), 'never more tenants than units');
+}
+
+/* 7. old saves ----------------------------------------------------------------- */
+{
+  const s = adultLife('uk', 'Leeds');
+  const a = ctx.makeHouse(s, 'house');
+  delete a.units; delete a.city; delete a.cc; delete a.hood;
+  Object.assign(a, { rentedOut: true, rentIncome: 14000 });
+  s.player.assets.push(a);
+  const ts = ctx.tenantsOf(s, a);
+  ok(ts.length === 1 && ts[0].rent === 14000, 'a pre-Cities rental keeps its income as one tenant');
+  ok(ctx.unitsOf(a) === 1 && ctx.assetCity(s, a) === 'Leeds', 'old homes get a unit count and a city');
+  s.player.housing = { type: 'rent', assetId: null, rent: 12000, name: 'Flat' };
+  ok(!!ctx.landlordOf(s) && s.player.housing.deposit === 2000, 'an old lease gets a landlord and a deposit');
+}
+
+if (failures) { console.log(`\n❌ ${failures} cities check failures.`); process.exit(1); }
+console.log(`Cities checks: pass (${Object.values(CITY_INFO).reduce((n, c) => n + Object.keys(c).length, 0)} cities)`);
+console.log('✅ Cities checks passed.');

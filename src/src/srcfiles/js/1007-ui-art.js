@@ -895,24 +895,24 @@ const CAT_HUES = { mind: '#FF8FC7', health: '#FF5D7A', love: '#FF8FC7', social: 
 // Emoji used across the game's content, grouped by the drawn icon that stands in
 // for them. Anything not listed keeps its emoji, drawn inside the same tile.
 const EMOJI_GROUPS = {
-  rattle: "👶🍼🧸🧒", cake: "🎂🧁", gradcap: "🎓", book: "📚📖📘📗📔📕📙", school: "🏫🎒✏️🖍️📐",
+  rattle: "👶🍼🧸🧒", cake: "🎂🧁🍰", gradcap: "🎓", book: "📚📖📘📗📔📕📙", school: "🏫🎒✏️🖍️📐",
   career: "💼👔", money: "💰💵💸🤑💲💳", piggy: "🏦🥫",
-  assets: "🏠🏡🏘️🏚️🏙️🌆🏯🏰", building: "🏢🏭🏬🏪🏨🏗️", car: "🚗🚙🚘🏎️🚕🚐🚌🚜🛵🏍️🏁🛣️",
-  plane: "✈️🛫🛩️🚁🧳🏖️🏝️🗺️🛳️🚤⛵🛥️🛶🏕️⛰️🌅", globe: "🌍🌎🌏🛂🧭",
+  assets: "🏠🏡🏘️🏚️🏙️🌆🏯🏰", building: "🏢🏭🏬🏪🏨🏗️🧱", car: "🚗🚙🚘🏎️🚕🚐🚌🚜🛵🏍️🏁🛣️🚇",
+  plane: "✈️🛫🛩️🚁🧳🏖️🏝️🗺️🛳️🚤⛵🛥️🛶🏕️⛰️🌅🌊", globe: "🌍🌎🌏🛂🧭📍",
   ring: "💍💒💎💠", heartbreak: "💔", love: "💕💞💓💘💝💌💋😘🥰🌹💐🌷😏", health: "❤️❤🩸",
-  medical: "🩺🏥💊💉🩹🚑🦷🦴😷👩‍⚕️👂👁️🦶🦵🦻", thermometer: "🤒🤧🤕🦠🥵🤮🤢😵🚬",
+  medical: "🩺🏥💊💉🩹🚑🦷🦴😷👩‍⚕️👂👁️🦶🦵🦻", thermometer: "🤒🤧🤕🦠🥵🥶🤮🤢😵🚬",
   happy: "😊😁😀😄😇☀️🌤️😂🤗", sad: "😢😟😰😱😫😞😔😖🥱😴😬😒🌧️🙈", angry: "😡😤🤬😠💢🗯️👊✊",
-  paw: "🐾🐶🐕🐈🐱🐹🐇🦜🐠🐢🦎🐍🐎🐐🦮🐖🦊🐺🦦🦔🐝🐛🐜🦢🦈🦋🦄🦒",
+  paw: "🐾🐶🐕🐈🐱🐹🐇🦜🐠🐢🦎🐍🐎🐐🦮🐖🦊🐺🦦🦔🐝🐛🐜🦢🦈🦋🦄🦒🐭",
   party: "🎉🥳🎈🎊🕺💃🎡🎢🎠🤘", drink: "🍺🍻🍸🍶🥂🍷🍾☕",
   plate: "🍽️🍳🍕🍔🍝🥘🌮🍜🍟🍿🍦🍫🍪🍭🍬🌭🥐🍎🍋🥗🥦🍩🌶️👨‍🍳",
-  trophy: "🏆🥇🏅🎖️💯🔝", fame: "⭐🌟💫🤩", looks: "✨💅💄💇💈", clover: "🍀🎰", dice: "🎲", cards: "🃏♠️♟️",
+  trophy: "🏆🥇🏅🎖️💯🔝🏟️", fame: "⭐🌟💫🤩", looks: "✨💅💄💇💈", clover: "🍀🎰", dice: "🎲", cards: "🃏♠️♟️",
   music: "🎸🎻🎹🎷🎺🥁🎤🎶🎵🎼🎧🎙️🪕", palette: "🎨🖌️🖼️", clapper: "🎬🎭📺🎟️🎫📸📷🎥",
   controller: "🎮🕹️👾", phone: "📱📲📞☎️🤳📵", laptop: "💻🖥️⌨️👩‍💻🤖💿", flask: "🔬🧪🧬⚗️☢️", rocket: "🚀",
   scales: "⚖️👩‍⚖️", columns: "🏛️🗳️", scroll: "📜📝📋📄📑🗂️✍️🖋️📰", receipt: "🧾", chartup: "📈💹⬆️", chartdown: "📉",
-  prison: "⛓️🚔🚓🚨", lock: "🔒", mask: "🦹🕵️🔪💀😈🕳️👻", flame: "🔥💥", key: "🔑🗝️🔓", gift: "🎁", handshake: "🤝🙏🤲",
+  prison: "⛓️🚔🚓🚨", lock: "🔒", mask: "🦹🕵️🔪💀😈🕳️👻", flame: "🔥💥", key: "🔑🗝️🔓🚪", gift: "🎁", handshake: "🤝🙏🤲✋",
   bulb: "💡🔮", box: "📦🚚", chat: "💬🗣️💭🤐", megaphone: "📣📢🔊", mail: "✉️📧📭📮📤", bell: "🔔⏰⏱️",
   warning: "⚠️🚫🚧", dove: "🕊️⚰️🥀", tree: "🌳🌲🌱🌿🌾🌻🌼🌺", dumbbell: "🏋️💪🥊🥋🏃⛷️🏊🎾🏀⚽🏈🛹👟",
-  hourglass: "⏳⌛⏪", crown: "👑", couch: "🛋️🛏️🪑🛁", karma: "☯️😇", mind: "🧘🌀🌙", gear: "⚙️🛠️🔧🔩🧰🔨",
+  hourglass: "⏳⌛⏪", crown: "👑", couch: "🛋️🛏️🪑🛁🚿", karma: "☯️😇", mind: "🧘🌀🌙", gear: "⚙️🛠️🔧🔩🧰🔨",
   bag: "🛍️🛒🏷️👛👗👕🧢", people: "👥👪👨‍👩‍👧‍👦👵👋🙋", smarts: "🧠🤓🧩🔢🧮",
 };
 const EMOJI_RE = /(?:\p{Extended_Pictographic}|\p{Regional_Indicator})(?:️|‍\p{Extended_Pictographic}|\p{Regional_Indicator}|\p{Emoji_Modifier})*/gu;

@@ -2,8 +2,8 @@
  * 16-money.js — the yearly budget, loans, investments, lifestyle,
  * inheritance, bankruptcy.
  *
- * Adults who live on their own pay living costs set by their lifestyle,
- * plus rent / upkeep / loan payments. Kids and anyone living with their
+ * Adults who live on their own pay living costs set by their lifestyle and
+ * their city's cost of living, plus rent / upkeep / loan payments. Kids and anyone living with their
  * parents pay nothing. M(s).lastFinance keeps last year's breakdown.
  * ===================================================================== */
 
@@ -54,14 +54,16 @@ function financeTick(s) {
     const deal = price(s, Math.round(Math.pow(m.socials.followers, 0.92) * 0.12));
     inc.push(['Sponsorships', deal]);
   }
-  for (const a of m.assets) if (a.kind === 'house' && a.rentedOut) inc.push(['Rent from ' + a.name, a.rentIncome]);
+  // Rent from your tenants (49-cities.js): late payers, managers' fees and all.
+  for (const a of m.assets) if (a.kind === 'house') { const r = rentRoll(s, a); if (r) inc.push(r); }
 
   if (livesAlone(s) && m.housing.type !== 'homeless') {
     if (m.money < 0 && m.lifestyle !== 'frugal') { m.lifestyle = 'frugal'; log(s, '🥫 Money is tight. You cut back to a frugal lifestyle.', 'bad'); }
     const ls = LIFESTYLES[m.lifestyle] || LIFESTYLES.normal;
-    exp.push([ls.name + ' living costs', Math.round(price(s, ls.cost) * (trait(s, 'frugal') ? 0.8 : 1))]);
+    exp.push([ls.name + ' living costs', Math.round(livingCost(s, ls.cost) * (trait(s, 'frugal') ? 0.8 : 1))]);
   }
-  if (m.housing.type === 'rent' && !inPrison(s)) exp.push(['Rent', m.housing.rent]);
+  const rent = rentToPay(s);
+  if (rent) exp.push(['Rent', rent]);
   for (const a of m.assets) {
     const up = assetUpkeep(s, a);
     if (up) exp.push(['Upkeep: ' + a.name, up]);
@@ -190,11 +192,11 @@ function withdrawMoney(s, k, amt) {
 defAction({
   id: 'lifestyle', cat: 'money', label: 'Lifestyle', emoji: '🛋️', desc: 'How much you spend to live.',
   when: (s) => free(s) && livesAlone(s),
-  sub: (s) => LIFESTYLES[M(s).lifestyle].name + ' · ' + fmtMoney(price(s, LIFESTYLES[M(s).lifestyle].cost)) + '/yr',
+  sub: (s) => LIFESTYLES[M(s).lifestyle].name + ' · ' + fmtMoney(livingCost(s, LIFESTYLES[M(s).lifestyle].cost)) + '/yr',
   run: (s) => {
     popup(s, {
       emoji: '🛋️', title: 'Lifestyle', text: 'Your yearly living costs (rent and loans are extra).', handler: 'lifestyle',
-      choices: Object.keys(LIFESTYLES).map((k) => ({ label: LIFESTYLES[k].emoji + ' ' + LIFESTYLES[k].name, value: k, sub: fmtMoney(price(s, LIFESTYLES[k].cost)) + '/yr · ' + LIFESTYLES[k].desc })),
+      choices: Object.keys(LIFESTYLES).map((k) => ({ label: LIFESTYLES[k].emoji + ' ' + LIFESTYLES[k].name, value: k, sub: fmtMoney(livingCost(s, LIFESTYLES[k].cost)) + '/yr · ' + LIFESTYLES[k].desc })),
     });
   },
 });

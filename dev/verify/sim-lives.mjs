@@ -66,6 +66,14 @@ function check(s, where) {
       if (!Number.isInteger(v) || v < 0 || v > 100) fail(`body ${k}=${v} on ${id} @${where}`, s);
     }
   }
+  // Cities (49-cities.js): no building holds more tenants than it has units, and rents are real numbers.
+  for (const a of m.assets) {
+    if (a.kind !== 'house' || !a.tenants) continue;
+    const units = a.units || 1, mine = m.housing.type === 'own' && m.housing.assetId === a.id ? 1 : 0;
+    if (a.tenants.length + mine > units) fail(`${a.tenants.length} tenants + ${mine} owner in ${units} units @${where}`, s);
+    for (const t of a.tenants) if (!(t.rent > 0) || t.mood < 0 || t.mood > 100 || !t.first) fail(`bad tenant ${JSON.stringify(t)} @${where}`, s);
+  }
+  if (m.housing.type === 'rent' && !(m.housing.rent > 0)) fail(`rent ${m.housing.rent} @${where}`, s);
   walk(s, 's', s);
 }
 
@@ -101,6 +109,7 @@ function available(s) {
 }
 
 const kin = { lives: 0, people: 0, maxPeople: 0 };
+const cities = { moves: 0, places: 0, tenants: 0, maxTenants: 0, signed: 0, evicted: 0, wasEvicted: 0, beaten: 0, rent: 0 };
 const courts = { filed: 0, won: 0, lost: 0, settled: 0, sued: 0, beaten: 0, small: 0, rulings: 0, justices: 0, clientWins: 0 };
 const biz = { founded: 0, ipos: 0, exits: 0, fails: 0, maxVal: 0, maxStaff: 0, profitable: 0, coYears: 0, byInd: {} };
 const stats = { lives: 0, deaths: [], worth: [], gens: [], titles: {}, causes: {}, careers: {}, actionsRun: {}, prison: 0, degrees: {}, maxAge: 0, events: {}, tagLives: {} };
@@ -132,7 +141,9 @@ for (let i = 0; i < N; i++) {
     }
     // Persona lives steer the first generation into careers random play rarely reaches, so
     // their actions and events get tested: parents (i % 10 = 1: three kids at 30, a company,
-    // half of them a crime family too, and lots of parenting), sports (3), fame (5), the
+    // half of them a crime family too, and lots of parenting), cities (2: rents at 20, moves
+    // city at 26 and 41, and at 30 buys a duplex to live in plus two more homes to rent out,
+    // then plays landlord and tenant every year), sports (3), fame (5), the
     // underworld (7), romance (8: a partner at 24, then hookups, affairs and open
     // relationships), and the courts (9: a judge or a lawyer at 36, sometimes already high
     // on the ladder).
@@ -166,6 +177,21 @@ for (let i = 0; i < N; i++) {
           for (const pid in s.player.rels) for (const a of ctx.actionList(s, 'person', pid)) if (a.id.startsWith('rx_') || ['p_askout', 'p_leave_for', 'p_breakup'].includes(a.id)) acts.push([a.id, pid]);
           for (const id of ['hookup', 'find_date']) if (ctx.actionList(s, 'love').some((a) => a.id === id)) acts.push([id, undefined]);
           if (acts.length) { const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'romance:' + id); }
+        }
+        if (i % 10 === 2 && age === 20 && s.player.housing.type !== 'rent') { ctx.doAction(s, 'find_rental'); resolveAll(s, 'persona'); }
+        if (i % 10 === 2 && (age === 26 || age === 41)) { ctx.doAction(s, 'city_move'); resolveAll(s, 'persona'); }
+        if (i % 10 === 2 && age === 30) {
+          s.player.money += 2e6;
+          const homes = ['duplex', pick(['fourplex', 'apartments']), pick(['house', 'condo', 'townhouse'])].map((t) => ctx.makeHouse(s, t));
+          s.player.assets.push(...homes);
+          ctx.doAction(s, 'asset_movein', homes[0].id); resolveAll(s, 'persona');
+          for (const a of homes) { ctx.doAction(s, 'asset_rentout', a.id); resolveAll(s, 'persona'); }
+        }
+        if (i % 10 === 2 && age > 20 && chance(0.7)) {
+          const acts = [];
+          for (const a0 of s.player.assets) for (const a of ctx.actionList(s, 'asset', a0.id)) if ((a.id.startsWith('ll_') || a.id === 'asset_rentout') && (a.id !== 'asset_rentout' || !a0.rentedOut || chance(0.05))) acts.push([a.id, a0.id]);
+          for (const a of ctx.actionList(s, 'home')) if (a.id.startsWith('ll_')) acts.push([a.id, undefined], [a.id, undefined]);
+          if (acts.length) { const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'cities:' + id); }
         }
         if (i % 10 === 5 && age === 20) { const job = ['musician', 'author', 'comedian', 'director', 'producer', 'actor', 'model'][Math.floor(i / 10) % 7]; if (s.player.career) ctx.leaveJob(s, 'switched'); Object.assign(s.player.skills, { music: 50, writing: 50, acting: 50, art: 50, charisma: 40 }); s.people[s.playerId].stats.looks = Math.max(75, s.people[s.playerId].stats.looks); ctx.hire(s, job, 0); }
       } catch (e) { fail('persona setup threw: ' + e.stack.split('\n').slice(0, 3).join(' | '), s); }
@@ -219,6 +245,9 @@ for (let i = 0; i < N; i++) {
   kin.lives++; kin.people += Object.keys(s.people).length; kin.maxPeople = Math.max(kin.maxPeople, Object.keys(s.people).length);
   for (const id in s.player.rels) { const k = s.player.rels[id].kind; if (['aunt', 'cousin', 'nibling', 'inlaw', 'sibling', 'halfsibling'].includes(k)) kin[k] = (kin[k] || 0) + 1; }
   const lf = s.player.life; biz.founded += lf.companiesFounded || 0; biz.ipos += lf.ipos || 0; biz.exits += lf.exits || 0; biz.fails += lf.bizFails || 0;
+  for (const [k, t] of [['moves', 'cityMoves'], ['signed', 'tenantsSigned'], ['evicted', 'tenantsEvicted'], ['wasEvicted', 'evicted'], ['beaten', 'evictionsBeaten'], ['rent', 'rentCollected']]) cities[k] += lf[t] || 0;
+  cities.places += (s.player.places || []).length;
+  const nt = s.player.assets.reduce((n, a) => n + (a.tenants || []).length, 0); cities.tenants += nt; cities.maxTenants = Math.max(cities.maxTenants, nt);
   for (const [k, t] of [['filed', 'lawsuitsFiled'], ['won', 'lawsuitsWon'], ['lost', 'lawsuitsLost'], ['settled', 'settlements'], ['sued', 'timesSued'], ['beaten', 'suitsBeaten'], ['small', 'smallClaimsWon'], ['rulings', 'rulings'], ['justices', 'supremeCourt'], ['clientWins', 'clientWins']]) courts[k] += lf[t] || 0;
 }
 
@@ -243,6 +272,7 @@ console.log(`Business: ${biz.founded} founded (last gen per life) · ${biz.coYea
 console.log(`Company-years by industry: ${top(biz.byInd, 22)}`);
 console.log(`Family (last gen per life, average): ${['sibling', 'aunt', 'cousin', 'nibling', 'inlaw'].map((k) => `${((kin[k] || 0) / Math.max(1, kin.lives)).toFixed(1)} ${k}`).join(' · ')} · ${Math.round(kin.people / Math.max(1, kin.lives))} people in the save (max ${kin.maxPeople})`);
 console.log(`Courts (last gen per life): ${courts.filed} lawsuits filed · ${courts.won} won, ${courts.lost} lost, ${courts.settled} settled · sued ${courts.sued} times, ${courts.beaten} beaten · ${courts.small} small-claims wins · ${courts.rulings} rulings, ${courts.justices} justices confirmed · ${courts.clientWins} trials won for clients`);
+console.log(`Cities (last gen per life): ${cities.moves} city moves · ${(cities.places / Math.max(1, kin.lives)).toFixed(1)} cities lived in on average · ${cities.signed} leases signed by tenants · ${cities.tenants} tenants at the end (max ${cities.maxTenants}) · ${cities.evicted} tenants evicted · player evicted ${cities.wasEvicted} times, ${cities.beaten} evictions beaten · ${Math.round(cities.rent).toLocaleString()} rent collected`);
 console.log(`Content tags on: ${TAG_IDS.map((t) => `${t} in ${stats.tagLives[t] || 0} lives`).join(', ')}`);
 console.log(`Events never fired (${neverFired.length}/${evIds.length}): ${neverFired.join(', ') || 'none'}`);
 console.log(`Actions never run (${neverRun.length}/${ACTION_ORDER.length}): ${neverRun.join(', ') || 'none'}`);

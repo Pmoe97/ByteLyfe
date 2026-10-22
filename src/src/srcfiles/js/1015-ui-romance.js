@@ -8,6 +8,13 @@ function romanceFacts(p) {
   if (!p.alive) return '';
   const r = relOf(G, p.id), chips = [];
   const chip = (e, t) => chips.push(`<span class="chip">${emo(e, 18)}${esc(t)}</span>`);
+  if (r.taboo) {
+    try {
+      const fam = r.wasFam || (typeof bloodKinshipInfo === 'function' ? bloodKinshipInfo(G, p.id) : null);
+      if (fam) chip('🔞', `Consensual adult family romance (${fam})`);
+      else chip('🔞', 'Consensual adult family romance');
+    } catch (e) { chip('🔞', 'Consensual adult family romance'); }
+  }
   if (openWith(G, p.id)) chip('🔓', `Open relationship since ${M(G).open.since}`);
   if (r.kind === 'lover') {
     if (r.known) chip('🔓', `${nm(G, romanticId(G))} knows`);

@@ -10,7 +10,7 @@
  * ===================================================================== */
 
 const META = {
-  settings: { theme: 'auto', textSize: 'medium', showHidden: true, autoPopups: false, confirmAge: false, reduceMotion: false, chaos: false, mature: false },
+  settings: { theme: 'auto', textSize: 'medium', showHidden: true, autoPopups: false, confirmAge: false, reduceMotion: false, chaos: false, mature: false, taboo: false, taboo_parent: false, taboo_step: false, taboo_sibling: false, taboo_child: false, taboo_grand: false, taboo_extended: false, taboo_inlaw: false },
   achievements: {}, // id -> first unlock time
   graveyard: [], // past lives, newest first
 };

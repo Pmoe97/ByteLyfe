@@ -41,8 +41,8 @@ promotions, firing, retirement and pensions. Also 14 part-time jobs and 15 side 
 mortgage, car, boat. Five investment types, voluntary and forced bankruptcy, trust funds for
 minors, sponsorship income.
 
-**Assets.** 12 home types (buy with cash or a mortgage, move in, rent out, renovate, throw
-parties). Rentals, 13 car classes, boats, aircraft, jewelry, instruments, art. Condition and
+**Assets.** 15 home types, from studios to castles plus duplexes, fourplexes and apartment
+buildings (buy with cash or a mortgage, move in, rent out, renovate, throw parties). Rentals, 13 car classes, boats, aircraft, jewelry, instruments, art. Condition and
 market value change over time; cars can crash.
 
 **Health.** 40+ conditions, including hidden cancers that checkups catch early, plus
@@ -59,7 +59,7 @@ parks, shopping. The lottery, a casino (blackjack, roulette, slots), charity, 12
 emigration, driver's license, name changes. Social media: posts, going viral,
 verification, sponsorships. Fan meets and publicity stunts.
 
-**Events.** Over 400 random events across every stage of life and in prison (see More story).
+**Events.** Over 500 random events across every stage of life and in prison (see More story).
 
 **Business ownership (v0.2).** Start up to three companies across 22 industries, from food
 trucks and bakeries to tech startups, biotech, hotels and airlines. Medical, dental, law and
@@ -102,16 +102,19 @@ outlast you across generations.
 - **Extras:** 5 new company events and 4 new achievements (Hostile Takeover, Franchise King,
   Market Leader, Stock Picker).
 
-**Meta.** 113 achievements kept across lives, three bucket-list goals per life, legacy titles
+**Meta.** 119 achievements kept across lives, three bucket-list goals per life, legacy titles
 and epitaphs, the Hall of Lives, multiple save slots, export/import codes. God Mode (stats,
 money, skills, traits, instant careers and degrees, relationship editing) and a 10-year Time
 Machine, both free. Light/dark themes, text size, reduced motion.
 
 **Content tags.** Events, choices and actions can be tagged `chaos` (absurd and
-supernatural) or `mature` (harder crime and affair content). Each tag has an off-by-default
-switch in Settings, so players who want the game weirder or darker can opt in. So far, seven
-events are tagged `chaos` (four of them toddler hazards), and three of the messiest affair and
-one-night-stand events are tagged `mature` (see Relationships 2.0).
+supernatural), `mature` (harder crime and affair content), or `taboo` + one subtype
+(parent, step, sibling, child, grand, extended, in-law) for consensual adult-only family
+romance. Each tag has an off-by-default switch in Settings, so players who want the game
+weirder or darker can opt in. The taboo master plus seven subtype switches live in their
+own Settings section and all default OFF, so the game is exactly as before until opted in.
+So far, seven events are tagged `chaos` (four of them toddler hazards), and three of the
+messiest affair and one-night-stand events are tagged `mature` (see Relationships 2.0).
 
 **Quick wins.** Petty actions: throw a tantrum to squeeze money out of your parents,
 toilet-paper someone's house, yell at people (detention at school, a write-up at work), spread
@@ -325,39 +328,84 @@ person's page.
   (blackmail, a lover on your doorstep, a fling who won't go away), and 5 achievements (Open Book,
   Smooth Operator, Busted, It's Complicated, Ghosts of Flings Past).
 
+**Taboo family romance (opt-in).** Consensual adult-only family romance, strictly 18+ both
+with no teen path, gated by a master `taboo` switch plus seven subtype switches (parents,
+step-parents, siblings, children, grandparents/grandchildren, extended family, in-laws —
+all default OFF).
+- **Eligibility:** family members become dateable only with master + matching subtype on,
+  18+ both, single, and the usual orientation/attraction checks. Dual labels ("Brother ·
+  Girlfriend"), blood-safe in-law handling, and blocked parental blessing.
+- **Realistic genetics:** real pedigree inbreeding stored on each child (`p.inbred`,
+  `p.tabooDepth`): unrelated 0, cousin 0.0625, sibling/parent-child 0.25, repeat inbred
+  matings climb fast. Low first-generation defect/miscarriage risk, rising sharply later.
+- **Neutral sim with fallout:** karma/fame dings, family disapproval and discovery/holiday/
+  pregnancy-reaction events. No jail, no teen content, ever.
+
+**Cities.** Where you live matters now. All 160 cities have their own size, cost of living, pay,
+big industries and character (capital, coastal, beaches, tourist hotspot, college town,
+nightlife, snowy, historic, industrial), shown on a new City page.
+- **Money:** rent, home prices and living costs follow the city, so New York costs about twice
+  what Phoenix does and pays about 35% more. Each city's housing market booms and slumps, and
+  homes gain or lose value with it.
+- **Jobs:** big cities post more openings, a city's big industries almost always hire, and small
+  cities rarely need developers, scientists or bankers.
+- **Neighborhoods:** four per city, from rough to upscale, with names in the local language.
+  Rentals and homes for sale come with a neighborhood that sets the price, how safe it is, and how
+  you feel living there. Neighborhoods can gentrify, and a new train line raises prices.
+- **Moving:** move to another city in your country. Your spouse and kids come along, your partner
+  might, your friends miss you, and your job may transfer you (with pay for the new city) or not.
+  Job transfers and emigrating use the same moves. Moving into a home you own in another city moves
+  you there.
+- **Landlords:** every rental has a named landlord with a style (easygoing, hard to reach,
+  penny-pinching, a property company, a small-time owner) and online reviews you can check before
+  signing. They raise the rent each year, skip repairs, and serve eviction notices: the building
+  sold, a relative moving in, a "renovation", vacation rentals, unpaid rent, or payback after you
+  called the inspector. Fix things yourself, keep asking, call the housing inspector, withhold rent,
+  sue them, fight an eviction in housing court, ask for cash to leave, or win them over with a gift
+  basket. Deposits come back, or don't (sue for it). Strong tenant laws in Germany, France and
+  Sweden cap raises at 3% and make evictions hard; some other countries are in between.
+- **Being a landlord:** rent out any home, or live in one unit of a duplex, fourplex or apartment
+  building and rent out the rest. Pick from three named applicants, with a background check if you
+  want the truth. Tenants have personalities (model tenants, settled families, late payers, people
+  who are hard on the place, loud ones, and professional non-payers), happiness, rent and debts.
+  Set the rent below, at or above market, handle repair requests (fix it, patch it or ignore it and
+  risk fines, rent strikes and lawsuits), give late payers time or a payment plan, evict, or pay
+  people to leave. A property manager takes 8% and handles everything.
+- **Extras:** 34 events (commutes, subway delays, star sightings, small-town gossip, floods,
+  protests, tourists, startup recruiters, gentrification, landlords who let themselves in, rent
+  strikes, tenants who want a dog, sublet to tourists or vanish in the night...), 6 achievements
+  (City Hopper, Big City Dreams, Landlord, House Hacker, Tenant Power, Slumlord), 2 goals and the
+  Real Estate Baron legacy title.
+
 ## Next up
 
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Cities.** A few cities per country, each with its own cost of living, job market and
-    events. Move within a country, pick a neighborhood, and rent from landlords who raise the
-    rent, skip repairs or evict you. The other side too: be a landlord with named tenants, set
-    the rent, handle repairs and evictions.
-2. **Real currencies** per country, with exchange when emigrating.
-3. **Chaos mode** (`chaos` tag). Random events that grant superpowers (laser eyes, flight...),
+1. **Real currencies** per country, with exchange when emigrating.
+2. **Chaos mode** (`chaos` tag). Random events that grant superpowers (laser eyes, flight...),
     superhero and supervillain careers, ascending as an archangel or a demon lord. Vampire
     lives: feeding, slow aging, hunters, and turning others.
-4. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
+3. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
     A daily challenge with streaks. Every challenge stays available, free.
-5. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
-6. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
+4. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
+5. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
     (collect animals, build exhibits, breeding programs), both on the business engine.
-7. **Military depth.** Wars, desertion, veterans' benefits.
-8. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+6. **Military depth.** Wars, desertion, veterans' benefits.
+7. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
     double agents, and getting burned.
-9. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+8. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-10. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+9. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-11. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+10. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-12. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+11. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
     purges, coups and declared wars. Builds on Royalty and Military depth.
-13. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+12. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-14. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-15. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+13. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+14. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 
@@ -367,5 +415,7 @@ spin-off for the distant future, not an expansion.
 
 ## Not planned
 
-Romantic or sexual content between family members, and human trafficking as a crime path.
+Human trafficking as a crime path.
 Messy family drama that isn't sexual (custody battles, feuds, disownment) is fair game.
+Consensual adult-only family romance exists as the opt-in `taboo` system above (18+ both,
+master + subtype switches, all default OFF) — anything involving minors stays out, always.

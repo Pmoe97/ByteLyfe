@@ -110,9 +110,13 @@ SHEETS.settings = () => {
         ${toggle('reduceMotion', 'Reduce motion')}
       </div>
       <div class="section-title">Content</div><div class="card">
-        ${Object.keys(CONTENT_TAGS).map((k) => toggle(k, `${emo(CONTENT_TAGS[k].emoji, 18)} ${CONTENT_TAGS[k].name}`, CONTENT_TAGS[k].desc)).join('')}
+        ${Object.keys(CONTENT_TAGS).filter((k) => !k.startsWith('taboo')).map((k) => toggle(k, `${emo(CONTENT_TAGS[k].emoji, 18)} ${CONTENT_TAGS[k].name}`, CONTENT_TAGS[k].desc)).join('')}
       </div>
-      <div class="note">Off by default. These apply to every life and kick in from the next thing that happens.</div>
+      <div class="section-title">Taboo romance (18+ only, opt-in)</div><div class="card">
+        ${toggle('taboo', `${emo(CONTENT_TAGS.taboo.emoji, 18)} ${CONTENT_TAGS.taboo.name}`, CONTENT_TAGS.taboo.desc + ' Adult-only, consensual. No teens, ever.')}
+        ${['taboo_parent', 'taboo_step', 'taboo_sibling', 'taboo_child', 'taboo_grand', 'taboo_extended', 'taboo_inlaw'].map((k) => toggle(k, `${emo(CONTENT_TAGS[k].emoji, 18)} ${CONTENT_TAGS[k].name}`, CONTENT_TAGS[k].desc)).join('')}
+      </div>
+      <div class="note">Taboo stays exactly as before (off) unless you turn on the master switch plus a subtype. 18+ both, consensual only. Off by default. These apply to every life and kick in from the next thing that happens.</div>
       <div class="section-title">Your data</div><div class="list">
         ${G ? itemRow({ a: 'exportLife', ico: '📤', t: 'Export this life', s: 'Copy a backup code you can paste anywhere' }) : ''}
         ${itemRow({ a: 'sheet', ds: { k: 'import' }, ico: '📥', t: 'Import a life', s: 'Paste a backup code', chev: true })}

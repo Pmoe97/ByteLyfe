@@ -512,17 +512,19 @@ onChoice('emigrate', (s, ctx, c) => {
   const odds = 0.35 + P(s).stats.smarts / 300 + (M(s).career ? 0.15 : 0) + (eduRank(s) >= 3 ? 0.15 : 0) + (netWorth(s) > price(s, 100000) ? 0.15 : 0) - (hasFelony(s) ? 0.35 : 0);
   if (!chance(clamp(odds, 0.05, 0.95))) return { text: `Your visa to ${COUNTRIES[c].name} was denied.`, tone: 'bad', emoji: '🛂' };
   const me = P(s);
+  const dep = leaveRental(s, 'moved');
   me.country = c;
   me.city = pick(COUNTRIES[c].cities);
+  cityArrive(s);
   if (M(s).career) leaveJob(s, 'moved');
   M(s).ptJob = null;
   if (M(s).edu.current) { M(s).edu.current = null; }
-  if (M(s).housing.type === 'rent' || M(s).housing.type === 'parents') M(s).housing = { type: 'homeless', assetId: null, rent: 0, name: '' };
+  if (M(s).housing.type !== 'homeless') M(s).housing = { type: 'homeless', assetId: null, rent: 0, name: '' };
   for (const pid in M(s).rels) if (['friend', 'classmate', 'coworker', 'boss'].includes(M(s).rels[pid].kind)) M(s).rels[pid].rel = clamp100(M(s).rels[pid].rel - 20);
   s.listings = {};
   tally(s, 'countries');
   add(s, { happy: 6 });
-  return { text: `You moved to ${me.city}, ${COUNTRIES[c].name}! ${COUNTRIES[c].flag} Find a place to live and a new job.`, tone: 'good', emoji: '🛂' };
+  return { text: `You moved to ${me.city}, ${COUNTRIES[c].name}! ${COUNTRIES[c].flag} Find a place to live and a new job.${dep ? ' ' + dep : ''}`, tone: 'good', emoji: '🛂' };
 });
 
 /* ---- crime menu ---------------------------------------------------- */

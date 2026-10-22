@@ -3,6 +3,8 @@
  *
  * Asset = { id, kind, type, name, emoji, value, paid, cond, since,
  *           beds, loanId, rentedOut, rentIncome }
+ * Homes also carry cc, city, hood and units, and rented homes their
+ * tenants (49-cities.js). Prices follow the city and the neighborhood.
  * kind: house | car | boat | aircraft | jewelry | instrument | art
  * Shop listings refresh every year (s.listings[key]).
  * M(s).housing = { type: parents | rent | own | homeless, assetId, rent, name }
@@ -28,16 +30,14 @@ function genListing(s, key) {
   const out = [];
   const mk = (o) => Object.assign({ id: uid(s, 'a'), cond: 100, since: s.year }, o);
   if (key === 'houses') {
+    const cc = P(s).country, city = P(s).city;
     for (let i = 0; i < 7; i++) {
       const t = weighted(HOUSE_TYPES, (x) => x.w);
-      const cond = randInt(25, 100);
-      out.push(mk({ kind: 'house', type: t.id, emoji: t.emoji, name: pick(HOUSE_ADJ) + ' ' + t.name, cond, beds: randInt(t.beds[0], t.beds[1]), built: s.year - randInt(0, 110), value: price(s, t.base * randFloat(0.65, 1.4) * (0.6 + cond / 250)) }));
+      const cond = randInt(25, 100), hood = t.base >= 1500000 && !t.units ? randInt(2, 3) : randInt(0, 3);
+      out.push(mk({ kind: 'house', type: t.id, emoji: t.emoji, name: pick(HOUSE_ADJ) + ' ' + t.name, cond, beds: randInt(t.beds[0], t.beds[1]), units: t.units || 1, cc, city, hood, built: s.year - randInt(0, 110), value: price(s, t.base * randFloat(0.65, 1.4) * (0.6 + cond / 250) * houseMult(s, cc, city, hood)) }));
     }
   } else if (key === 'rentals') {
-    for (const t of RENTAL_TYPES) {
-      if (chance(0.25)) continue;
-      out.push({ id: uid(s, 'r'), type: t.id, emoji: t.emoji, name: pick(HOUSE_ADJ) + ' ' + t.name, rent: price(s, t.rent * randFloat(0.8, 1.25)) });
-    }
+    out.push(...rentalListing(s));
   } else if (key === 'cars') {
     for (let i = 0; i < 7; i++) {
       const t = weighted(CAR_CLASSES, (x) => x.w);
@@ -94,7 +94,7 @@ function openShop(s, key) {
     emoji: shop.emoji, title: shop.name, text: key === 'houses' ? 'This year’s listings.' : 'Take a look around.', handler: 'shopPick', ctx: { key },
     choices: items.map((it) => ({
       label: it.emoji + ' ' + it.name, value: it.id,
-      sub: fmtMoney(it.value) + (it.kind === 'house' ? ` · ${it.beds ? it.beds + ' bed · ' : ''}condition ${it.cond}%` : it.kind === 'car' && it.cond < 100 ? ` · condition ${it.cond}%` : ''),
+      sub: fmtMoney(it.value) + (it.kind === 'house' ? ` · ${it.units > 1 ? it.units + ' units · ' : it.beds ? it.beds + ' bed · ' : ''}${hoodName(it.cc, it.city, it.hood)} · condition ${it.cond}%` : it.kind === 'car' && it.cond < 100 ? ` · condition ${it.cond}%` : ''),
     })).concat([{ label: 'Leave', value: null }]),
   });
 }
@@ -153,11 +153,14 @@ onChoice('moveIn', (s, ctx, yes) => (yes ? moveInto(s, ctx.id) : undefined));
 function moveInto(s, id) {
   const a = myAsset(s, id);
   if (!a) return;
-  a.rentedOut = false;
+  if (freeUnits(s, a) < 1) return { text: `Your tenants live in every unit of your ${a.name}.`, nolog: true };
+  const dep = leaveRental(s, 'moved');
+  if (unitsOf(a) === 1) a.rentedOut = false;
   M(s).housing = { type: 'own', assetId: id, rent: 0, name: a.name };
+  P(s).hood = assetHood(s, a);
   tally(s, 'moves');
   add(s, { happy: 4 });
-  return { text: `You moved into your ${a.name}.`, emoji: '🔑' };
+  return { text: `${dep ? dep + ' ' : ''}You moved into your ${a.name}.`, emoji: '🔑' };
 }
 
 function removeAsset(s, id) {
@@ -176,20 +179,31 @@ function sellValue(a) { return Math.round(a.value * (a.kind === 'house' ? 0.94 :
 const ownedOf = (kind) => (s, id) => free(s) && !!myAsset(s, id) && (!kind || kind.includes(myAsset(s, id).kind));
 defAction({
   id: 'asset_movein', cat: 'asset', target: 'asset', label: 'Move in', emoji: '🔑',
-  when: (s, id) => ownedOf(['house'])(s, id) && !(M(s).housing.type === 'own' && M(s).housing.assetId === id),
-  run: (s, id) => moveInto(s, id),
+  when: (s, id) => ownedOf(['house'])(s, id) && !livesIn(s, myAsset(s, id)) && freeUnits(s, myAsset(s, id)) > 0,
+  sub: (s, id) => (isRemote(s, myAsset(s, id)) ? `It's in ${assetCity(s, myAsset(s, id))}` : ''),
+  run: (s, id) => {
+    const a = myAsset(s, id);
+    if (!isRemote(s, a)) return moveInto(s, id);
+    if (assetCC(s, a) !== P(s).country) return { text: `Your ${a.name} is in ${COUNTRIES[assetCC(s, a)].name}. You'd have to emigrate first.`, nolog: true };
+    cityConfirm(s, assetCC(s, a), assetCity(s, a), id);
+  },
 });
 defAction({
   id: 'asset_rentout', cat: 'asset', target: 'asset', emoji: '🏷️',
   label: (s, id) => (myAsset(s, id).rentedOut ? 'Stop renting it out' : 'Rent it out'),
-  sub: (s, id) => (myAsset(s, id).rentedOut ? 'Earning ' + fmtMoney(myAsset(s, id).rentIncome) + '/yr' : 'About ' + fmtMoney(Math.round(myAsset(s, id).value * 0.05)) + '/yr'),
-  when: (s, id) => ownedOf(['house'])(s, id) && !(M(s).housing.type === 'own' && M(s).housing.assetId === id),
+  sub: (s, id) => { const a = myAsset(s, id); return a.rentedOut ? `${nOf(tenantsOf(s, a).length, 'tenant')} · ${fmtMoney(a.rentIncome || 0)}/yr` : `About ${fmtMoney(askingRent(s, a))}/yr${unitsOf(a) > 1 ? ' a unit' : ''}`; },
+  when: (s, id) => ownedOf(['house'])(s, id) && (!livesIn(s, myAsset(s, id)) || unitsOf(myAsset(s, id)) > 1),
   run: (s, id) => {
     const a = myAsset(s, id);
-    if (a.rentedOut) { a.rentedOut = false; return `Your tenants moved out of the ${a.name}.`; }
+    if (a.rentedOut) {
+      const ts = tenantsOf(s, a);
+      for (const t of ts) if (['family', 'model'].includes(t.kind)) add(s, { karma: -1 });
+      Object.assign(a, { tenants: [], rentedOut: false, mgr: false, rentIncome: 0 });
+      return ts.length ? `You gave notice to ${listJoin(ts.map((t) => t.first))}. Your ${a.name} is empty now.` : `You took your ${a.name} off the rental market.`;
+    }
+    tenantsOf(s, a);
     a.rentedOut = true;
-    a.rentIncome = Math.round(a.value * randFloat(0.04, 0.06) * (0.6 + a.cond / 250));
-    return `You found tenants for your ${a.name}. They'll pay ${fmtMoney(a.rentIncome)} a year.`;
+    if (freeUnits(s, a) > 0) screenTenants(s, a, false);
   },
 });
 defAction({
@@ -306,27 +320,22 @@ defAction({
 
 /* ---- housing actions ----------------------------------------------- */
 defAction({
-  id: 'find_rental', cat: 'home', label: 'Rent a place', emoji: '🏢', desc: 'Move out and rent.',
-  when: (s) => free(s) && A(s) >= 18 && M(s).housing.type !== 'rent',
-  run: (s) => {
-    const items = listing(s, 'rentals');
-    popup(s, {
-      emoji: '🏢', title: 'Rentals', text: 'Rent is paid yearly. You will also pay living costs.', handler: 'rent',
-      choices: items.map((r) => ({ label: r.emoji + ' ' + r.name, value: r.id, sub: fmtMoney(r.rent) + '/yr' })).concat([{ label: 'Never mind', value: null }]),
-    });
-  },
+  id: 'find_rental', cat: 'home', emoji: '🏢',
+  label: (s) => (M(s).housing.type === 'rent' ? 'Move to a different rental' : 'Rent a place'),
+  desc: 'Pick a neighborhood and a landlord.',
+  when: (s) => free(s) && A(s) >= 18,
+  run: (s) => openRentals(s),
 });
+// Rentals come with a neighborhood and a landlord (49-cities.js). "own:<id>" moves you into a home you own.
 onChoice('rent', (s, ctx, id) => {
   if (!id) return;
+  if (String(id).startsWith('own:')) return moveInto(s, id.slice(4));
   const r = listing(s, 'rentals').find((x) => x.id === id);
   if (!r) return;
   const deposit = Math.round(r.rent / 6);
   if (!pay(s, deposit)) return cantAfford(deposit);
-  const first = M(s).housing.type === 'parents';
-  M(s).housing = { type: 'rent', assetId: null, rent: r.rent, name: r.name };
-  tally(s, 'moves');
-  add(s, { happy: first ? 8 : 3 });
-  return { text: `You${first ? ' moved out of your parents’ place and' : ''} signed a lease on a ${r.name.toLowerCase()}. Deposit: ${fmtMoney(deposit)}.`, emoji: '🔑', tone: 'good' };
+  s.listings.rentals.items = listing(s, 'rentals').filter((x) => x !== r);
+  return signLease(s, r);
 });
 defAction({
   id: 'move_home', cat: 'home', label: 'Move back in with your parents', emoji: '🏠', desc: 'Free rent. Some pride lost.',
@@ -343,9 +352,9 @@ defAction({
 function assetTick(s) {
   for (const a of M(s).assets) {
     if (a.kind === 'house') {
-      a.value = Math.round(a.value * (1 + gauss(0.035, 0.07)));
+      // Its city's market moves it (49-cities.js); tenants wear it down in cityTick.
+      a.value = Math.round(a.value * (1 + houseGrowth(s, a)));
       a.cond = clamp(a.cond - randInt(0, 3), 0, 100);
-      if (a.rentedOut && chance(0.08)) { a.cond = clamp(a.cond - randInt(5, 20), 0, 100); log(s, `🏚️ Your tenants trashed the ${a.name}.`, 'bad'); }
     } else if (a.kind === 'car') {
       a.value = Math.round(a.value * (a.type === 'classic' ? randFloat(0.98, 1.08) : randFloat(0.82, 0.9)));
       a.cond = clamp(a.cond - randInt(2, 8), 0, 100);

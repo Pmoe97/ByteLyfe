@@ -1,6 +1,7 @@
 /* =====================================================================
  * 1002-ui-menus.js — Activities, Work/School, the job board, education,
- * Assets, Finances and single-asset sheets.
+ * Assets, Finances and single-asset sheets (the city, landlord and tenant
+ * parts come from 1016-ui-cities.js).
  * ===================================================================== */
 
 /* ---- activities ---------------------------------------------------- */
@@ -138,7 +139,8 @@ CLICK.enroll = (el, ds) => uiRun(() => { if (!hasHighSchool(G) || M(G).career ||
 
 function salaryRange(id) {
   const lad = JOBS[id].ladder;
-  return fmtMoneyShort(nicePrice(lad[0][1] * econ(G))) + (lad.length > 1 ? '–' + fmtMoneyShort(nicePrice(lad[lad.length - 1][1] * econ(G))) : '');
+  const k = econ(G) * wageOf(G);
+  return fmtMoneyShort(nicePrice(lad[0][1] * k)) + (lad.length > 1 ? '–' + fmtMoneyShort(nicePrice(lad[lad.length - 1][1] * k)) : '');
 }
 SHEETS.jobboard = () => {
   const board = jobBoard(G);
@@ -180,7 +182,8 @@ SHEETS.assets = () => {
   const h = m.housing;
   let html = `<div class="section-title">Home</div><div class="card">
     <div class="row"><div class="ico">${icon('assets', 28)}</div><div class="grow"><b>${esc(housingLabel(G))}</b><div class="muted">${h.type === 'rent' ? 'Rent ' + fmtMoney(h.rent) + '/yr' : h.type === 'own' ? 'You own this home' : h.type === 'homeless' ? (A(G) >= 18 ? 'You have nowhere to live' : '') : 'Living with family'}</div></div></div>
-  </div>${listOf(actionRows('home'))}`;
+    ${homeFacts()}
+  </div>${listOf(cityRow() + actionRows('home'))}`;
   html += `<div class="section-title">Money</div><div class="list">
     ${itemRow({ a: 'sheet', ds: { k: 'finance' }, ico: '💵', t: fmtMoney(m.money), s: `Net worth ${fmtMoneyShort(netWorth(G))}${m.trust ? ' · Trust fund ' + fmtMoneyShort(m.trust) : ''}`, chev: true })}
     ${actionRows('money', undefined, (a) => ['investments', 'stocks', 'bank_loan', 'lifestyle', 'bankruptcy'].includes(a.id))}
@@ -188,7 +191,7 @@ SHEETS.assets = () => {
   for (const [kind, name] of ASSET_GROUPS) {
     const list = m.assets.filter((a) => a.kind === kind);
     if (!list.length) continue;
-    html += `<div class="section-title">${name}</div><div class="list">${list.map((a) => itemRow({ a: 'sheet', ds: { k: 'asset', arg: a.id }, ico: a.emoji, t: esc(a.name), s: `Worth ${fmtMoney(a.value)}${a.kind === 'house' || a.kind === 'car' || a.kind === 'boat' ? ' · condition ' + a.cond + '%' : ''}${a.rentedOut ? ' · rented out' : ''}${h.assetId === a.id ? ' · you live here' : ''}`, chev: true })).join('')}</div>`;
+    html += `<div class="section-title">${name}</div><div class="list">${list.map((a) => itemRow({ a: 'sheet', ds: { k: 'asset', arg: a.id }, ico: a.emoji, t: esc(a.name), s: `Worth ${fmtMoney(a.value)}${a.kind === 'house' || a.kind === 'car' || a.kind === 'boat' ? ' · condition ' + a.cond + '%' : ''}${a.kind === 'house' ? houseRowNote(a) : ''}${h.assetId === a.id ? ' · you live here' : ''}`, chev: true })).join('')}</div>`;
   }
   const shop = actionRows('shop');
   if (shop) html += `<div class="section-title">Shopping</div>${listOf(shop)}`;
@@ -204,6 +207,7 @@ SHEETS.asset = (id) => {
       <div class="mini-stats">${kvRow('Value', fmtMoney(a.value))}${kvRow('Paid', fmtMoney(a.paid || a.value))}${a.beds !== undefined ? kvRow('Bedrooms', a.beds) : ''}${a.since ? kvRow('Owned since', a.since) : ''}${loan ? kvRow('Loan left', fmtMoney(loan.balance)) : ''}${a.rentedOut ? kvRow('Rent income', fmtMoney(a.rentIncome) + '/yr') : ''}${assetUpkeep(G, a) ? kvRow('Upkeep', fmtMoney(assetUpkeep(G, a)) + '/yr') : ''}</div>
       ${['house', 'car', 'boat', 'aircraft'].includes(a.kind) ? `<div class="rel-bar"><div class="muted" style="text-align:left">Condition</div>${bar(a.cond)}</div>` : ''}
     </div>
+    ${tenantSection(a)}
     <div class="section-title">Actions</div>${listOf(actionRows('asset', id))}`,
   };
 };

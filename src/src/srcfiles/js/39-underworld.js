@@ -313,6 +313,8 @@ function witnessProtection(s) {
   const me = P(s), u = uw(s), C = country(s);
   me.last = randomLast(me.country);
   me.city = pick(C.cities.filter((c) => c !== me.city));
+  cityArrive(s);
+  if (M(s).housing.type === 'rent') M(s).housing = { type: 'rent', assetId: null, rent: M(s).housing.rent, name: 'Safe House Apartment', rtype: 'apt1' };
   Object.assign(u, { fam: null, rank: 0, made: false, crew: 0, turf: 0, rackets: [], rat: false, enemy: null, heat: 0, dealer: null, book: 0 });
   add(s, { happy: -10 });
   tally(s, 'witnessProtection');

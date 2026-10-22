@@ -173,7 +173,18 @@ function kinLabel(kind, p) {
 function kinTitle(s, pid) {
   const r = relOf(s, pid), p = s.people[pid];
   if (!r || !p) return '';
-  return r.kind === 'inlaw' ? inlawTitle(s, p) : kinLabel(r.kind, p);
+  const base = r.kind === 'inlaw' ? inlawTitle(s, p) : kinLabel(r.kind, p);
+  // Taboo dual role: "Sister · Girlfriend" instead of losing the blood label.
+  try {
+    if (r.taboo && typeof bloodKinshipInfo === 'function') {
+      const fam = r.wasFam || bloodKinshipInfo(s, pid);
+      if (fam) {
+        const famLbl = kinLabel(fam === 'halfsibling' ? 'halfsibling' : fam, p);
+        if (famLbl && famLbl !== base) return famLbl + ' · ' + base;
+      }
+    }
+  } catch (e) {}
+  return base;
 }
 function inlawTitle(s, p) {
   const word = (m, f, x) => genderWord(p, m, f, x);
