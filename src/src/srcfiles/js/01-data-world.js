@@ -11,7 +11,7 @@
 const COUNTRIES = {
   us: {
     name: 'United States', flag: '🇺🇸', adj: 'American', econ: 1.0, tax: 0.22, drink: 21, drive: 16,
-    cities: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Seattle', 'Atlanta', 'Denver', 'Miami', 'Boston', 'Nashville', 'Portland'],
+    cities: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Seattle', 'Atlanta', 'Denver', 'Miami', 'Boston', 'Nashville', 'Portland', 'Silver Mesa'],
     m: ['James', 'Michael', 'Robert', 'John', 'David', 'William', 'Richard', 'Joseph', 'Thomas', 'Christopher', 'Daniel', 'Matthew', 'Anthony', 'Andrew', 'Joshua', 'Ethan', 'Noah', 'Liam', 'Mason', 'Logan', 'Elijah', 'Caleb', 'Tyler', 'Marcus'],
     f: ['Mary', 'Jennifer', 'Linda', 'Elizabeth', 'Jessica', 'Sarah', 'Ashley', 'Emily', 'Madison', 'Olivia', 'Emma', 'Ava', 'Sophia', 'Isabella', 'Mia', 'Abigail', 'Harper', 'Chloe', 'Grace', 'Lily', 'Hannah', 'Brianna', 'Kayla', 'Zoe'],
     last: ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Thompson', 'White', 'Harris', 'Clark', 'Walker', 'Young', 'King', 'Brooks'],

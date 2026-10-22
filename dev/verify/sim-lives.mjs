@@ -126,6 +126,7 @@ function available(s) {
   for (const pid in s.people) if (!s.people[pid].alive && s.player.rels[pid]) for (const a of ctx.actionList(s, 'person', pid)) out.push([a.id, pid]);
   for (const id in s.pets) for (const a of ctx.actionList(s, 'pet', id)) out.push([a.id, id]);
   for (const a0 of s.player.assets) for (const a of ctx.actionList(s, 'asset', a0.id)) out.push([a.id, a0.id]);
+  for (const v of ctx.venuesReach(s)) for (const a of ctx.actionList(s, 'venue', v.id)) out.push([a.id, v.id]);
   for (const co of s.player.companies || []) for (const a of ctx.actionList(s, 'company', co.id)) { out.push([a.id, co.id]); if (['biz_hire', 'biz_product', 'biz_open'].includes(a.id)) out.push([a.id, co.id], [a.id, co.id]); }
   return out;
 }
@@ -246,6 +247,13 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
       } catch (e) { fail('persona setup threw: ' + e.stack.split('\n').slice(0, 3).join(' | '), s); }
     }
     if (s.gen === 1 && i % 10 === 7 && age === 18) s.player.skills.streetwise = Math.max(50, s.player.skills.streetwise || 0);
+    // The underworld persona gambles too: a bookie tab at 25, then a night out most years.
+    if (s.gen === 1 && i % 10 === 7 && !s.dead && !s.player.prison && ctx.canGamble(s)) {
+      try {
+        if (age === 25) { const v = ctx.venuesIn(s, s.people[s.playerId].country, s.people[s.playerId].city).find((x) => x.kind === 'bookie'); if (v) ctx.addDebt(s, v, ctx.price(s, 30000)); }
+        if (chance(0.8)) { const acts = ctx.actionList(s, 'gamble').map((a) => [a.id, undefined]).concat(ctx.venuesReach(s).map((v) => ['venue_visit', v.id])); const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'gamble:' + id); }
+      } catch (e) { fail('gambling persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
     const n = randInt(0, 5);
     for (let k = 0; k < n && !s.dead; k++) {
       const av = available(s).filter(([id]) => !RARE.has(id) || chance(0.04));

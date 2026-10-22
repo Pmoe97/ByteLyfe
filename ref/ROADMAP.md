@@ -55,7 +55,7 @@ GED, gangs, riots, escapes, appeals, parole hearings. Fugitive status.
 
 **Activities.** Gym, running, meditation, library, reading, yoga, gardening, 12 classes.
 Social life: meeting people, nightlife, parties, concerts, volunteering, movies, theme
-parks, shopping. The lottery, a casino (blackjack, roulette, slots), charity, 12 vacations,
+parks, shopping. The lottery, scratch cards, gambling (see Gambling), charity, 12 vacations,
 emigration, driver's license, name changes. Social media: posts, going viral,
 verification, sponsorships. Fan meets and publicity stunts.
 
@@ -102,7 +102,7 @@ outlast you across generations.
 - **Extras:** 5 new company events and 4 new achievements (Hostile Takeover, Franchise King,
   Market Leader, Stock Picker).
 
-**Meta.** 136 achievements kept across lives, three bucket-list goals per life, legacy titles
+**Meta.** 145 achievements kept across lives, three bucket-list goals per life, legacy titles
 and epitaphs, the Hall of Lives, multiple save slots, export/import codes. God Mode (stats,
 money, skills, traits, instant careers and degrees) and a 10-year Time Machine, both free.
 Light/dark themes, text size, reduced motion.
@@ -385,6 +385,39 @@ nightlife, snowy, historic, industrial), shown on a new City page.
   (City Hopper, Big City Dreams, Landlord, House Hacker, Tenant Power, Slumlord), 2 goals and the
   Real Estate Baron legacy title.
 
+**Gambling.** A new Gambling menu, and a whole ecosystem of named places to play.
+- **Venues that live:** every city has its own, made the first time you look and kept for the family
+  line: a bookie with a nickname, mob-run back rooms (owned by that country's crime families),
+  racetracks, casinos and resort casinos (owned by hotel companies on the stock market), plus a betting
+  app in your pocket. Big, touristy and party cities have more. Venues get raided, lose their licenses
+  over mob ties, close and are replaced. **Silver Mesa**, a new casino city in the US, has four casinos,
+  four resorts, a track and the back rooms, and anyone can take a trip there.
+- **Your standing:** every casino and track tracks what you wager, from Newcomer to Regular, Silver,
+  Gold (a comped suite) and Whale (a personal host, higher limits and a private jet to Silver Mesa).
+- **Games:** blackjack, roulette, slots and baccarat at each venue's own limits, dice in the back room
+  (win too big and they check your dice), and counting cards at blackjack, which wins until two men in
+  suits back you off and ban you from every casino the owner runs.
+- **Horse racing** with a real field: named horses with speed, stamina, form and win records, odds on a
+  tote board (1/2 to 76/1), and win, place and show bets. You watch the race: colored horses run a
+  miniature track, surging and fading, with a live leaderboard and a race caller, and the money moves
+  only at the finish. Horses retire and new ones arrive.
+- **More betting:** season bets on the real sports leagues (they pay when the champion is crowned), fight
+  nights, and poker from bar tournaments and casino weeklies to high-stakes cash games, high rollers and
+  the Grand Felt Championship in Silver Mesa (televised final table). A "card sense" skill and rival
+  pros who keep turning up at your table.
+- **Credit and debt:** bookies, back rooms and casinos let you bet on credit. Bookie and mob debts grow
+  with interest and escalate: a reminder, a visit, a beating (usually a broken arm or leg, sometimes the
+  hospital, rarely worse), then "a favor": drive a package, throw a game if you're an athlete, or run
+  their money through your company. With Mature on, they can go after your family. Unpaid casino
+  markers become lawsuits. Pay, ask for time, or skip town.
+- **The habit:** big losses tempt you to "win it back", the app sends free bets, and your partner can
+  find the statements. Put yourself on the self-exclusion list, or go to recovery meetings, where a
+  sponsor gives you their number.
+- **Extras:** 9 events (hot streaks, a lucky-charm stranger, an inside tip on a doped favorite, an offer
+  to fix your game, a whale who needs a briefcase held, raids...), 9 achievements (High Roller, Long
+  Shot, Photo Finish, Card Shark, Final Table, Champion of the Felt, In Too Deep, Still Standing, Clean
+  Break), and the High Roller and Degenerate Gambler legacy titles.
+
 **Challenges.** "Take a challenge" on the title screen. A challenge is a starting scenario plus
 goals, played by the character who starts it.
 - **19 hand-made challenges** from easy to brutal: Born Broke, Retire Rich; Rags to Riches; Self-Made
@@ -447,24 +480,27 @@ shows everything in US dollars instead.
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
-2. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
-    (collect animals, build exhibits, breeding programs), both on the business engine.
-3. **Military depth.** Wars, desertion, veterans' benefits.
-4. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+1. **Owning the house.** Run a bookmaking operation (balance the book, pray for no upsets),
+    own and breed racehorses that race at the tracks, and run a casino on the business engine
+    (house edge, whales, cheating scandals, gaming licenses, the mob wanting a skim).
+2. **Pet depth.** Pet shows, exotic pets, breeding.
+3. **More business types.** A zoo (collect animals, build exhibits, breeding programs) on the
+    business engine.
+4. **Military depth.** Wars, desertion, veterans' benefits.
+5. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
     double agents, and getting burned.
-5. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+6. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-6. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+7. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-7. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+8. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-8. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+9. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
     purges, coups and declared wars. Builds on Royalty and Military depth.
-9. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+10. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-10. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-11. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+11. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+12. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 

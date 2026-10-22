@@ -181,3 +181,9 @@ button.tnode:hover { background: var(--surface-2); }
 .tnode i { font-style: normal; font-size: 0.64em; color: var(--text-faint); }
 .tnode.gone > svg { opacity: 0.6; }
 .tring { align-self: center; margin-top: -26px; font-size: 0.72em; }
+
+/* ---- the race (1021-ui-gambling.js) ---- */
+.race-wrap { border-radius: 16px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+.race-wrap svg { display: block; width: 100%; height: auto; }
+.race-call { margin: 10px 2px 8px; min-height: 1.4em; font-weight: 800; font-size: 1.05em; color: var(--text); text-align: center; }
+.race-board .kv b { font-weight: 700; }

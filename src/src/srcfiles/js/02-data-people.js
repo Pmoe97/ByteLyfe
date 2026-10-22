@@ -44,6 +44,7 @@ const SKILLS = {
   streetwise: { name: 'Streetwise', emoji: '🕶️' },
   business: { name: 'Business', emoji: '💼' },
   driving: { name: 'Driving', emoji: '🚗' },
+  cards: { name: 'Card sense', emoji: '🃏' }, // poker and counting cards (53-gambling.js)
 };
 const SKILL_IDS = Object.keys(SKILLS);
 const CREATIVE_SKILLS = ['music', 'art', 'writing', 'acting'];

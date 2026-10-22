@@ -8,6 +8,7 @@
 //   - God Mode: the per-person editor's rules (28-sandbox.js)
 //   - Chaos mode: gating, powers, capes, vampires, ascension (51-chaos.js)
 //   - challenges: starts, goals, the daily challenge and streaks (52-challenges.js)
+//   - gambling: venues, credit, races, season bets, debts, limits (53-gambling.js)
 //   - the life simulator (300 lives), split into shards across the cores, then merged
 // Each check is its own process; at most one per core runs at a time, longest first.
 // Output is held until a check finishes, so checks never interleave.
@@ -48,6 +49,7 @@ const tasks = [
   { label: 'God Mode checks', args: ['dev/verify/godmode.mjs'] },
   { label: 'Chaos checks', args: ['dev/verify/chaos.mjs'] },
   { label: 'challenge checks', args: ['dev/verify/challenges.mjs'] },
+  { label: 'gambling checks', args: ['dev/verify/gambling.mjs'] },
 ];
 function run(task) {
   return new Promise((resolve) => {

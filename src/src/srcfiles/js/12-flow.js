@@ -142,6 +142,7 @@ function actionSub(a, s, t) { try { return a.sub ? a.sub(s, t) : (a.desc || '');
 function doAction(s, id, t) {
   const a = ACTIONS[id];
   if (!a || s.dead || s.pending.length) return false;
+  if (M(s).gamb && M(s).gamb.race) settleRaceQuietly(s); // a race left running (53-gambling.js)
   if (!actionAvailable(a, s, t)) return false;
   runWithResult(s, () => a.run(s, t), { emoji: a.emoji, title: actionLabel(a, s, t) });
   return true;

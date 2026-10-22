@@ -25,6 +25,7 @@ function refresh() {
     UI.sheets.push({ kind: 'look', arg: undefined, scroll: 0 });
     UI.sheetAnim = 'open';
   }
+  raceHook(); // a race to watch (1021-ui-gambling.js)
   renderScreen();
   renderSheet();
   renderModal();

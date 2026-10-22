@@ -268,7 +268,7 @@ defAction({
 
 /* ---- money & luck -------------------------------------------------- */
 defAction({
-  id: 'lottery', cat: 'money', label: 'Buy a lottery ticket', emoji: '🎟️', desc: 'Long odds. Big dreams.',
+  id: 'lottery', cat: 'gamble', label: 'Buy a lottery ticket', emoji: '🎟️', desc: 'Long odds. Big dreams.',
   when: (s) => free(s) && A(s) >= 18,
   sub: (s) => fmtMoney(price(s, 5)),
   run: (s) => {
@@ -349,16 +349,8 @@ function handValue(cards) {
 function betChoices(s) {
   return [10, 100, 1000, 10000, 100000].map((b) => price(s, b)).map((b) => ({ label: 'Bet ' + fmtMoney(b), value: b, disabled: M(s).money < b })).concat([{ label: 'Leave', value: 0 }]);
 }
-defAction({
-  id: 'casino', cat: 'money', label: 'Casino', emoji: '🎰', desc: 'Blackjack, roulette, slots.',
-  when: (s) => free(s) && A(s) >= Math.max(18, country(s).drink),
-  run: (s) => {
-    popup(s, {
-      emoji: '🎰', title: 'Casino', text: 'The house always wins. Usually.', handler: 'casinoGame',
-      choices: [{ label: '🃏 Blackjack', value: 'bj' }, { label: '🎡 Roulette', value: 'roulette' }, { label: '🎰 Slots', value: 'slots' }, { label: 'Leave', value: null }],
-    });
-  },
-});
+// The table games. Venues (53-gambling.js) deal them now; 'casinoGame' and 'casinoBet'
+// stay for popups saved before venues existed.
 onChoice('casinoGame', (s, ctx, g) => {
   if (!g) return;
   popup(s, { emoji: { bj: '🃏', roulette: '🎡', slots: '🎰' }[g], title: { bj: 'Blackjack', roulette: 'Roulette', slots: 'Slots' }[g], text: `Cash: ${fmtMoney(M(s).money)}`, handler: 'casinoBet', ctx: { g }, choices: betChoices(s) });
@@ -404,7 +396,7 @@ onChoice('bj', (s, st, v) => {
 });
 function bjSettle(s, st, how) {
   const show = () => `You: ${st.me.join(' ')} (${handValue(st.me)})\nDealer: ${st.dealer.join(' ')} (${handValue(st.dealer)})\n`;
-  if (how === 'bust') { add(s, { happy: -2 }); return { text: show() + `Bust! You lost ${fmtMoney(st.bet)}.`, tone: 'bad', emoji: '🃏', title: 'Blackjack' }; }
+  if (how === 'bust') { add(s, { happy: -2 }); tableLoss(s, 'bj', st.bet, st.v); return { text: show() + `Bust! You lost ${fmtMoney(st.bet)}.`, tone: 'bad', emoji: '🃏', title: 'Blackjack' }; }
   if (how === 'natural') {
     if (handValue(st.dealer) === 21) { M(s).money += st.bet; return { text: show() + 'Both blackjack. Push.', emoji: '🃏', title: 'Blackjack' }; }
     const win = Math.round(st.bet * 2.5);
@@ -417,6 +409,7 @@ function bjSettle(s, st, how) {
   if (d > 21 || me > d) { M(s).money += st.bet * 2; add(s, { happy: 4 }); return { text: show() + `You win ${fmtMoney(st.bet)}!`, tone: 'good', emoji: '🃏', title: 'Blackjack' }; }
   if (me === d) { M(s).money += st.bet; return { text: show() + 'Push. You get your bet back.', emoji: '🃏', title: 'Blackjack' }; }
   add(s, { happy: -2 });
+  tableLoss(s, 'bj', st.bet, st.v);
   return { text: show() + `Dealer wins. You lost ${fmtMoney(st.bet)}.`, tone: 'bad', emoji: '🃏', title: 'Blackjack' };
 }
 const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
@@ -434,10 +427,11 @@ onChoice('roulette', (s, ctx, betOn) => {
   const color = !isNum ? '🟢' : red ? '🔴' : '⚫';
   if (mult) { M(s).money += ctx.bet * mult; add(s, { happy: mult > 2 ? 15 : 4 }); return { text: `The ball landed on ${color} ${label}. You won ${fmtMoney(ctx.bet * (mult - 1))}!`, tone: 'good', emoji: '🎡', title: 'Roulette' }; }
   add(s, { happy: -2 });
+  tableLoss(s, 'roulette', ctx.bet, ctx.v);
   return { text: `The ball landed on ${color} ${label}. You lost ${fmtMoney(ctx.bet)}.`, tone: 'bad', emoji: '🎡', title: 'Roulette' };
 });
 const SLOT_SYMBOLS = [['🍒', 30], ['🍋', 25], ['🔔', 18], ['⭐', 12], ['💎', 7], ['7️⃣', 4]];
-function spinSlots(s, bet) {
+function spinSlots(s, bet, vid) {
   const reel = () => weighted(SLOT_SYMBOLS, (x) => x[1])[0];
   let r = [reel(), reel(), reel()];
   if (trait(s, 'lucky') && !(r[0] === r[1] && r[1] === r[2]) && chance(0.1)) r = [reel(), reel(), reel()];
@@ -449,6 +443,7 @@ function spinSlots(s, bet) {
   if (mult > 1) { M(s).money += bet * mult; add(s, { happy: mult >= 25 ? 15 : 4 }); return { text: `${face}\nYou won ${fmtMoney(bet * (mult - 1))}!`, tone: 'good', emoji: '🎰', title: 'Slots' }; }
   if (mult === 1) { M(s).money += bet; return { text: `${face}\nYou got your bet back.`, emoji: '🎰', title: 'Slots' }; }
   add(s, { happy: -1 });
+  tableLoss(s, 'slots', bet, vid);
   return { text: `${face}\nNothing. You lost ${fmtMoney(bet)}.`, tone: 'bad', emoji: '🎰', title: 'Slots' };
 }
 
