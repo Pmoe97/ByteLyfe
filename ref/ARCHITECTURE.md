@@ -46,8 +46,9 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `47` | Relationships 2.0 (`47-romance.js`): open relationships, affairs that can be found out, flings who come back, romance events | No DOM. `ageUp` reaches `romanceTick` through a wrapper; `startRomance`, the hookup action and `npcTick` call into it at runtime. |
 | `48` | Taboo family romance (`48-taboo.js`): opt-in adult-only (18+ both, master + subtype toggles, all default OFF), pedigree inbreeding (F stored as `p.inbred`), birth fallout, discovery events | No DOM. `ageUp` reaches `tabooTick` through a wrapper; `startRomance/marry/bornChild/pregnancyTick` call into it at runtime. |
 | `49` | Cities (`49-cities.js`): city profiles (cost of living, pay, job hubs, traits), neighborhoods, local housing markets, moving, landlords, tenants, city and landlord events | No DOM. `ageUp` reaches `cityTick` through a wrapper; `financeTick`, `salaryFor`, `jobBoard`, the rentals and real-estate listings, `moveInto`, `assetTick`, emigration and job transfers call into it at runtime. |
-| `50–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1016-ui-cities.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `50` | Currencies (`50-currency.js`): each country's currency and its yearly strength, money formatting per country, exchange when emigrating, foreign savings, currency events | No DOM. `ageUp` reaches `fxTick` through a wrapper (first phase); `runWithResult`, `createLife`, `continueAs` and the UI's `refresh` call `useCurrency`. |
+| `51–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1017-ui-currency.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -160,6 +161,25 @@ hashed from the city's name, so nothing about them is saved; `P(s).hood` is wher
   city in `M(s).places`; `cityGo` adds the job transfer and the new home. Emigration and witness
   protection call `cityArrive`, and the `job_transfer` event calls `transferTo`.
 
+**Currencies.** `50-currency.js`. Every amount in the engine is stored in US dollars (the same
+numbers `price` makes); only the display changes. `useCurrency(s)` sets `MONEY_FMT` (declared in
+`00-util.js`) to the player's currency, `{ sym, rate, post, indian }`, and `fmtMoney`, `fmtMoneyShort`
+and `fmtPrice` (share prices) use it; pass a currency as the second argument to show a sum in another
+one (`fmtIn(code, n)`, where the dollar reads "US$" if it's foreign). `useCurrency` runs in
+`runWithResult`, at the start of every year (`fxTick`), in `createLife` and `continueAs`, and in the
+UI's `refresh`, so text is always written in the currency of the moment; the "Money shown in" setting
+(`META.settings.currency = 'usd'`) turns it off. Never write a "$" into text: format the amount, or
+make the description a function (achievement `desc` and goal `text` may be functions, read through
+`achDesc` and `goalText`).
+- **Strength:** `s.fx[code] = { str, prev }` at the top of the save, around 1, rolled each year by
+  `fxTick`. Display rates are fixed, so local prices don't move; strength only matters across
+  borders. `rateText` and `pairText` show today's market rate.
+- **Emigrating:** `exchangeOnEmigrate` multiplies cash by `strength(old) / strength(new)` less 2%,
+  re-values foreign savings the same way, and turns savings in the new currency into cash.
+- **Foreign savings:** `M(s).fxSave[code]` is a holding's value in your own money; `fxTick` moves it
+  with the two currencies, `fxUnits` gives the foreign amount (which stays put), and `netWorth`
+  includes it.
+
 **Stories.** `STORY(id, { title, ages, w, when, ctx, chapters })` in `43-stories.js` is a chain of
 events across years. The `start` chapter is registered as an ordinary event (`st_<id>`, once per
 life), so it rolls with the year's events. A choice calls `nextChapter(s, st, 'name', lo, hi)` to
@@ -185,7 +205,7 @@ answer re-check, `rollBizEvent` and `actionAvailable` all call it. A new tag nee
 `CONTENT_TAGS` entry and a boolean default in `META.settings`. The Settings toggles are
 built from `CONTENT_TAGS`, with the taboo master + subtypes grouped in their own section.
 
-**A year (`ageUp`).** Body → pregnancy → school → career → businesses and the market →
+**A year (`ageUp`).** Currencies → body → pregnancy → school → career → businesses and the market →
 prison → money → assets → cities (rent, landlords, tenants) → fame → the people around you → the wider family → parenting →
 romance → taboo family romance → royalty → the underworld →
 show business → sports → courts → pets → milestones → story chapters → random events → new illness → death check. The order
@@ -355,11 +375,12 @@ never fired and actions that never ran, which usually means a `when` that can't 
 
 | Tool | What it does |
 | --- | --- |
-| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36, and a city persona rents at 20, moves city at 26 and 41, and at 30 buys a duplex to live in plus two homes to rent out, then plays landlord and tenant every year. Also checks that no building holds more tenants than units. Prints a balance summary, including businesses, the courts, the family and cities, and lists events that never fired, actions that never ran and story chapters never reached. |
+| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36, and a city persona rents at 20, moves city at 26 and 41, and at 30 buys a duplex to live in plus two homes to rent out, then plays landlord and tenant every year. Also checks that no building holds more tenants than units, and that a life that never lived in the US never shows a plain "$123" (one life in seven shows US dollars by setting). Prints a balance summary, including businesses, the courts, the family and cities, and lists events that never fired, actions that never ran and story chapters never reached. |
 | `dev/verify/tags.mjs` | Content tags: every tag in use is in `CONTENT_TAGS` with a Settings default, and the filters hide tagged events, choices and actions (checked on fixture content, so it works before anything is tagged). Prints how much content carries tags. |
 | `dev/verify/taboo.mjs` | Taboo gates: master + 7 subtype defaults OFF, per-kind gate matrix (master-only / subtype-only / wrong-subtype / teen-player / teen-partner all stay closed), tree persistence when a sibling becomes a partner, pedigree F (sibs 0.25, cousins 0.0625, second-gen 0.375), birth tallies, event gating (tag + real partner), dual kin label, no-leak on a generated family. |
 | `dev/verify/cities.mjs` | Cities: every city has a profile and four stable neighborhood names; pay, rents and home prices follow the city; tech hubs out-hire small cities; moving takes your spouse and kids and returns your deposit; Germany caps raises at 3%; an expired notice ends a lease; a duplex holds you plus one tenant; background checks reveal the same applicants; unpaid rent leads to eviction; old saves get tenants and landlords. |
+| `dev/verify/currency.mjs` | Currencies: every country has one; local formats (₹8,30,000 and ₹8.3L, 5,000 kr, -£250, ¥7.5M); the US-dollar setting; forty years of a Japanese life with no stray "$"; strengths stay in bounds and average about 1; emigrating converts at the strength ratio less 2% (nothing inside the eurozone, savings in the new currency come along free); foreign savings cost 1.5%, ride the currencies and keep their foreign amount; trips abroad cost more with weak money. |
 | `dev/verify/sim-business.mjs` | Business balance report (add an industry id as the third argument to run just that one): every industry run 20 years under a sensible owner (who also franchises and buys a small rival when flush) and a hands-off owner. Survival, profit, size, IPO readiness, franchising and acquisitions at years 1/5/10/20. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |
-| `dev/verify/run-all.mjs` | Syntax check + emoji audit + content tags + taboo checks + cities checks + 300-life sim (`npm run verify`). |
+| `dev/verify/run-all.mjs` | Syntax check + emoji audit + content tags + taboo checks + cities checks + currency checks + 300-life sim (`npm run verify`). |
 | `dev/verify/ui-smoke.js` | Paste into the browser console: plays 60 years through the real UI, opening every sheet. |

@@ -468,14 +468,14 @@ defAction({
   run: (s) => {
     popup(s, {
       emoji: '🏖️', title: 'Vacations', text: A(s) < 18 ? 'Your parents might take you somewhere, but you pay for solo trips.' : 'Where to?', handler: 'vacation',
-      choices: VACATIONS.filter((v) => A(s) >= v.minAge).map((v) => ({ label: v.emoji + ' ' + v.name, value: v.id, sub: fmtMoney(price(s, v.cost)), disabled: M(s).money < price(s, v.cost) })).concat([{ label: 'Stay home', value: null }]),
+      choices: VACATIONS.filter((v) => A(s) >= v.minAge).map((v) => ({ label: v.emoji + ' ' + v.name, value: v.id, sub: fmtMoney(vacationCost(s, v)) + (v.abroad && strengthPct(s, homeCur(s)) <= -8 ? ' · pricey: your money is weak' : v.abroad && strengthPct(s, homeCur(s)) >= 8 ? ' · cheap: your money is strong' : ''), disabled: M(s).money < vacationCost(s, v) })).concat([{ label: 'Stay home', value: null }]),
     });
   },
 });
 onChoice('vacation', (s, ctx, id) => {
   if (!id) return;
   const v = VACATIONS.find((x) => x.id === id);
-  const cost = price(s, v.cost);
+  const cost = vacationCost(s, v);
   if (!pay(s, cost)) return cantAfford(cost);
   const n = bump(s, 'vacation');
   tally(s, 'vacations');
@@ -500,7 +500,7 @@ defAction({
   run: (s) => {
     popup(s, {
       emoji: '🛂', title: 'Emigrate', text: 'Where do you want to live? Visas cost money and are not guaranteed.', handler: 'emigrate',
-      choices: COUNTRY_IDS.filter((c) => c !== P(s).country).map((c) => ({ label: COUNTRIES[c].flag + ' ' + COUNTRIES[c].name, value: c, sub: 'Visa: ' + fmtMoney(price(s, 3000)) })).concat([{ label: 'Stay', value: null }]),
+      choices: COUNTRY_IDS.filter((c) => c !== P(s).country).map((c) => ({ label: COUNTRIES[c].flag + ' ' + COUNTRIES[c].name, value: c, sub: `Visa: ${fmtMoney(price(s, 3000))}${M(s).money > 0 && curOf(c) !== homeCur(s) ? ` · your cash would be ${fmtInShort(curOf(c), cashAbroad(s, c))}` : ''}` })).concat([{ label: 'Stay', value: null }]),
     });
   },
 });
@@ -511,11 +511,13 @@ onChoice('emigrate', (s, ctx, c) => {
   if (!pay(s, cost)) return cantAfford(cost);
   const odds = 0.35 + P(s).stats.smarts / 300 + (M(s).career ? 0.15 : 0) + (eduRank(s) >= 3 ? 0.15 : 0) + (netWorth(s) > price(s, 100000) ? 0.15 : 0) - (hasFelony(s) ? 0.35 : 0);
   if (!chance(clamp(odds, 0.05, 0.95))) return { text: `Your visa to ${COUNTRIES[c].name} was denied.`, tone: 'bad', emoji: '🛂' };
-  const me = P(s);
+  const me = P(s), from = me.country;
   const dep = leaveRental(s, 'moved');
   me.country = c;
   me.city = pick(COUNTRIES[c].cities);
   cityArrive(s);
+  const fx = exchangeOnEmigrate(s, from, c);
+  useCurrency(s);
   if (M(s).career) leaveJob(s, 'moved');
   M(s).ptJob = null;
   if (M(s).edu.current) { M(s).edu.current = null; }
@@ -524,7 +526,7 @@ onChoice('emigrate', (s, ctx, c) => {
   s.listings = {};
   tally(s, 'countries');
   add(s, { happy: 6 });
-  return { text: `You moved to ${me.city}, ${COUNTRIES[c].name}! ${COUNTRIES[c].flag} Find a place to live and a new job.${dep ? ' ' + dep : ''}`, tone: 'good', emoji: '🛂' };
+  return { text: `You moved to ${me.city}, ${COUNTRIES[c].name}! ${COUNTRIES[c].flag} Find a place to live and a new job.${dep ? ' ' + dep : ''}${fx ? ' ' + fx : ''}`, tone: 'good', emoji: '🛂' };
 });
 
 /* ---- crime menu ---------------------------------------------------- */

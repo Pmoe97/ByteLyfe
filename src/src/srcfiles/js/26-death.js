@@ -106,6 +106,7 @@ function continueAs(s, pid) {
 
   s.playerId = pid;
   s.player = newPlayerBlock();
+  useCurrency(s);
   s.gen++;
   s.dead = false;
   s.pending = [];

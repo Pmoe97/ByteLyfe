@@ -118,12 +118,12 @@ const VACATIONS = [
   { id: 'city', name: 'City break', emoji: '🌃', cost: 2500, happy: [5, 11], minAge: 16 },
   { id: 'themepark', name: 'Theme park getaway', emoji: '🎢', cost: 2000, happy: [6, 12], minAge: 12 },
   { id: 'beach', name: 'Beach resort', emoji: '🏝️', cost: 3500, happy: [7, 14], minAge: 16 },
-  { id: 'backpack', name: 'Backpacking abroad', emoji: '🎒', cost: 3000, happy: [6, 14], minAge: 18 },
+  { id: 'backpack', name: 'Backpacking abroad', emoji: '🎒', cost: 3000, happy: [6, 14], minAge: 18, abroad: true },
   { id: 'ski', name: 'Ski trip', emoji: '⛷️', cost: 4500, happy: [6, 13], minAge: 16 },
-  { id: 'cruise', name: 'Cruise', emoji: '🛳️', cost: 6000, happy: [7, 14], minAge: 18 },
-  { id: 'island', name: 'Private island villa', emoji: '🌺', cost: 18000, happy: [10, 18], minAge: 18 },
-  { id: 'safari', name: 'Safari', emoji: '🦒', cost: 9000, happy: [8, 16], minAge: 18 },
-  { id: 'world', name: 'Around-the-world tour', emoji: '🌍', cost: 45000, happy: [14, 25], minAge: 18 },
+  { id: 'cruise', name: 'Cruise', emoji: '🛳️', cost: 6000, happy: [7, 14], minAge: 18, abroad: true },
+  { id: 'island', name: 'Private island villa', emoji: '🌺', cost: 18000, happy: [10, 18], minAge: 18, abroad: true },
+  { id: 'safari', name: 'Safari', emoji: '🦒', cost: 9000, happy: [8, 16], minAge: 18, abroad: true },
+  { id: 'world', name: 'Around-the-world tour', emoji: '🌍', cost: 45000, happy: [14, 25], minAge: 18, abroad: true },
   { id: 'space', name: 'Orbital space flight', emoji: '🚀', cost: 450000, happy: [20, 35], minAge: 21 },
 ];
 

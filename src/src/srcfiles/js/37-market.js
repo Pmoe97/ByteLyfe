@@ -25,7 +25,7 @@ function firms(s) { return Object.values(ensureMarket(s).firms); }
 function firmById(s, id) { return (id && ensureMarket(s).firms[id]) || null; }
 function industryRivals(s, ind) { return firms(s).filter((f) => f.ind === ind).sort((a, b) => b.rev - a.rev); }
 function listedFirms(s) { return firms(s).filter((f) => f.ticker); }
-function sharePrice(p) { return '$' + p.toFixed(2); }
+function sharePrice(p) { return fmtPrice(p); }
 function pctMove(x) { return (x >= 0 ? '▲' : '▼') + Math.abs(Math.round(x * 10) / 10) + '%'; }
 
 /* ---- making the market ----------------------------------------------- */

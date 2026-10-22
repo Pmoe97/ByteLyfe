@@ -152,7 +152,7 @@ SHEETS.graveyard = () => {
   if (!g.length) return { title: 'Hall of lives', html: '<div class="empty">Lives you finish will be remembered here.</div>' };
   return {
     title: 'Hall of lives',
-    html: `<div class="note">${g.length} ${plural(g.length, 'life', 'lives')} lived. Average age ${Math.round(sum(g, (x) => x.age) / g.length)}.</div><div class="list">${g.slice(0, 150).map((r) => itemRow({ ico: r.titleEmoji || '⚰️', t: `${esc(r.name)} <span class="faint">${r.born}–${r.died}</span>`, s: `${esc(r.title)} · died ${esc(deathPhrase(r.cause))} at ${r.age} · ${fmtMoneyShort(r.worth)}${r.gen > 1 ? ' · gen ' + r.gen : ''}` })).join('')}</div>`,
+    html: `<div class="note">${g.length} ${plural(g.length, 'life', 'lives')} lived. Average age ${Math.round(sum(g, (x) => x.age) / g.length)}.</div><div class="list">${g.slice(0, 150).map((r) => itemRow({ ico: r.titleEmoji || '⚰️', t: `${esc(r.name)} <span class="faint">${r.born}–${r.died}</span>`, s: `${esc(r.title)} · died ${esc(deathPhrase(r.cause))} at ${r.age} · ${fmtMoneyShort(r.worth, META.settings.currency === 'usd' ? null : curFmt(curOf(r.country)))}${r.gen > 1 ? ' · gen ' + r.gen : ''}` })).join('')}</div>`,
   };
 };
 SHEETS.achievements = () => {
@@ -160,6 +160,6 @@ SHEETS.achievements = () => {
   const n = Object.keys(got).length;
   return {
     title: `Achievements ${n}/${ACHIEVEMENTS.length}`,
-    html: `<div class="list">${ACHIEVEMENTS.map((a) => itemRow({ ico: got[a.id] ? a.emoji : '🔒', t: esc(a.name), s: esc(a.desc), cls: got[a.id] ? '' : 'disabled', end: got[a.id] ? '✓' : '' })).join('')}</div>`,
+    html: `<div class="list">${ACHIEVEMENTS.map((a) => itemRow({ ico: got[a.id] ? a.emoji : '🔒', t: esc(a.name), s: esc(achDesc(a, G)), cls: got[a.id] ? '' : 'disabled', end: got[a.id] ? '✓' : '' })).join('')}</div>`,
   };
 };

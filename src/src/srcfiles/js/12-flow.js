@@ -61,6 +61,7 @@ function resolvePopup(s, popupId, idx, input) {
 }
 
 function runWithResult(s, fn, src) {
+  useCurrency(s);
   const before = snapStats(s);
   const known = new Set(s.pending.map((p) => p.id));
   const res = fn();

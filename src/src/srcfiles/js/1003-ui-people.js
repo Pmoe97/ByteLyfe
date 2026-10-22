@@ -124,5 +124,5 @@ SHEETS.profile = () => {
 function goalsList() {
   const goals = M(G).goals;
   if (!goals.length) return '<div class="note">No goals.</div>';
-  return `<div class="list">${goals.map((g) => { const d = GOALS.find((x) => x.id === g.id); return itemRow({ ico: g.done ? icon('ui-check', 22) : d.emoji, t: esc(d.text), s: g.done ? 'Done in ' + g.year : 'In progress', cls: g.done ? 'good' : '' }); }).join('')}</div>`;
+  return `<div class="list">${goals.map((g) => { const d = GOALS.find((x) => x.id === g.id); return itemRow({ ico: g.done ? icon('ui-check', 22) : d.emoji, t: esc(goalText(d, G)), s: g.done ? 'Done in ' + g.year : 'In progress', cls: g.done ? 'good' : '' }); }).join('')}</div>`;
 }

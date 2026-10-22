@@ -25,6 +25,7 @@ function createLife(opts) {
   });
   s.playerId = me.id;
   s.player = newPlayerBlock();
+  useCurrency(s);
   // Royal births (38-royalty.js): chosen in a custom life, or now and then by chance.
   const royal = !!C.monarchy && (opts.royal || (opts.royal === undefined && !opts.wealth && chance(ROYAL_BIRTH_ODDS)));
   const fam = generateFamily(s, me, { wealth: royal ? 'rich' : opts.wealth, skin: opts.look ? opts.look.skin : undefined });

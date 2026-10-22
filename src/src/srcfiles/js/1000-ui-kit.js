@@ -16,6 +16,7 @@ const CLICK = {};
 const INPUT = {};
 
 function refresh() {
+  useCurrency(G);
   if (G && G.dead && !G.pending.length && UI.screen === 'game') UI.screen = 'death';
   if (G && !G.dead && UI.screen === 'death') UI.screen = 'game';
   // Just turned 18 and chose to redesign: open the editor once the popups are done.

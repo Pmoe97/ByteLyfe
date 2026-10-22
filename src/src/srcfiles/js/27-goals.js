@@ -25,9 +25,9 @@ const ACHIEVEMENTS = [
   { id: 'general', name: 'Four Stars', emoji: '⭐', desc: 'Become a general.', check: (s) => !!M(s).career && M(s).career.id === 'officer' && M(s).career.level === 6 },
   { id: 'astronaut', name: 'To the Stars', emoji: '🚀', desc: 'Become an astronaut.', check: (s) => !!M(s).career && M(s).career.id === 'astronaut' && M(s).career.level >= 1 },
   { id: 'retired', name: 'Gone Fishing', emoji: '🎣', desc: 'Retire.', check: (s) => !!M(s).retired },
-  { id: 'thousandaire', name: 'Five Figures', emoji: '💵', desc: 'Have $10,000.', check: (s) => netWorth(s) >= 10000 },
-  { id: 'millionaire', name: 'Millionaire', emoji: '💰', desc: 'Be worth $1 million.', check: (s) => netWorth(s) >= 1e6 },
-  { id: 'billionaire', name: 'Billionaire', emoji: '🤑', desc: 'Be worth $1 billion.', check: (s) => netWorth(s) >= 1e9 },
+  { id: 'thousandaire', name: 'Five Figures', emoji: '💵', desc: () => `Have ${fmtMoney(10000)}.`, check: (s) => netWorth(s) >= 10000 },
+  { id: 'millionaire', name: 'Millionaire', emoji: '💰', desc: () => `Be worth ${fmtMoneyShort(1e6)}.`, check: (s) => netWorth(s) >= 1e6 },
+  { id: 'billionaire', name: 'Billionaire', emoji: '🤑', desc: () => `Be worth ${fmtMoneyShort(1e9)}.`, check: (s) => netWorth(s) >= 1e9 },
   { id: 'jackpot', name: 'Jackpot!', emoji: '🎰', desc: 'Win the lottery jackpot.', check: (s) => LC(s, 'jackpots') >= 1 },
   { id: 'homeowner', name: 'Homeowner', emoji: '🏡', desc: 'Buy a home.', check: (s) => LC(s, 'housesBought') >= 1 },
   { id: 'mogul', name: 'Property Mogul', emoji: '🏘️', desc: 'Own five homes at once.', check: (s) => M(s).assets.filter((a) => a.kind === 'house').length >= 5 },
@@ -54,19 +54,19 @@ const ACHIEVEMENTS = [
   { id: 'jailbird', name: 'Jailbird', emoji: '⛓️', desc: 'Go to prison.', check: (s) => LC(s, 'prisonStints') >= 1 },
   { id: 'escape', name: 'Escape Artist', emoji: '🕳️', desc: 'Escape from prison.', check: (s) => LC(s, 'escapes') >= 1 },
   { id: 'acquitted', name: 'Not Guilty', emoji: '🎉', desc: 'Get acquitted at trial.', check: (s) => LC(s, 'acquittals') >= 1 },
-  { id: 'kingpin', name: 'Kingpin', emoji: '💎', desc: 'Steal $1 million in one life.', check: (s) => LC(s, 'crimeLoot') >= 1e6 },
+  { id: 'kingpin', name: 'Kingpin', emoji: '💎', desc: () => `Steal ${fmtMoneyShort(1e6)} in one life.`, check: (s) => LC(s, 'crimeLoot') >= 1e6 },
   { id: 'globetrotter', name: 'Globetrotter', emoji: '🌍', desc: 'Take ten vacations.', check: (s) => LC(s, 'vacations') >= 10 },
   { id: 'expat', name: 'Expat', emoji: '🛂', desc: 'Move to another country.', check: (s) => LC(s, 'countries') >= 1 },
   { id: 'survivor', name: 'Survivor', emoji: '🎗️', desc: 'Beat cancer.', check: (s) => LC(s, 'cancerBeaten') >= 1 },
-  { id: 'philanthropist', name: 'Philanthropist', emoji: '💝', desc: 'Donate $1 million in one life.', check: (s) => LC(s, 'donated') >= 1e6 },
+  { id: 'philanthropist', name: 'Philanthropist', emoji: '💝', desc: () => `Donate ${fmtMoneyShort(1e6)} in one life.`, check: (s) => LC(s, 'donated') >= 1e6 },
   { id: 'medal', name: 'Decorated', emoji: '🎖️', desc: 'Earn a military medal.', check: (s) => LC(s, 'medals') >= 1 },
   { id: 'won_election', name: 'Elected', emoji: '🗳️', desc: 'Win an election.', check: (s) => LC(s, 'elections') >= 1 },
   { id: 'founder', name: 'Founder', emoji: '🚀', desc: 'Start a business.', check: (s) => LC(s, 'companiesFounded') >= 1 },
   { id: 'in_the_black', name: 'In the Black', emoji: '📗', desc: 'Have a company turn a profit.', check: (s) => LC(s, 'profitableYears') >= 1 },
   { id: 'big_employer', name: 'Job Creator', emoji: '🏭', desc: 'Employ 100 people.', check: (s) => sum(companies(s), (c) => headcount(c)) >= 100 },
-  { id: 'unicorn', name: 'Unicorn', emoji: '🦄', desc: 'Own a company worth $1 billion.', check: (s) => companies(s).some((c) => coWorth(c) >= 1e9) },
+  { id: 'unicorn', name: 'Unicorn', emoji: '🦄', desc: () => `Own a company worth ${fmtMoneyShort(1e9)}.`, check: (s) => companies(s).some((c) => coWorth(c) >= 1e9) },
   { id: 'ipo', name: 'Ring the Bell', emoji: '🔔', desc: 'Take a company public.', check: (s) => LC(s, 'ipos') >= 1 },
-  { id: 'exit', name: 'The Big Exit', emoji: '🥂', desc: 'Sell a company for $1 million or more.', check: (s) => LC(s, 'exitValue') >= 1e6 },
+  { id: 'exit', name: 'The Big Exit', emoji: '🥂', desc: () => `Sell a company for ${fmtMoneyShort(1e6)} or more.`, check: (s) => LC(s, 'exitValue') >= 1e6 },
   { id: 'serial', name: 'Serial Entrepreneur', emoji: '🔁', desc: 'Found three companies in one life.', check: (s) => LC(s, 'companiesFounded') >= 3 },
   { id: 'family_business', name: 'Family Business', emoji: '🏢', desc: 'Inherit a company.', check: (s) => LC(s, 'inheritedCompanies') >= 1 },
   { id: 'lessons', name: 'Lessons Learned', emoji: '📉', desc: 'Have a company go bankrupt.', check: (s) => LC(s, 'bizFails') >= 1 },
@@ -80,7 +80,7 @@ const ACHIEVEMENTS = [
   { id: 'hall_of_fame', name: 'Hall of Famer', emoji: '🏛️', desc: 'Get inducted into the Hall of Fame.', check: (s) => LC(s, 'hallOfFame') >= 1 },
   { id: 'chart_topper', name: 'Number One', emoji: '💿', desc: 'Top the album chart.', check: (s) => LC(s, 'numberOnes') >= 1 },
   { id: 'bestseller', name: 'Bestseller', emoji: '📖', desc: 'Top the bestseller list.', check: (s) => LC(s, 'bestsellers') >= 1 },
-  { id: 'blockbuster', name: 'Blockbuster', emoji: '🎥', desc: 'Be part of a film that grosses $100 million.', check: (s) => LC(s, 'blockbusters') >= 1 },
+  { id: 'blockbuster', name: 'Blockbuster', emoji: '🎥', desc: () => `Be part of a film that grosses ${fmtMoneyShort(1e8)}.`, check: (s) => LC(s, 'blockbusters') >= 1 },
   { id: 'award_winner', name: 'And the Winner Is...', emoji: '🏆', desc: 'Win an award for your work.', check: (s) => LC(s, 'awards') >= 1 },
   { id: 'trophy_case', name: 'Trophy Case', emoji: '🏅', desc: 'Win awards at three different award shows.', check: (s) => !!M(s).sb && M(s).sb.shows.length >= 3 },
   { id: 'own_label', name: 'On Your Own Terms', emoji: '🎚️', desc: 'Release your work through a label or studio you own.', check: (s) => LC(s, 'ownReleases') >= 1 },
@@ -96,10 +96,10 @@ const ACHIEVEMENTS = [
   { id: 'jubilee', name: 'Silver Jubilee', emoji: '🎉', desc: 'Reign for 25 years.', check: (s) => { const cr = crown(s); const r = cr && cr.reigns[cr.reigns.length - 1]; return !!r && r.pid === s.playerId && s.year - r.from >= 25; } },
   { id: 'franchise_king', name: 'Franchise King', emoji: '🏪', desc: 'Have 25 franchised locations.', check: (s) => companies(s).some((c) => c.franchise && c.franchise.outlets >= 25) },
   { id: 'market_leader', name: 'Market Leader', emoji: '🥇', desc: 'Outsell every rival in your industry.', check: (s) => companies(s).some((c) => !c.closed && c.last && c.last.revenue > 0 && industryRivals(s, c.ind).every((f) => f.rev < c.last.revenue)) },
-  { id: 'stock_picker', name: 'Stock Picker', emoji: '💹', desc: 'Make $100,000 in gains selling stocks.', check: (s) => LC(s, 'stockGains') >= price(s, 100000) },
+  { id: 'stock_picker', name: 'Stock Picker', emoji: '💹', desc: (s) => `Make ${fmtMoney(s ? price(s, 100000) : 100000)} in gains selling stocks.`, check: (s) => LC(s, 'stockGains') >= price(s, 100000) },
   { id: 'hitmaker', name: 'Hitmaker', emoji: '🔥', desc: 'Launch three hit products.', check: (s) => LC(s, 'hits') >= 3 },
   { id: 'see_you_in_court', name: 'See You in Court', emoji: '⚖️', desc: 'File a lawsuit.', check: (s) => LC(s, 'lawsuitsFiled') >= 1 },
-  { id: 'jackpot_justice', name: 'Jackpot Justice', emoji: '💰', desc: 'Win $1 million in a single lawsuit.', check: (s) => LC(s, 'bigVerdicts') >= 1 },
+  { id: 'jackpot_justice', name: 'Jackpot Justice', emoji: '💰', desc: () => `Win ${fmtMoneyShort(1e6)} in a single lawsuit.`, check: (s) => LC(s, 'bigVerdicts') >= 1 },
   { id: 'small_claims', name: 'Small Claims, Big Win', emoji: '🧾', desc: 'Win in small claims court.', check: (s) => LC(s, 'smallClaimsWon') >= 1 },
   { id: 'case_dismissed', name: 'Case Dismissed', emoji: '🛡️', desc: 'Beat a lawsuit someone filed against you.', check: (s) => LC(s, 'suitsBeaten') >= 1 },
   { id: 'order_in_court', name: 'Order in the Court', emoji: '🔨', desc: 'Rule on 25 cases as a judge.', check: (s) => LC(s, 'rulings') >= 25 },
@@ -145,8 +145,8 @@ const GOALS = [
   { id: 'g_car', text: 'Buy a sports car or better', emoji: '🏎️', check: (s) => M(s).assets.some((a) => ['sports', 'super', 'hyper'].includes(a.type)) },
   { id: 'g_followers', text: 'Reach 100K followers', emoji: '📱', check: (s) => !!M(s).socials && M(s).socials.followers >= 100000 },
   { id: 'g_grandkid', text: 'Meet a grandchild', emoji: '👵', check: (s) => relPeople(s, ['grandchild'], { dead: true }).length >= 1 },
-  { id: 'g_debtfree', text: 'Be debt-free at 40 with $100K', emoji: '🧾', check: (s) => A(s) >= 40 && !M(s).loans.length && M(s).money >= price(s, 100000) },
-  { id: 'g_charity', text: 'Donate $50,000 to charity', emoji: '💝', check: (s) => LC(s, 'donated') >= price(s, 50000) },
+  { id: 'g_debtfree', text: (s) => `Be debt-free at 40 with ${fmtMoneyShort(s ? price(s, 100000) : 100000)}`, emoji: '🧾', check: (s) => A(s) >= 40 && !M(s).loans.length && M(s).money >= price(s, 100000) },
+  { id: 'g_charity', text: (s) => `Donate ${fmtMoney(s ? price(s, 50000) : 50000)} to charity`, emoji: '💝', check: (s) => LC(s, 'donated') >= price(s, 50000) },
   { id: 'g_clean', text: 'Reach 60 without a criminal record', emoji: '🧼', check: (s) => A(s) >= 60 && !M(s).record.length },
   { id: 'g_business', text: 'Start your own business', emoji: '🚀', check: (s) => LC(s, 'companiesFounded') >= 1 },
   { id: 'g_ipo', text: 'Take a company public', emoji: '🔔', check: (s) => LC(s, 'ipos') >= 1 },
@@ -186,6 +186,9 @@ const LEGACY_TITLES = [
   { id: 'lonely', name: 'Lone Wolf', emoji: '🐺', check: (s) => A(s) >= 40 && !LC(s, 'partners') },
 ];
 
+// Descriptions that mention money are functions, so they read in the player's currency.
+function achDesc(a, s) { return typeof a.desc === 'function' ? a.desc(s) : a.desc; }
+function goalText(g, s) { return typeof g.text === 'function' ? g.text(s) : g.text; }
 function assignGoals(s) {
   M(s).goals = pickN(GOALS, 3).map((g) => ({ id: g.id, done: false }));
 }
@@ -209,7 +212,7 @@ function checkAchievements(s) {
     m.achievements.push(a.id);
     if (!onAchievement(a.id)) continue; // already unlocked in an earlier life: count it quietly
     log(s, `🏅 Achievement unlocked: ${a.name}`, 'good');
-    if (!s.dead) popup(s, { emoji: a.emoji, title: 'Achievement unlocked!', text: `${a.name}: ${a.desc}`, tone: 'good' });
+    if (!s.dead) popup(s, { emoji: a.emoji, title: 'Achievement unlocked!', text: `${a.name}: ${achDesc(a, s)}`, tone: 'good' });
   }
 }
 function checkGoals(s) {
@@ -223,7 +226,7 @@ function checkGoals(s) {
     g.done = true;
     g.year = s.year;
     add(s, { happy: 10, karma: 2 });
-    announce(s, { emoji: '✅', title: 'Goal complete!', text: `You completed a life goal: ${def.text}.`, tone: 'good', log: `✅ Goal complete: ${def.text}` });
+    announce(s, { emoji: '✅', title: 'Goal complete!', text: `You completed a life goal: ${goalText(def, s)}.`, tone: 'good', log: `✅ Goal complete: ${goalText(def, s)}` });
   }
 }
 // Called after anything changes the life.

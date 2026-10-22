@@ -327,7 +327,7 @@ function companyYear(s, co) {
     co.sent = clamp(co.sent * gauss(1, 0.1) * (growth > 0.02 ? 1.04 : 0.96), 0.4, 2.5);
     co.price = Math.max(0.01, Math.round((co.val * co.sent / co.shares) * 100) / 100);
     const pct = before ? Math.round(((co.price - before) / before) * 100) : 0;
-    stockLine = ` ${co.ticker} ${pct >= 0 ? '▲' : '▼'}${Math.abs(pct)}% to $${co.price.toFixed(2)}.`;
+    stockLine = ` ${co.ticker} ${pct >= 0 ? '▲' : '▼'}${Math.abs(pct)}% to ${sharePrice(co.price)}.`;
   }
   co.hist.push({ y: s.year, r: revenue, p: profit, v: coWorth(co) });
   if (co.hist.length > 40) co.hist.shift();
@@ -856,7 +856,7 @@ onChoice('bizIPO', (s, ctx, yes) => {
   tally(s, 'ipos');
   add(s, { happy: 15, fame: 6 });
   const move = Math.round(Math.abs(pop - 1) * 100);
-  return { text: `${co.name} is now public as ${co.ticker}! Shares opened at $${co.price.toFixed(2)}, ${move === 0 ? 'right at' : move + '% ' + (pop >= 1 ? 'above' : 'below')} the bankers' price. The company raised ${fmtMoney(raised)}. Your stake is worth ${fmtMoney(coStakeValue(s, co))}.`, tone: 'good', emoji: '🔔', title: 'IPO day' };
+  return { text: `${co.name} is now public as ${co.ticker}! Shares opened at ${sharePrice(co.price)}, ${move === 0 ? 'right at' : move + '% ' + (pop >= 1 ? 'above' : 'below')} the bankers' price. The company raised ${fmtMoney(raised)}. Your stake is worth ${fmtMoney(coStakeValue(s, co))}.`, tone: 'good', emoji: '🔔', title: 'IPO day' };
 });
 defAction({
   id: 'biz_sellshares', cat: 'company', target: 'company', label: 'Sell some of your shares', emoji: '📤',
@@ -865,7 +865,7 @@ defAction({
   run: (s, id) => {
     const co = company(s, id);
     popup(s, {
-      emoji: '📤', title: 'Sell ' + co.ticker + ' shares', text: `Shares trade at $${co.price.toFixed(2)}. Capital gains are taxed at 15%.`, handler: 'bizSellShares', ctx: { co: id },
+      emoji: '📤', title: 'Sell ' + co.ticker + ' shares', text: `Shares trade at ${sharePrice(co.price)}. Capital gains are taxed at 15%.`, handler: 'bizSellShares', ctx: { co: id },
       choices: [0.1, 0.25, 0.5, 1].map((f) => ({ label: f === 1 ? 'Sell my entire stake' : `Sell ${Math.round(f * 100)}% of my shares`, value: f, sub: fmtMoney(coStakeValue(s, co) * f * 0.97 * 0.85) + ' after tax', tone: f === 1 ? 'bad' : '' })).concat([{ label: 'Never mind', value: 0 }]),
     });
   },

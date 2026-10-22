@@ -896,7 +896,7 @@ const CAT_HUES = { mind: '#FF8FC7', health: '#FF5D7A', love: '#FF8FC7', social: 
 // for them. Anything not listed keeps its emoji, drawn inside the same tile.
 const EMOJI_GROUPS = {
   rattle: "👶🍼🧸🧒", cake: "🎂🧁🍰", gradcap: "🎓", book: "📚📖📘📗📔📕📙", school: "🏫🎒✏️🖍️📐",
-  career: "💼👔", money: "💰💵💸🤑💲💳", piggy: "🏦🥫",
+  career: "💼👔", money: "💰💵💸🤑💲💳💱", piggy: "🏦🥫",
   assets: "🏠🏡🏘️🏚️🏙️🌆🏯🏰", building: "🏢🏭🏬🏪🏨🏗️🧱", car: "🚗🚙🚘🏎️🚕🚐🚌🚜🛵🏍️🏁🛣️🚇",
   plane: "✈️🛫🛩️🚁🧳🏖️🏝️🗺️🛳️🚤⛵🛥️🛶🏕️⛰️🌅🌊", globe: "🌍🌎🌏🛂🧭📍",
   ring: "💍💒💎💠", heartbreak: "💔", love: "💕💞💓💘💝💌💋😘🥰🌹💐🌷😏", health: "❤️❤🩸",

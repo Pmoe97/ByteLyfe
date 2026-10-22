@@ -168,6 +168,8 @@ function caughtPopup(s, pid, rom) {
 function partnerLeaves(s, rom) { return relKind(s, rom) === 'spouse' ? divorce(s, rom, false).text : (endRomance(s, rom, 'ex'), ''); }
 function confessAffair(s, pid, rom) {
   const p = s.people[pid], q = s.people[rom];
+  // The partner may have left earlier in the same stack of popups.
+  if (!p || !q || !relOf(s, rom)) return { text: 'The moment passed.', quiet: true, nolog: true };
   addRel(s, rom, -25);
   if (relKind(s, pid) === 'lover') endRomance(s, pid, 'ex');
   add(s, { karma: 2 });

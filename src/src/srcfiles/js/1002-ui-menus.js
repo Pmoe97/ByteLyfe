@@ -186,7 +186,7 @@ SHEETS.assets = () => {
   </div>${listOf(cityRow() + actionRows('home'))}`;
   html += `<div class="section-title">Money</div><div class="list">
     ${itemRow({ a: 'sheet', ds: { k: 'finance' }, ico: '💵', t: fmtMoney(m.money), s: `Net worth ${fmtMoneyShort(netWorth(G))}${m.trust ? ' · Trust fund ' + fmtMoneyShort(m.trust) : ''}`, chev: true })}
-    ${actionRows('money', undefined, (a) => ['investments', 'stocks', 'bank_loan', 'lifestyle', 'bankruptcy'].includes(a.id))}
+    ${actionRows('money', undefined, (a) => ['investments', 'stocks', 'fx_trade', 'bank_loan', 'lifestyle', 'bankruptcy'].includes(a.id))}
   </div>`;
   for (const [kind, name] of ASSET_GROUPS) {
     const list = m.assets.filter((a) => a.kind === kind);
@@ -220,13 +220,14 @@ SHEETS.finance = () => {
     ${m.trust ? kvRow('Trust fund (at 18)', fmtMoney(m.trust)) : ''}
     ${kvRow('Investments', fmtMoney(investTotal(G)))}
     ${stocksValue(G) ? kvRow('Stocks', fmtMoney(stocksValue(G))) : ''}
+    ${fxSaved(G) ? kvRow('Foreign currency', fmtMoney(fxSaved(G))) : ''}
     ${kvRow('Property & things', fmtMoney(assetsValue(G)))}
     ${kvRow('Debt', `<span class="${debtTotal(G) ? 'bad' : ''}">${fmtMoney(debtTotal(G))}</span>`)}
     ${kvRow('<b>Net worth</b>', fmtMoney(netWorth(G)))}
     ${livesAlone(G) ? kvRow('Lifestyle', emo(LIFESTYLES[m.lifestyle].emoji, 18) + ' ' + LIFESTYLES[m.lifestyle].name) : ''}
     ${m.career ? kvRow('Salary', fmtMoney(m.career.salary) + '/yr') : ''}
     ${kvRow('Income tax', Math.round(country(G).tax * 100) + '%')}
-  </div>`;
+  </div>${currencyCard()}`;
   if (m.loans.length) {
     html += `<div class="section-title">Loans</div><div class="list">${m.loans.map((l) => itemRow({ a: 'payLoan', ds: { id: l.id }, ico: '🏦', t: esc(l.name), s: `${fmtMoney(l.balance)} left · ${Math.round(l.rate * 1000) / 10}% · ${fmtMoney(l.payment)}/yr`, end: m.money >= l.balance ? 'Pay off' : '', disabled: m.money < l.balance })).join('')}</div>`;
   }

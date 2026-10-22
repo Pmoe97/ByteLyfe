@@ -63,22 +63,40 @@ function nicePrice(n) {
   return Math.round(n / step) * step;
 }
 
-/* ---- money --------------------------------------------------------- */
-function fmtMoney(n) {
-  const neg = n < 0;
-  return (neg ? '-$' : '$') + Math.round(Math.abs(n)).toLocaleString('en-US');
+/* ---- money ---------------------------------------------------------
+ * Money is stored in US dollars. MONEY_FMT, set by useCurrency (50-currency.js),
+ * shows it in the local currency: { sym, rate, post, indian }. Null means dollars.
+ * Pass a currency as the second argument to show a sum in that one instead. */
+let MONEY_FMT = null;
+const USD_FMT = { sym: '$', rate: 1 };
+// 1,234,567, or the Indian 12,34,567.
+function groupDigits(n, indian) {
+  const str = String(Math.round(Math.abs(n)));
+  if (!indian || str.length <= 3) return str.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return str.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + str.slice(-3);
 }
-function fmtMoneyShort(n) {
-  const neg = n < 0;
-  const a = Math.abs(n);
+function moneyText(c, body, neg) { return (neg ? '-' : '') + (c.post ? body + '\u00a0' + c.sym : c.sym + body); }
+function fmtMoney(n, cur) {
+  const c = cur || MONEY_FMT || USD_FMT;
+  return moneyText(c, groupDigits(Math.abs(n) * c.rate, c.indian), n < 0);
+}
+function fmtMoneyShort(n, cur) {
+  const c = cur || MONEY_FMT || USD_FMT, a = Math.abs(n) * c.rate;
   let out;
-  const f = (v, sfx) => (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10) + sfx;
-  if (a >= 1e12) out = f(a / 1e12, 'T');
+  const f = (v, sfx) => (v >= 100 ? groupDigits(v, c.indian) : Math.round(v * 10) / 10) + sfx;
+  if (c.indian && a >= 1e7) out = f(a / 1e7, ' Cr');
+  else if (c.indian && a >= 1e5) out = f(a / 1e5, 'L');
+  else if (a >= 1e12) out = f(a / 1e12, 'T');
   else if (a >= 1e9) out = f(a / 1e9, 'B');
   else if (a >= 1e6) out = f(a / 1e6, 'M');
   else if (a >= 1e5) out = f(a / 1e3, 'K');
-  else out = Math.round(a).toLocaleString('en-US');
-  return (neg ? '-$' : '$') + out;
+  else out = groupDigits(a, c.indian);
+  return moneyText(c, out, n < 0);
+}
+// Share prices: cents in strong currencies, whole units in the others (¥1,520).
+function fmtPrice(n) {
+  const c = MONEY_FMT || USD_FMT, v = Math.abs(n) * c.rate;
+  return moneyText(c, v < 1000 && c.rate < 20 ? v.toFixed(2) : groupDigits(v, c.indian), n < 0);
 }
 function fmtNum(n) {
   const a = Math.abs(n);

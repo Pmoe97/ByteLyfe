@@ -38,7 +38,7 @@ EV('ad_wedding_invite', {
   ],
 });
 EV('ad_scam_email', {
-  ages: [18, 95], emoji: '📧', text: 'You got an email from a "prince" who needs your help moving $10 million out of his country.',
+  ages: [18, 95], emoji: '📧', text: () => `You got an email from a "prince" who needs your help moving ${fmtMoneyShort(1e7)} out of his country.`,
   choices: [
     ['Send your bank details', (s) => { const loss = Math.min(Math.max(0, M(s).money), price(s, randInt(500, 5000))); M(s).money -= loss; add(s, { happy: -6 }); return `The "prince" emptied ${fmtMoney(loss)} from your account. Royalty, huh.`; }],
     ['Delete it', () => 'Delete. Obviously.'],
@@ -495,7 +495,7 @@ EV('ad_scratch_card', {
   ages: [18, 100], emoji: '🎟️', text: 'Someone handed you a scratch-off ticket as change at the corner store.',
   choices: [
     ['Scratch it', (s) => { if (chance(0.03)) { const w = price(s, randInt(5, 50) * 1000); add(s, { money: w, happy: 12 }); return `YOU WON ${fmtMoney(w)}!`; } if (chance(0.25)) { const w = price(s, randInt(2, 50)); add(s, { money: w }); return `You won ${fmtMoney(w)}. Exciting!`; } return 'Not a winner. The scratch dust got everywhere.'; }],
-    ['Give it to the next person in line', (s) => { add(s, { karma: 2 }); return 'They won $2 and were thrilled.'; }],
+    ['Give it to the next person in line', (s) => { add(s, { karma: 2 }); return `They won ${fmtMoney(2)} and were thrilled.`; }],
   ],
 });
 

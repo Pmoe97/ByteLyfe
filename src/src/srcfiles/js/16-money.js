@@ -33,7 +33,7 @@ function addStudentLoan(s, amt) {
 function debtTotal(s) { return sum(M(s).loans, (l) => l.balance); }
 function investTotal(s) { return sum(INVEST_IDS, (k) => M(s).invest[k] || 0); }
 function assetsValue(s) { return sum(M(s).assets, (a) => a.value || 0); }
-function netWorth(s) { return M(s).money + M(s).trust + investTotal(s) + stocksValue(s) + assetsValue(s) + collectionValue(s) + (M(s).uw ? M(s).uw.book : 0) + companiesValue(s) - debtTotal(s); }
+function netWorth(s) { return M(s).money + M(s).trust + investTotal(s) + stocksValue(s) + fxSaved(s) + assetsValue(s) + collectionValue(s) + (M(s).uw ? M(s).uw.book : 0) + companiesValue(s) - debtTotal(s); }
 function livesAlone(s) { return A(s) >= 18 && M(s).housing.type !== 'parents' && !inPrison(s); }
 function dependents(s) { return myChildren(s).filter((c) => ageOf(s, c) < 18 && !flagOf(c, 'awayFromYou')); }
 function flagOf(p, k) { return p.flags && p.flags[k]; }
@@ -133,6 +133,7 @@ function forcedBankruptcy(s) {
   m.money = 0;
   for (const k of INVEST_IDS) m.invest[k] = 0;
   m.stocks = {};
+  m.fxSave = {};
   if (m.housing.type === 'own') m.housing = { type: 'homeless', assetId: null, rent: 0, name: '' };
   flag(s, 'bankruptYear', s.year);
   tally(s, 'bankruptcies');
@@ -219,6 +220,7 @@ onChoice('bankrupt', (s, ctx, yes) => {
   m.money = 0;
   for (const k of INVEST_IDS) m.invest[k] = 0;
   m.stocks = {};
+  m.fxSave = {};
   if (m.housing.type === 'own') m.housing = { type: 'homeless', assetId: null, rent: 0, name: '' };
   flag(s, 'bankruptYear', s.year);
   tally(s, 'bankruptcies');

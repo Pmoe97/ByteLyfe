@@ -60,7 +60,7 @@ SHEETS.sandbox = () => {
         ${['happy', 'health', 'smarts', 'looks'].map((k) => slider(k, p.stats[k], STAT_INFO[k].name, icon(STAT_ICONS[k], 18))).join('')}
         ${slider('karma', m.karma, 'Karma', icon('karma', 18))}${slider('fame', m.fame, 'Fame', icon('fame', 18))}
       </div>
-      <div class="section-title">Money</div><div class="card"><div class="field-row"><input type="number" id="sb-money" value="${Math.round(m.money)}"><button class="btn primary" data-a="sbMoney">Set</button></div>
+      <div class="section-title">Money</div><div class="card"><div class="field-row"><input type="number" id="sb-money" value="${Math.round(m.money * (MONEY_FMT ? MONEY_FMT.rate : 1))}" aria-label="Money in ${esc(MONEY_FMT ? MONEY_FMT.sym : '$')}"><button class="btn primary" data-a="sbMoney">Set</button></div>
         <div class="chips" style="margin-top:10px">${[1000, 100000, 1000000, 1e9].map((v) => `<button class="chip" data-a="sbAddMoney" data-v="${v}">+${fmtMoneyShort(v)}</button>`).join('')}</div></div>
       <div class="section-title">Skills</div><div class="card">${SKILL_IDS.map((k) => `<div class="slider-row"><span>${emo(SKILLS[k].emoji, 18)} ${SKILLS[k].name}</span><input type="range" min="0" max="100" value="${Math.round(m.skills[k] || 0)}" data-in="sbSkill" data-k="${k}"><b id="sbs-${k}">${Math.round(m.skills[k] || 0)}</b></div>`).join('')}</div>
       <div class="section-title">Personality</div><div class="chips">${TRAIT_IDS.map((t) => `<button class="chip ${p.traits.includes(t) ? 'on' : ''}" data-a="sbTrait" data-t="${t}">${emo(TRAITS[t].emoji, 18)}${esc(TRAITS[t].name)}</button>`).join('')}</div>
@@ -78,7 +78,7 @@ SHEETS.sandbox = () => {
 };
 INPUT.sbStat = (el, ds) => { Sandbox.setStat(G, ds.k, Number(el.value)); const v = $('#sb-' + ds.k); if (v) v.textContent = el.value; renderScreen(); scheduleSave(); };
 INPUT.sbSkill = (el, ds) => { Sandbox.setSkill(G, ds.k, Number(el.value)); const v = $('#sbs-' + ds.k); if (v) v.textContent = el.value; scheduleSave(); };
-CLICK.sbMoney = () => { Sandbox.setMoney(G, Number($('#sb-money').value)); refresh(); toast('Money set.'); };
+CLICK.sbMoney = () => { Sandbox.setMoney(G, Number($('#sb-money').value) / (MONEY_FMT ? MONEY_FMT.rate : 1)); refresh(); toast('Money set.'); };
 CLICK.sbAddMoney = (el, ds) => { Sandbox.setMoney(G, M(G).money + Number(ds.v)); refresh(); toast('+' + fmtMoneyShort(Number(ds.v))); };
 CLICK.sbTrait = (el, ds) => { Sandbox.toggleTrait(G, ds.t); refresh(); };
 CLICK.sbDo = (el, ds) => { Sandbox[ds.f](G); afterChange(G); refresh(); toast('Done.'); };
@@ -102,6 +102,7 @@ SHEETS.settings = () => {
     html: `<div class="section-title">Look</div><div class="card">
         <div class="field"><label>Theme</label>${seg('theme', [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']])}</div>
         <div class="field"><label>Text size</label>${seg('textSize', [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
+        <div class="field"><label>Money shown in</label>${seg('currency', [['local', 'Local currency'], ['usd', 'US dollars']])}</div>
       </div>
       <div class="section-title">Gameplay</div><div class="card">
         ${toggle('showHidden', 'Show karma & fame', 'Karma is hidden in some life sims. Not here.')}

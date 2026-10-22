@@ -27,6 +27,7 @@ function fail(msg, s) {
 }
 
 const BAD_TEXT = /undefined|NaN|\[object|function \(|=>/;
+const DOLLAR = /(^|[^A-Za-z])\$\d/;
 function walk(o, path, s) {
   if (typeof o === 'number' && !Number.isFinite(o)) fail('non-finite number at ' + path, s);
   else if (o && typeof o === 'object') for (const k in o) walk(o[k], path + '.' + k, s);
@@ -74,6 +75,12 @@ function check(s, where) {
     for (const t of a.tenants) if (!(t.rent > 0) || t.mood < 0 || t.mood > 100 || !t.first) fail(`bad tenant ${JSON.stringify(t)} @${where}`, s);
   }
   if (m.housing.type === 'rent' && !(m.housing.rent > 0)) fail(`rent ${m.housing.rent} @${where}`, s);
+  // Real currencies (50-currency.js): a life that never lived in the US shows no plain "$123" anywhere.
+  if (ctx.run('MONEY_FMT') && !(m.places || []).some((k) => k.startsWith('us:')) && p.country !== 'us') {
+    const texts = s.pending.flatMap((pp) => [pp.text, pp.title, ...pp.choices.map((c) => c.label + ' ' + (c.sub || ''))]).concat(last ? last.lines.map((l) => l.t) : []);
+    const leak = texts.find((t) => DOLLAR.test(String(t)));
+    if (leak) fail(`dollars in a ${p.country} life: "${leak}" @${where}`, s);
+  }
   walk(s, 's', s);
 }
 
@@ -116,6 +123,7 @@ const stats = { lives: 0, deaths: [], worth: [], gens: [], titles: {}, causes: {
 const t0 = Date.now();
 for (let i = 0; i < N; i++) {
   for (const t of TAG_IDS) { META.settings[t] = chance(0.5); if (META.settings[t]) stats.tagLives[t] = (stats.tagLives[t] || 0) + 1; }
+  META.settings.currency = chance(0.15) ? 'usd' : 'local';
   let s;
   // One life in ten is born royal, so royal life gets played (random births rarely are).
   try { s = ctx.createLife(i % 10 === 0 ? { country: pick(['uk', 'es', 'se', 'jp']), royal: true } : {}); } catch (e) { fail('createLife threw: ' + e.stack); continue; }

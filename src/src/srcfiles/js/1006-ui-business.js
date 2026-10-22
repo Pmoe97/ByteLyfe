@@ -9,7 +9,7 @@ function bizSection() {
   if (!list.length && !start) return '';
   const rows = list.map((co) => {
     const I = indOf(co);
-    const sub = `${I.name} · ${co.public ? `${co.ticker} $${co.price.toFixed(2)}` : 'worth ' + fmtMoneyShort(co.val)} · ${co.last ? (co.last.profit >= 0 ? 'profit ' : 'loss ') + fmtMoneyShort(Math.abs(co.last.profit)) : 'just opened'}`;
+    const sub = `${I.name} · ${co.public ? `${co.ticker} ${sharePrice(co.price)}` : 'worth ' + fmtMoneyShort(co.val)} · ${co.last ? (co.last.profit >= 0 ? 'profit ' : 'loss ') + fmtMoneyShort(Math.abs(co.last.profit)) : 'just opened'}`;
     return itemRow({ a: 'sheet', ds: { k: 'company', arg: co.id }, ico: I.emoji, t: esc(co.name) + (co.ceo !== 'you' ? ` <span class="faint">· ${co.ceo === 'trustee' ? 'in trust' : 'run by ' + esc(co.ceoName)}</span>` : ''), s: esc(sub), chev: true });
   }).join('');
   return `<div class="section-title">Your businesses</div><div class="list">${rows}${start}</div>`;
@@ -40,7 +40,7 @@ SHEETS.company = (id) => {
     <div class="p-name">${esc(co.name)}</div>
     <div class="p-meta">${esc(I.name)} · founded ${co.founded} · ${nOf(co.locations, I.place)}</div>
     <div class="p-meta">${ceoLine}${co.auto ? ' · 🤖 autopilot hiring' : ''}</div>
-    ${co.public ? `<div class="chips" style="justify-content:center;margin-top:6px"><span class="chip on">📈 ${esc(co.ticker)} $${co.price.toFixed(2)}</span><span class="chip">Market cap ${fmtMoneyShort(marketCap(co))}</span></div>` : ''}
+    ${co.public ? `<div class="chips" style="justify-content:center;margin-top:6px"><span class="chip on">📈 ${esc(co.ticker)} ${sharePrice(co.price)}</span><span class="chip">Market cap ${fmtMoneyShort(marketCap(co))}</span></div>` : ''}
     <div class="mini-stats">${statLine('🌟', co.rep, 'accent')}${statLine('💡', effQuality(G, co), 'accent')}${statLine('🙂', avgMorale(co))}${statLine('⚙️', clamp(f.eff * 80, 0, 100), 'accent')}</div>
     <div class="note" style="text-align:center">🌟 reputation · 💡 product quality · 🙂 morale · ⚙️ efficiency</div>
   </div>`;
