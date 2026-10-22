@@ -5,6 +5,7 @@
  *                          extras any time; adults see their body and what
  *                          changes it (diet, exercise, surgery)
  *   SHEETS.look('god')     God Mode: everything, body sliders included
+ *   SHEETS.look('god:<id>') God Mode for someone else (1018-ui-godmode.js)
  *   SHEETS.look('custom')  a custom life's baby, before birth (no body)
  * While M(G).freeRestyle is set (just turned 18) normal play also unlocks
  * the face and the body once. Bodies only exist for adults (36-looks.js).
@@ -55,6 +56,9 @@ function lookDraft(arg) {
   if (arg === 'custom') {
     if (!CUSTOM.look) CUSTOM.look = randomLook({ gender: CUSTOM.gender, country: CUSTOM.country }, { age: 0 });
     d = { target: 'custom', free: true, adult: false, age: null, look: Object.assign({}, CUSTOM.look), body: null, tab: 'hair', view: 'portrait', stage: 'adult' };
+  } else if (String(arg).startsWith('god:') && G.people[arg.slice(4)]) {
+    const pid = arg.slice(4), p = G.people[pid], age = ageOf(G, p), adult = age >= ADULT_AGE;
+    d = { target: 'npc', pid, god: true, free: true, adult, age, look: Object.assign({}, ensureLook(G, p)), body: adult ? Object.assign({}, ensureBody(G, p)) : null, tab: 'hair', view: adult ? 'figure' : 'portrait', stage: null };
   } else {
     const p = P(G), age = A(G), adult = age >= ADULT_AGE;
     d = { target: 'player', god: arg === 'god', free: arg === 'god' || !!M(G).freeRestyle, adult, age, look: Object.assign({}, ensureLook(G, p)), body: adult ? Object.assign({}, ensureBody(G, p)) : null, tab: 'hair', view: adult ? 'figure' : 'portrait', stage: null };
@@ -66,10 +70,11 @@ function lookTabs(d) {
   return LOOK_TABS.filter((t) => (!t.locked || d.free) && (!t.adultOnly || d.adult) && (!t.minAge || d.target === 'custom' || d.age >= t.minAge) && !(t.body && !d.body));
 }
 function lookPreview(d) {
-  if (d.adult && d.view === 'figure') return figureSVG(d.look, d.body, { age: d.age, size: 360, label: 'Your full figure' });
+  const whose = d.target === 'npc' ? `${G.people[d.pid].first}'s` : 'Your';
+  if (d.adult && d.view === 'figure') return figureSVG(d.look, d.body, { age: d.age, size: 360, label: `${whose} full figure` });
   return d.target === 'custom'
     ? avatarSVG(d.look, { stage: d.stage, frame: 'none', size: 232, label: 'Your character' })
-    : avatarSVG(d.look, { age: d.age, frame: 'none', size: 232, label: 'Your portrait' });
+    : avatarSVG(d.look, { age: d.age, frame: 'none', size: 232, label: `${whose} portrait` });
 }
 function lookOptions(d, tab) {
   if (tab.extras) return [['glasses', 'none'], ['glasses', 'round'], ['glasses', 'square'], ['headwear', 'beanie'], ['headwear', 'hijab'], ['earrings', 'studs'], ['earrings', 'hoops']];
@@ -113,7 +118,7 @@ SHEETS.look = (arg) => {
   }
   if (!d.free && d.target === 'player') html += `<div class="lk-note">${icon('looks', 22)}<span>Face and skin are yours for life. Plastic surgery can change some of it (Activities → Health & Looks).</span></div>`;
   html += `<div class="lk-done"><div class="field-row">${d.free ? `<button class="btn" data-a="lkShuffle" aria-label="Shuffle look">${icon('dice', 26)}</button>` : ''}<button class="btn primary grow" data-a="lkSave">${icon('ui-check', 20)}${d.target === 'custom' ? 'Use this look' : 'Save look'}</button></div></div>`;
-  const title = d.target === 'custom' ? 'Appearance' : d.god ? 'Edit appearance' : d.free ? 'Your adult look' : 'Your look';
+  const title = d.target === 'custom' ? 'Appearance' : d.target === 'npc' ? `${G.people[d.pid].first}'s look` : d.god ? 'Edit appearance' : d.free ? 'Your adult look' : 'Your look';
   return { title, html };
 };
 function swatches(key, entries, cur) {
@@ -124,7 +129,7 @@ function lookBodyPanel(d) {
   if (d.free) {
     return `<div class="lk-head"><h3>Body</h3><span>${d.god ? 'God Mode' : 'Free this once'}</span></div>
       <div class="card" style="padding:8px 14px">${BODY_SLIDERS.map(([k, l, lo, hi]) => `<div class="lk-slider"><span>${l}</span><input type="range" min="${lo}" max="${hi}" value="${Math.round(b[k])}" data-in="lkBody" data-k="${k}" aria-label="${l}"><b id="lkv-${k}">${bodySliderText(k, b[k])}</b></div>`).join('')}</div>
-      <div class="note">After this, your body drifts with your diet, exercise and age. Surgery can change it too.</div>`;
+      <div class="note">${d.target === 'npc' ? 'Their body still drifts with age afterward.' : 'After this, your body drifts with your diet, exercise and age. Surgery can change it too.'}</div>`;
   }
   const rows = actionRows('mind', undefined, (a) => ['gym', 'jog'].includes(a.id)) + actionRows('health', undefined, (a) => ['diet', 'surgery'].includes(a.id));
   return `<div class="lk-head"><h3>Body</h3><span>${esc(bodyWord('fat', b.fat))} · ${esc(bodyWord('muscle', b.muscle))}</span></div>
@@ -151,7 +156,7 @@ CLICK.lkToggle = (el, ds) => { const d = curDraft(); if (d) { d.look[ds.k] = !d.
 CLICK.lkShuffle = () => {
   const d = curDraft();
   if (!d || !d.free) return;
-  const who = d.target === 'custom' ? { gender: CUSTOM.gender, country: CUSTOM.country } : P(G);
+  const who = d.target === 'custom' ? { gender: CUSTOM.gender, country: CUSTOM.country } : d.target === 'npc' ? G.people[d.pid] : P(G);
   d.look = Object.assign(randomLook(who, { age: d.age ?? 0 }), { bg: d.look.bg });
   renderSheet();
 };
@@ -168,7 +173,8 @@ CLICK.lkSave = () => {
   const d = curDraft();
   if (!d) return;
   if (d.target === 'custom') { CUSTOM.look = Object.assign({}, d.look); CUSTOM.lookSaved = true; backSheet(); return; }
-  const p = P(G);
+  const p = d.target === 'npc' ? G.people[d.pid] : P(G);
+  if (!p) return;
   p.look = Object.assign({}, d.look);
   if (d.free && d.body && p.body) {
     for (const [k] of BODY_SLIDERS) p.body[k] = Math.round(d.body[k]);
@@ -176,7 +182,7 @@ CLICK.lkSave = () => {
     p.body.fatBase = clamp(p.body.fat, 8, 70);
     p.body.muscleBase = clamp(p.body.muscle, 5, 80);
   }
-  if (!d.god) M(G).freeRestyle = false;
+  if (!d.god && d.target === 'player') M(G).freeRestyle = false;
   backSheet();
   refresh();
   toast('Look saved.');

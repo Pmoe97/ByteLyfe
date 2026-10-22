@@ -96,8 +96,8 @@ SHEETS.custom = () => {
       <div class="field grow"><label>Family</label>${sel('wealth', [['random', 'Random']].concat(WEALTH_IDS.map((k) => [k, WEALTH[k].name]), C.monarchy ? [['royal', '👑 Royal family']] : []), CUSTOM.wealth)}</div></div>
       ${C.monarchy ? '' : '<div class="note" style="margin-top:-6px">Royal families: pick the United Kingdom, Spain, Sweden or Japan.</div>'}
       <div class="field"><label>Personality (up to 3)</label><div class="chips">${TRAIT_IDS.map((t) => `<button class="chip ${CUSTOM.traits.includes(t) ? 'on' : ''}" data-a="custTrait" data-t="${t}" title="${esc(TRAITS[t].desc)}">${emo(TRAITS[t].emoji, 18)}${esc(TRAITS[t].name)}</button>`).join('')}</div><div class="note">Leave empty to inherit traits from your parents.</div></div>
-      <div class="field"><label class="row"><span class="grow">Set starting stats (God Mode)</span><button class="switch ${st ? 'on' : ''}" data-a="custStats" aria-label="Set starting stats"></button></label>
-      ${st ? ['happy', 'health', 'smarts', 'looks'].map((k) => `<div class="slider-row"><span>${icon(STAT_ICONS[k], 20)} ${STAT_INFO[k].name}</span><input type="range" min="0" max="100" value="${st[k]}" data-in="custStat" data-k="${k}"><b id="cs-${k}">${st[k]}</b></div>`).join('') : '<div class="note">Off: your stats are rolled from your parents.</div>'}</div>
+      ${godOn() ? `<div class="field"><label class="row"><span class="grow">Set starting stats (God Mode)</span><button class="switch ${st ? 'on' : ''}" data-a="custStats" aria-label="Set starting stats"></button></label>
+      ${st ? ['happy', 'health', 'smarts', 'looks'].map((k) => `<div class="slider-row"><span>${icon(STAT_ICONS[k], 20)} ${STAT_INFO[k].name}</span><input type="range" min="0" max="100" value="${st[k]}" data-in="custStat" data-k="${k}"><b id="cs-${k}">${st[k]}</b></div>`).join('') : '<div class="note">Off: your stats are rolled from your parents.</div>'}</div>` : ''}
       <button class="btn primary block" data-a="custStart">${icon('rattle', 26)}Be born</button>`,
   };
 };
@@ -121,7 +121,7 @@ INPUT.custStat = (el, ds) => { CUSTOM.stats[ds.k] = Number(el.value); const v = 
 CLICK.custStart = async () => {
   await saveNow();
   const o = { first: cleanName(CUSTOM.first), last: cleanName(CUSTOM.last), gender: CUSTOM.gender, orient: CUSTOM.orient, country: CUSTOM.country, city: CUSTOM.city || undefined, year: CUSTOM.year, wealth: ['random', 'royal'].includes(CUSTOM.wealth) ? undefined : CUSTOM.wealth, royal: CUSTOM.wealth === 'royal', traits: CUSTOM.traits.slice() };
-  if (CUSTOM.stats) Object.assign(o, CUSTOM.stats);
+  if (CUSTOM.stats && godOn()) Object.assign(o, CUSTOM.stats);
   if (CUSTOM.lookSaved && CUSTOM.look) o.look = Object.assign({}, CUSTOM.look);
   CUSTOM.first = '';
   CUSTOM.last = '';

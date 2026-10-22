@@ -58,7 +58,7 @@ SHEETS.company = (id) => {
   </div>`;
   const acts = actionRows('company', id);
   html += `<div class="section-title">Run the company</div>${acts ? listOf(acts) : '<div class="note">You have no say in day-to-day decisions right now.</div>'}`;
-  if (META.settings.sandbox) html += `<div class="section-title">God Mode</div><div class="chips">${[100000, 1000000, 100000000].map((v) => `<button class="chip" data-a="sbCoCash" data-id="${co.id}" data-v="${v}">+${fmtMoneyShort(v)} company cash</button>`).join('')}<button class="chip" data-a="sbCoRep" data-id="${co.id}">Max reputation</button></div>`;
+  if (godOn()) html += `<div class="section-title">God Mode</div><div class="chips">${[100000, 1000000, 100000000].map((v) => `<button class="chip" data-a="sbCoCash" data-id="${co.id}" data-v="${v}">+${fmtMoneyShort(v)} company cash</button>`).join('')}<button class="chip" data-a="sbCoRep" data-id="${co.id}">Max reputation</button></div>`;
   html += `<div class="section-title">Team</div>${listOf(BIZ_ROLE_IDS.map((r) => {
     const g = t[r];
     return itemRow({ ico: BIZ_ROLES[r].emoji, t: `${esc(roleTitle(co, r, 2))} <span class="faint">× ${g.n}</span>`, s: g.n ? `Skill ${Math.round(g.skill)} · morale ${Math.round(g.morale)}% · ${fmtMoneyShort(g.pay)}/yr each` : esc(BIZ_ROLES[r].desc), cls: g.n ? '' : 'disabled' });

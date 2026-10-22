@@ -10,7 +10,7 @@ SHEETS.menu = () => ({
     ${itemRow({ a: 'sheet', ds: { k: 'goals' }, ico: icon('trophy', 30), t: 'Goals & achievements', s: `${M(G).goals.filter((g) => g.done).length}/${M(G).goals.length} life goals done`, chev: true })}
     ${itemRow({ a: 'sheet', ds: { k: 'lineage' }, ico: icon('tree', 30), t: 'Family line', s: `Generation ${G.gen}`, chev: true })}
     ${itemRow({ a: 'sheet', ds: { k: 'timemachine' }, ico: icon('hourglass', 30), t: 'Time machine', s: rewindDepth(G) ? `Go back up to ${nOf(rewindDepth(G), 'year')}` : 'Age up to build history', chev: true })}
-    ${itemRow({ a: 'sheet', ds: { k: 'sandbox' }, ico: icon('crown', 30), t: 'God Mode', s: 'Edit stats, money, skills, looks and more', chev: true })}
+    ${godOn() ? itemRow({ a: 'sheet', ds: { k: 'sandbox' }, ico: icon('crown', 30), t: 'God Mode', s: 'Edit stats, money, skills, looks and more', chev: true }) : ''}
     ${itemRow({ a: 'sheet', ds: { k: 'settings' }, ico: icon('gear', 30), t: 'Settings', s: 'Theme, text size, content, saves', chev: true })}
     ${itemRow({ a: 'toTitle', ico: icon('assets', 30), t: 'Save & exit to main menu' })}
   </div>`,
@@ -55,7 +55,7 @@ SHEETS.sandbox = () => {
   const degOpts = Object.keys(DEGREE_NAMES).map((d) => `<option value="${d}">${esc(DEGREE_NAMES[d])}</option>`).join('');
   return {
     title: 'God Mode',
-    html: `<div class="card"><div class="row"><span class="grow"><b>Edit relationships too</b><div class="muted">Shows a relationship slider on each person.</div></span><button class="switch ${META.settings.sandbox ? 'on' : ''}" data-a="setToggle" data-k="sandbox" aria-label="Relationship editing"></button></div></div>
+    html: `<div class="note" style="margin-top:-6px">To edit someone else, open their page and tap Edit under God Mode.</div>
       <div class="section-title">Stats</div><div class="card">
         ${['happy', 'health', 'smarts', 'looks'].map((k) => slider(k, p.stats[k], STAT_INFO[k].name, icon(STAT_ICONS[k], 18))).join('')}
         ${slider('karma', m.karma, 'Karma', icon('karma', 18))}${slider('fame', m.fame, 'Fame', icon('fame', 18))}
@@ -108,6 +108,7 @@ SHEETS.settings = () => {
         ${toggle('showHidden', 'Show karma & fame', 'Karma is hidden in some life sims. Not here.')}
         ${toggle('autoPopups', 'Pop up every event', 'Off: small happenings only appear in your life log.')}
         ${toggle('confirmAge', 'Confirm before aging up')}
+        ${toggle('godMode', 'God Mode buttons', 'Off hides God Mode everywhere: the menu, people’s pages, your companies and the custom-life stat picker.')}
         ${toggle('reduceMotion', 'Reduce motion')}
       </div>
       <div class="section-title">Content</div><div class="card">

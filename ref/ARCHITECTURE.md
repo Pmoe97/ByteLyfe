@@ -48,7 +48,7 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `49` | Cities (`49-cities.js`): city profiles (cost of living, pay, job hubs, traits), neighborhoods, local housing markets, moving, landlords, tenants, city and landlord events | No DOM. `ageUp` reaches `cityTick` through a wrapper; `financeTick`, `salaryFor`, `jobBoard`, the rentals and real-estate listings, `moveInto`, `assetTick`, emigration and job transfers call into it at runtime. |
 | `50` | Currencies (`50-currency.js`): each country's currency and its yearly strength, money formatting per country, exchange when emigrating, foreign savings, currency events | No DOM. `ageUp` reaches `fxTick` through a wrapper (first phase); `runWithResult`, `createLife`, `continueAs` and the UI's `refresh` call `useCurrency`. |
 | `51–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1017-ui-currency.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `1000+` | UI (`1000-ui-kit.js` … `1018-ui-godmode.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -348,6 +348,14 @@ trial `practice`.
   judge's rung: criminal and civil cases, appeals, then `LANDMARKS`.
 - **Lawyers** take two clients a year (`ct_client`), each a two-step popup.
 
+**God Mode.** `28-sandbox.js` holds every edit as `Sandbox.*` (no DOM), for you and, through the
+`npc*` methods, for anyone else. `npcAgeRange` keeps parents at least 14 years older than their
+children and a romantic partner on your side of 18, `npcAge` removes or adds a body as someone
+crosses 18, and `npcKind` only swaps friends, best friends and enemies. The God Mode sheet is in
+`1005-ui-system.js`, the per-person editor in `1018-ui-godmode.js` (`SHEETS.npcEdit`, opened from
+`godRow` on a person's page), and the look editor takes `'god:<id>'` for someone else. `godOn()`
+reads `META.settings.godMode`; every God Mode entry point checks it.
+
 **Saving.** `29-save.js` wraps the Perchance `kv-plugin` (`root.kv`), falling back to
 `localStorage`, then memory. Folders: `saves` (one JSON state per life), `rewind` (the last
 5 Time Machine snapshots), `meta` (index, settings, achievements, Hall of Lives).
@@ -382,5 +390,6 @@ never fired and actions that never ran, which usually means a `when` that can't 
 | `dev/verify/currency.mjs` | Currencies: every country has one; local formats (₹8,30,000 and ₹8.3L, 5,000 kr, -£250, ¥7.5M); the US-dollar setting; forty years of a Japanese life with no stray "$"; strengths stay in bounds and average about 1; emigrating converts at the strength ratio less 2% (nothing inside the eurozone, savings in the new currency come along free); foreign savings cost 1.5%, ride the currencies and keep their foreign amount; trips abroad cost more with weak money. |
 | `dev/verify/sim-business.mjs` | Business balance report (add an industry id as the third argument to run just that one): every industry run 20 years under a sensible owner (who also franchises and buys a small rival when flush) and a hands-off owner. Survival, profit, size, IPO readiness, franchising and acquisitions at years 1/5/10/20. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |
-| `dev/verify/run-all.mjs` | Syntax check + emoji audit + content tags + taboo checks + cities checks + currency checks + 300-life sim (`npm run verify`). |
+| `dev/verify/godmode.mjs` | God Mode's per-person rules: parent and child ages, a spouse never under 18, bodies removed and restored across 18, clean names, clamped stats, trait conflicts and the limit of four, age limits on jobs, money, education, gender, orientation and home, and which relationships can change kind. |
+| `dev/verify/run-all.mjs` | Syntax check + emoji audit + content tags + taboo checks + cities checks + currency checks + God Mode checks + 300-life sim (`npm run verify`). |
 | `dev/verify/ui-smoke.js` | Paste into the browser console: plays 60 years through the real UI, opening every sheet. |

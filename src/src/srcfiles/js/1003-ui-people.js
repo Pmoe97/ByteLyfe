@@ -75,7 +75,7 @@ SHEETS.person = (pid) => {
     ${kidFacts(p)}${romanceFacts(p)}
   </div>`;
   const body = bodyCard(p, false);
-  const sb = META.settings.sandbox && p.alive ? `<div class="section-title">Sandbox</div><div class="card"><div class="slider-row"><span>Relationship</span><input type="range" min="0" max="100" value="${r.rel}" data-in="sbRel" data-id="${pid}"><b id="sbRelV">${r.rel}</b></div></div>` : '';
+  const sb = godRow(p); // God Mode editing (1018-ui-godmode.js)
   // Parenting (46-parenting.js) and romance (47-romance.js) get their own sections.
   const acts = actionRows('person', pid, (a) => !a.group);
   const parenting = actionRows('person', pid, (a) => a.group === 'parent');

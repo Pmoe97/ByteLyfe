@@ -104,8 +104,15 @@ outlast you across generations.
 
 **Meta.** 122 achievements kept across lives, three bucket-list goals per life, legacy titles
 and epitaphs, the Hall of Lives, multiple save slots, export/import codes. God Mode (stats,
-money, skills, traits, instant careers and degrees, relationship editing) and a 10-year Time
-Machine, both free. Light/dark themes, text size, reduced motion.
+money, skills, traits, instant careers and degrees) and a 10-year Time Machine, both free.
+Light/dark themes, text size, reduced motion.
+- **God Mode for anyone:** every living person's page has an Edit button: name, gender,
+  orientation, age, stats, relationship (friend, best friend or enemy), personality, money, job
+  and rung, education, home country and city, and their whole appearance, body included for
+  adults. Ages keep families sane (parents stay older than their kids) and romance stays on your
+  side of 18.
+- **God Mode buttons** can be switched off in Settings, which hides God Mode from the menu,
+  people's pages, your companies and the custom-life stat picker.
 
 **Content tags.** Events, choices and actions can be tagged `chaos` (absurd and
 supernatural), `mature` (harder crime and affair content), or `taboo` + one subtype

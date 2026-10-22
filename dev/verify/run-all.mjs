@@ -5,7 +5,8 @@
 //   4. taboo gate/inbreeding/event checks (48-taboo.js)
 //   5. cities: city data, prices, moving, landlords and tenants (49-cities.js)
 //   6. currencies: formats, exchange when emigrating, foreign savings (50-currency.js)
-//   7. the life simulator (300 lives) with its invariant checks
+//   7. God Mode: the per-person editor's rules (28-sandbox.js)
+//   8. the life simulator (300 lives) with its invariant checks
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -30,6 +31,7 @@ run('content tags', ['dev/verify/tags.mjs']);
 run('taboo checks', ['dev/verify/taboo.mjs']);
 run('cities checks', ['dev/verify/cities.mjs']);
 run('currency checks', ['dev/verify/currency.mjs']);
+run('God Mode checks', ['dev/verify/godmode.mjs']);
 run('life simulator', ['dev/verify/sim-lives.mjs', '300', String(Date.now() % 100000)]);
 console.log(failed ? '\n❌ Some checks failed.' : '\n✅ All checks passed.');
 process.exit(failed ? 1 : 0);
