@@ -35,6 +35,7 @@ function commitCrime(s, id) {
   let odds = c.success + skill(s, 'streetwise') / 250 + (c.skillKey ? skill(s, c.skillKey) / 300 : 0);
   if (trait(s, 'cunning')) odds += 0.1;
   if (trait(s, 'lucky')) odds += 0.05;
+  odds += powerCrimeEdge(s); // invisibility or shapeshifting (51-chaos.js)
   if (trait(s, 'anxious')) odds -= 0.05;
   addSkill(s, 'streetwise', c.skill || 2);
   if (chance(clamp(odds, 0.03, 0.95))) {

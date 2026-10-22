@@ -625,7 +625,7 @@ defAction({
 });
 
 /* ---- babies -------------------------------------------------------- */
-function canConceive(a, b) { return (a.gender === 'f' && b.gender === 'm') || (a.gender === 'm' && b.gender === 'f'); }
+function canConceive(a, b) { if (a.vamp || b.vamp) return false; return (a.gender === 'f' && b.gender === 'm') || (a.gender === 'm' && b.gender === 'f'); }
 function fertility(age) {
   if (age < 16) return 0;
   if (age <= 30) return 0.45;

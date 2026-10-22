@@ -24,7 +24,8 @@ SHEETS.actcat = (cat) => {
   const royal = cat === 'royal' && crown(G) ? royalCard() : '';
   const mob = cat === 'mob' ? underworldCard() : '';
   const courts = cat === 'court' ? courtCard() : '';
-  return { title: c ? c.name : 'Activities', html: look + royal + mob + courts + listOf(actionRows(cat), 'Nothing available right now.') };
+  const chaos = cat === 'super' ? chaosCard() : ''; // 1019-ui-chaos.js
+  return { title: c ? c.name : 'Activities', html: look + royal + mob + courts + chaos + listOf(actionRows(cat), 'Nothing available right now.') };
 };
 // The Underworld opens with your standing: family, rank, heat and everything you run (39-underworld.js).
 function underworldCard() {

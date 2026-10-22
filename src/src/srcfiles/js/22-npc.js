@@ -30,7 +30,7 @@ function npcTick(s) {
     const age = ageOf(s, p);
 
     p.stats.health = clamp100(p.stats.health + (healthTarget(age, 20, hasTrait(p, 'athletic')) - p.stats.health) * 0.2 + randInt(-4, 3));
-    if (chance(mortality(age, p.stats.health) * (age < 18 ? 0.4 : 1))) { npcDies(s, p, npcCause(age)); continue; }
+    if (chance(mortality(bodyAge(s, p), p.stats.health) * (age < 18 ? 0.4 : 1))) { npcDies(s, p, npcCause(bodyAge(s, p))); continue; }
 
     if (r.kind === 'enemy') r.rel = clamp100(r.rel + randInt(0, 3));
     else r.rel = clamp100(r.rel - randInt(0, REL_DECAY[r.kind] ?? 4));

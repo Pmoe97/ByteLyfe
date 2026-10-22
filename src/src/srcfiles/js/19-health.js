@@ -36,6 +36,8 @@ function medBill(s, t) { return A(s) < 18 ? 0 : medPrice(s, t); }
 function medLabel(s, t) { return A(s) < 18 ? 'Your parents pay' : fmtMoney(medPrice(s, t)); }
 
 // Yearly odds of dying. Rises steeply with age; poor health multiplies it.
+// The age a body acts and looks: a vampire's stops where they were turned (51-chaos.js).
+function bodyAge(s, p) { return p.frozenAge !== undefined && p.frozenAge !== null ? Math.min(ageOf(s, p), p.frozenAge) : ageOf(s, p); }
 function mortality(age, health) {
   let q = 0.00006 * Math.exp(0.088 * age);
   if (age < 1) q += 0.002;
@@ -52,7 +54,7 @@ function healthTarget(age, fitness, athletic) {
 }
 
 function bodyTick(s) {
-  const p = P(s), m = M(s), age = A(s);
+  const p = P(s), m = M(s), age = bodyAge(s, p);
   const fit = skill(s, 'fitness');
   // Health drifts toward what your age and fitness support; illness and habits pull it down.
   const target = healthTarget(age, fit, trait(s, 'athletic'));
@@ -149,7 +151,7 @@ function diseaseTick(s) {
 
 function deathCheck(s) {
   if (s.dead) return;
-  const p = P(s), age = A(s);
+  const p = P(s), age = bodyAge(s, p);
   if (p.stats.health <= 0 && chance(0.6)) { die(s, worstDisease(s) || 'failing health'); return; }
   if (chance(mortality(age, p.stats.health))) die(s, naturalCause(s, age));
 }

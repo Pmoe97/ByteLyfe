@@ -167,7 +167,7 @@ function newBody(s, p) {
     hips: g(fem ? 52 : masc ? 28 : 40, 11, 8, 90),
     glutes: g(fem ? 46 : 34, 12, 8, 90),
   };
-  const age = ageOf(s, p);
+  const age = bodyAge(s, p);
   if (age > ADULT_AGE) {
     b.fat = clamp(Math.round(fatBase + Math.max(0, age - 30) * 0.35 + gauss(0, 6)), 3, 95);
     b.muscle = clamp(Math.round(muscleBase - Math.max(0, age - 40) * 0.4 + gauss(0, 5)), 3, 95);
@@ -191,7 +191,7 @@ function bodyNudge(s, d) {
 function bodyShapeTick(s) {
   const b = ensureBody(s, P(s));
   if (!b) return;
-  const m = M(s), age = A(s), fit = skill(s, 'fitness');
+  const m = M(s), age = bodyAge(s, P(s)), fit = skill(s, 'fitness');
   let fatT = b.fatBase + Math.max(0, age - 30) * 0.3 + (DIETS[m.diet] || DIETS.normal).fat - fit * 0.28;
   if (trait(s, 'lazy')) fatT += 5;
   if (trait(s, 'athletic')) fatT -= 5;
@@ -207,7 +207,7 @@ function bodyShapeTick(s) {
 function npcBodyTick(s, p) {
   const b = ensureBody(s, p);
   if (!b) return;
-  const age = ageOf(s, p);
+  const age = bodyAge(s, p);
   b.fat = clamp(Math.round(b.fat + (b.fatBase + Math.max(0, age - 30) * 0.3 - b.fat) * 0.2 + randFloat(-1.5, 1.5)), 2, 100);
   if (age > 45) b.muscle = clamp(Math.round(b.muscle - randFloat(0, 1)), 3, 100);
 }

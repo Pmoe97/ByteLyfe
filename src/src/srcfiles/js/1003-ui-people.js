@@ -72,7 +72,7 @@ SHEETS.person = (pid) => {
     ${p.alive ? `<div class="rel-bar"><div class="muted">Relationship · ${Math.round(r.rel)}%</div>${bar(r.rel)}</div>
     <div class="mini-stats">${statCell('health', p.stats.health)}${statCell('smarts', p.stats.smarts)}${statCell('looks', p.stats.looks)}${statCell('happy', p.stats.happy)}</div>` : ''}
     ${traits ? `<div class="chips" style="justify-content:center;margin-top:10px">${traits}</div>` : ''}
-    ${kidFacts(p)}${romanceFacts(p)}
+    ${kidFacts(p)}${romanceFacts(p)}${chaosFacts(p)}
   </div>`;
   const body = bodyCard(p, false);
   const sb = godRow(p); // God Mode editing (1018-ui-godmode.js)
@@ -110,6 +110,7 @@ SHEETS.profile = () => {
     <div class="p-meta">${A(G)} years old · ${genderWord(p, 'he/him', 'she/her', 'they/them')} · ${esc(ORIENTATIONS[p.orient].name)}</div>
     <div class="p-meta">${country(G).flag} ${esc(p.city)}, ${esc(country(G).name)} · born ${MONTHS[mo - 1]} ${d}, ${p.birthYear} (${zodiacOf(mo, d)})</div>
     <div class="mini-stats">${statCell('happy', p.stats.happy)}${statCell('health', p.stats.health)}${statCell('smarts', p.stats.smarts)}${statCell('looks', p.stats.looks)}${statCell('karma', m.karma, 'accent')}${statCell('fame', m.fame, 'accent')}</div>
+    ${chaosFacts(p)}
   </div>`;
   html += `<div class="section-title">${adult ? 'Look and body' : 'Your look'}</div>${bodyCard(p, true)}<div class="list" style="${adult ? 'margin-top:8px' : ''}">${itemRow({ a: 'sheet', ds: { k: 'look' }, ico: icon('part-shirt', 24), t: M(G).freeRestyle ? 'Design your adult look' : 'Change your style', s: M(G).freeRestyle ? 'One free redesign, face and body' : adult ? 'Hair and clothes any time. Your body changes with diet, exercise and surgery.' : 'Hair, glasses and clothes', chev: true })}</div>`;
   html += `<div class="section-title">Personality</div><div class="chips">${p.traits.map((t) => `<span class="chip" title="${esc(TRAITS[t].desc)}">${emo(TRAITS[t].emoji, 18)}${esc(TRAITS[t].name)}</span>`).join('') || '<span class="muted">No notable traits.</span>'}</div>`;

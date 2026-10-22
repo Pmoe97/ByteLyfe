@@ -47,8 +47,9 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `48` | Taboo family romance (`48-taboo.js`): opt-in adult-only (18+ both, master + subtype toggles, all default OFF), pedigree inbreeding (F stored as `p.inbred`), birth fallout, discovery events | No DOM. `ageUp` reaches `tabooTick` through a wrapper; `startRomance/marry/bornChild/pregnancyTick` call into it at runtime. |
 | `49` | Cities (`49-cities.js`): city profiles (cost of living, pay, job hubs, traits), neighborhoods, local housing markets, moving, landlords, tenants, city and landlord events | No DOM. `ageUp` reaches `cityTick` through a wrapper; `financeTick`, `salaryFor`, `jobBoard`, the rentals and real-estate listings, `moveInto`, `assetTick`, emigration and job transfers call into it at runtime. |
 | `50` | Currencies (`50-currency.js`): each country's currency and its yearly strength, money formatting per country, exchange when emigrating, foreign savings, currency events | No DOM. `ageUp` reaches `fxTick` through a wrapper (first phase); `runWithResult`, `createLife`, `continueAs` and the UI's `refresh` call `useCurrency`. |
-| `51–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1018-ui-godmode.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `51` | Chaos mode (`51-chaos.js`): superpowers, hero and villain careers, vampires, ascension, and their events; everything tagged `chaos` | No DOM. `ageUp` reaches `chaosTick` through a wrapper; `commitCrime` calls `powerCrimeEdge`. |
+| `52–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1019-ui-chaos.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -208,11 +209,14 @@ built from `CONTENT_TAGS`, with the taboo master + subtypes grouped in their own
 **A year (`ageUp`).** Currencies → body → pregnancy → school → career → businesses and the market →
 prison → money → assets → cities (rent, landlords, tenants) → fame → the people around you → the wider family → parenting →
 romance → taboo family romance → royalty → the underworld →
-show business → sports → courts → pets → milestones → story chapters → random events → new illness → death check. The order
+show business → sports → courts → chaos → pets → milestones → story chapters → random events → new illness → death check. The order
 is in `AGE_PHASES` (`25-ageup.js`).
 
 **Health.** Health drifts toward a target set by age and fitness (`healthTarget`), and
 illness and habits pull it down. Yearly death odds come from `mortality(age, health)`.
+Both use `bodyAge(s, p)`, the age a body acts and looks: a vampire's stops at `p.frozenAge`.
+Event age ranges, body drift and avatars use it too, so a 200-year-old vampire still gets
+the events of the 30-year-old they look like.
 A cause of death is the phrase after "died". `deathPhrase` adds "of" or "in" ("of a
 stroke", "in a car crash"). A cause that starts with while/after/during/in is used as written
 ("in single combat with a goose").
@@ -356,6 +360,22 @@ crosses 18, and `npcKind` only swaps friends, best friends and enemies. The God 
 `godRow` on a person's page), and the look editor takes `'god:<id>'` for someone else. `godOn()`
 reads `META.settings.godMode`; every God Mode entry point checks it.
 
+**Chaos mode.** `51-chaos.js`. Everything is tagged `chaos`, and `chaosTick` returns at once
+while the switch is off; state that already exists (powers, a vampire's frozen age) stays put.
+- **Powers:** `p.powers` on any person (a nemesis has them too); `grantPower` adds one.
+  `POWER_USES[power]` holds each power's uses as `[label, outcome, minAge]`. `M(s).sup` is your
+  control, `outed` (secret blown) and cape career: `side`, `alias`, `rep` (ranks at `CAPE_RANK_AT`),
+  `nemesis` (a person id), `wins`, `henchmen`, `team`. `capeYear` pays sponsorships into the
+  finance sheet or charges for henchmen.
+- **Vampires:** `p.vamp = { year, sire }` and `p.frozenAge` (see Health). `M(s).blood` holds hunger
+  (rises each year; feeding lowers it; at 100 you waste away), `hunt` (hunters' interest, from
+  feeding) and how many you've turned. `canConceive` refuses vampires. `cureVampire` sets the
+  birth year so aging resumes from the age you looked.
+- **Ascension:** `ascend` records `s.ancestor = { kind, name, year }` at the top of the save and ends
+  the life with a cause starting "while" or "after"; `anc_*` events reach later generations.
+- The Supernatural menu (`super` in `ACT_CATS`, added at load) opens with `chaosCard`
+  (`1019-ui-chaos.js`); `chaosFacts` puts chips on people's pages.
+
 **Saving.** `29-save.js` wraps the Perchance `kv-plugin` (`root.kv`), falling back to
 `localStorage`, then memory. Folders: `saves` (one JSON state per life), `rewind` (the last
 5 Time Machine snapshots), `meta` (index, settings, achievements, Hall of Lives).
@@ -383,13 +403,14 @@ never fired and actions that never ran, which usually means a `when` that can't 
 
 | Tool | What it does |
 | --- | --- |
-| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36, and a city persona rents at 20, moves city at 26 and 41, and at 30 buys a duplex to live in plus two homes to rent out, then plays landlord and tenant every year. Also checks that no building holds more tenants than units, and that a life that never lived in the US never shows a plain "$123" (one life in seven shows US dollars by setting). Prints a balance summary, including businesses, the courts, the family and cities, and lists events that never fired, actions that never ran and story chapters never reached. |
+| `dev/verify/sim-lives.mjs` | Plays N random lives (with heirs) through the real engine with a random-choice bot. Checks stats stay 0–100, no NaN anywhere, no dangling people, no `undefined`/`NaN` in any text, handlers exist, export/import round-trips. Each life switches every content tag on or off at random and fails if anything tagged shows up while its tag is off. Persona lives steer the first generation into rare paths so they get tested too: one life in ten is born royal, and others get a sports career at 19, a fame career at 20, the streetwise skill to get into the underworld at 18, or a judge or lawyer job at 36, a chaos persona (Chaos switched on) gets powers at 14, becomes a hero or a villain at 18 and, every other time, a vampire at 45 who feeds when hungry and walks into the sunrise at 130, and a city persona rents at 20, moves city at 26 and 41, and at 30 buys a duplex to live in plus two homes to rent out, then plays landlord and tenant every year. Also checks that no building holds more tenants than units, and that a life that never lived in the US never shows a plain "$123" (one life in seven shows US dollars by setting). Prints a balance summary, including businesses, the courts, the family and cities, and lists events that never fired, actions that never ran and story chapters never reached. |
 | `dev/verify/tags.mjs` | Content tags: every tag in use is in `CONTENT_TAGS` with a Settings default, and the filters hide tagged events, choices and actions (checked on fixture content, so it works before anything is tagged). Prints how much content carries tags. |
 | `dev/verify/taboo.mjs` | Taboo gates: master + 7 subtype defaults OFF, per-kind gate matrix (master-only / subtype-only / wrong-subtype / teen-player / teen-partner all stay closed), tree persistence when a sibling becomes a partner, pedigree F (sibs 0.25, cousins 0.0625, second-gen 0.375), birth tallies, event gating (tag + real partner), dual kin label, no-leak on a generated family. |
 | `dev/verify/cities.mjs` | Cities: every city has a profile and four stable neighborhood names; pay, rents and home prices follow the city; tech hubs out-hire small cities; moving takes your spouse and kids and returns your deposit; Germany caps raises at 3%; an expired notice ends a lease; a duplex holds you plus one tenant; background checks reveal the same applicants; unpaid rent leads to eviction; old saves get tenants and landlords. |
 | `dev/verify/currency.mjs` | Currencies: every country has one; local formats (₹8,30,000 and ₹8.3L, 5,000 kr, -£250, ¥7.5M); the US-dollar setting; forty years of a Japanese life with no stray "$"; strengths stay in bounds and average about 1; emigrating converts at the strength ratio less 2% (nothing inside the eurozone, savings in the new currency come along free); foreign savings cost 1.5%, ride the currencies and keep their foreign amount; trips abroad cost more with weak money. |
+| `dev/verify/chaos.mjs` | Chaos mode: every Chaos event and action is tagged; with the switch off the menu is empty and the tick does nothing; powers never repeat and kids don't see the casino uses; going public makes you famous; picking a side names you and makes a nemesis with powers; reputation climbs the ranks; outed heroes earn sponsorships; a well-fed vampire reaches 150 with a 30-year-old body, can't have children, can't turn anyone under 18, and a cure resumes aging; ascending as an archangel ends the life with the Archangel title and the next generation hears from them. |
 | `dev/verify/sim-business.mjs` | Business balance report (add an industry id as the third argument to run just that one): every industry run 20 years under a sensible owner (who also franchises and buys a small rival when flush) and a hands-off owner. Survival, profit, size, IPO readiness, franchising and acquisitions at years 1/5/10/20. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |
 | `dev/verify/godmode.mjs` | God Mode's per-person rules: parent and child ages, a spouse never under 18, bodies removed and restored across 18, clean names, clamped stats, trait conflicts and the limit of four, age limits on jobs, money, education, gender, orientation and home, and which relationships can change kind. |
-| `dev/verify/run-all.mjs` | Syntax check + emoji audit + content tags + taboo checks + cities checks + currency checks + God Mode checks + 300-life sim (`npm run verify`). |
+| `dev/verify/run-all.mjs` | Syntax check + emoji audit + content tags + taboo checks + cities checks + currency checks + God Mode checks + Chaos checks + 300-life sim (`npm run verify`). |
 | `dev/verify/ui-smoke.js` | Paste into the browser console: plays 60 years through the real UI, opening every sheet. |

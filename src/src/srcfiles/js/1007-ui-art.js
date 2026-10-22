@@ -623,7 +623,7 @@ function lookToday(p, age) {
   return out;
 }
 function moodOf(p) { const h = p.stats ? p.stats.happy : 60; return h < 30 ? 'sad' : h >= 70 ? 'happy' : ''; }
-function personAge(p) { return p.alive ? ageOf(G, p) : (p.deathYear || G.year) - p.birthYear; }
+function personAge(p) { return p.alive ? bodyAge(G, p) : Math.min((p.deathYear || G.year) - p.birthYear, p.frozenAge ?? Infinity); }
 function personAvatar(p, size, o) {
   const age = personAge(p);
   return avatarSVG(lookToday(p, age), Object.assign({ age, mood: p.alive ? moodOf(p) : '', dead: !p.alive, size, label: fullName(p) }, o || {}));
@@ -890,8 +890,8 @@ function icon(name, size, cls) {
   return `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 48 48" width="${size || 24}" height="${size || 24}" aria-hidden="true">${ICON_CACHE[name]}</svg>`;
 }
 const STAT_ICONS = { happy: 'happy', health: 'health', smarts: 'smarts', looks: 'looks', karma: 'karma', fame: 'fame', money: 'money' };
-const CAT_ICONS = { mind: 'mind', health: 'medical', love: 'love', social: 'party', family: 'paw', money: 'clover', shop: 'bag', travel: 'plane', fame: 'megaphone', crime: 'mask', legal: 'scroll', court: 'scales', prison: 'prison' };
-const CAT_HUES = { mind: '#FF8FC7', health: '#FF5D7A', love: '#FF8FC7', social: '#FFC83D', family: '#D99A5B', money: '#34D399', shop: '#FF8FC7', travel: '#4FA8FF', fame: '#FFB547', crime: '#8B6CFF', legal: '#D99A5B', court: '#4FA8FF', prison: '#8E96BC' };
+const CAT_ICONS = { super: 'mind', mind: 'mind', health: 'medical', love: 'love', social: 'party', family: 'paw', money: 'clover', shop: 'bag', travel: 'plane', fame: 'megaphone', crime: 'mask', legal: 'scroll', court: 'scales', prison: 'prison' };
+const CAT_HUES = { super: '#8B6CFF', mind: '#FF8FC7', health: '#FF5D7A', love: '#FF8FC7', social: '#FFC83D', family: '#D99A5B', money: '#34D399', shop: '#FF8FC7', travel: '#4FA8FF', fame: '#FFB547', crime: '#8B6CFF', legal: '#D99A5B', court: '#4FA8FF', prison: '#8E96BC' };
 // Emoji used across the game's content, grouped by the drawn icon that stands in
 // for them. Anything not listed keeps its emoji, drawn inside the same tile.
 const EMOJI_GROUPS = {
@@ -905,13 +905,13 @@ const EMOJI_GROUPS = {
   paw: "🐾🐶🐕🐈🐱🐹🐇🦜🐠🐢🦎🐍🐎🐐🦮🐖🦊🐺🦦🦔🐝🐛🐜🦢🦈🦋🦄🦒🐭",
   party: "🎉🥳🎈🎊🕺💃🎡🎢🎠🤘", drink: "🍺🍻🍸🍶🥂🍷🍾☕",
   plate: "🍽️🍳🍕🍔🍝🥘🌮🍜🍟🍿🍦🍫🍪🍭🍬🌭🥐🍎🍋🥗🥦🍩🌶️👨‍🍳",
-  trophy: "🏆🥇🏅🎖️💯🔝🏟️", fame: "⭐🌟💫🤩", looks: "✨💅💄💇💈", clover: "🍀🎰", dice: "🎲", cards: "🃏♠️♟️",
+  trophy: "🏆🥇🏅🎖️💯🔝🏟️🎯", fame: "⭐🌟💫🤩🦸", looks: "✨💅💄💇💈", clover: "🍀🎰", dice: "🎲", cards: "🃏♠️♟️",
   music: "🎸🎻🎹🎷🎺🥁🎤🎶🎵🎼🎧🎙️🪕", palette: "🎨🖌️🖼️", clapper: "🎬🎭📺🎟️🎫📸📷🎥",
-  controller: "🎮🕹️👾", phone: "📱📲📞☎️🤳📵", laptop: "💻🖥️⌨️👩‍💻🤖💿", flask: "🔬🧪🧬⚗️☢️", rocket: "🚀",
+  controller: "🎮🕹️👾", phone: "📱📲📞☎️🤳📵", laptop: "💻🖥️⌨️👩‍💻🤖💿", flask: "🔬🧪🧬⚗️☢️", rocket: "🚀☄️",
   scales: "⚖️👩‍⚖️", columns: "🏛️🗳️", scroll: "📜📝📋📄📑🗂️✍️🖋️📰", receipt: "🧾", chartup: "📈💹⬆️", chartdown: "📉",
-  prison: "⛓️🚔🚓🚨", lock: "🔒", mask: "🦹🕵️🔪💀😈🕳️👻", flame: "🔥💥", key: "🔑🗝️🔓🚪", gift: "🎁", handshake: "🤝🙏🤲✋",
-  bulb: "💡🔮", box: "📦🚚", chat: "💬🗣️💭🤐", megaphone: "📣📢🔊", mail: "✉️📧📭📮📤", bell: "🔔⏰⏱️",
-  warning: "⚠️🚫🚧", dove: "🕊️⚰️🥀", tree: "🌳🌲🌱🌿🌾🌻🌼🌺", dumbbell: "🏋️💪🥊🥋🏃⛷️🏊🎾🏀⚽🏈🛹👟",
+  prison: "⛓️🚔🚓🚨", lock: "🔒", mask: "🦹🕵️🔪💀😈🕳️👻🦇🕶️⚔️🗡️🧛🏹🕴️", flame: "🔥💥⚡🌋", key: "🔑🗝️🔓🚪", gift: "🎁", handshake: "🤝🙏🤲✋",
+  bulb: "💡🔮🧙", box: "📦🚚", chat: "💬🗣️💭🤐", megaphone: "📣📢🔊", mail: "✉️📧📭📮📤", bell: "🔔⏰⏱️",
+  warning: "⚠️🚫🚧", dove: "🕊️⚰️🥀🕯️", tree: "🌳🌲🌱🌿🌾🌻🌼🌺", dumbbell: "🏋️💪🥊🥋🏃⛷️🏊🎾🏀⚽🏈🛹👟",
   hourglass: "⏳⌛⏪", crown: "👑", couch: "🛋️🛏️🪑🛁🚿", karma: "☯️😇", mind: "🧘🌀🌙", gear: "⚙️🛠️🔧🔩🧰🔨",
   bag: "🛍️🛒🏷️👛👗👕🧢", people: "👥👪👨‍👩‍👧‍👦👵👋🙋", smarts: "🧠🤓🧩🔢🧮",
 };

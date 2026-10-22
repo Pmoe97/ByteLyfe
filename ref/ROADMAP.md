@@ -102,7 +102,7 @@ outlast you across generations.
 - **Extras:** 5 new company events and 4 new achievements (Hostile Takeover, Franchise King,
   Market Leader, Stock Picker).
 
-**Meta.** 122 achievements kept across lives, three bucket-list goals per life, legacy titles
+**Meta.** 133 achievements kept across lives, three bucket-list goals per life, legacy titles
 and epitaphs, the Hall of Lives, multiple save slots, export/import codes. God Mode (stats,
 money, skills, traits, instant careers and degrees) and a 10-year Time Machine, both free.
 Light/dark themes, text size, reduced motion.
@@ -120,8 +120,9 @@ supernatural), `mature` (harder crime and affair content), or `taboo` + one subt
 romance. Each tag has an off-by-default switch in Settings, so players who want the game
 weirder or darker can opt in. The taboo master plus seven subtype switches live in their
 own Settings section and all default OFF, so the game is exactly as before until opted in.
-So far, seven events are tagged `chaos` (four of them toddler hazards), and three of the
-messiest affair and one-night-stand events are tagged `mature` (see Relationships 2.0).
+Chaos mode (below) is all tagged `chaos`: 36 events and 17 actions, counting the seven
+older chaos events (four of them toddler hazards). Three of the messiest affair and
+one-night-stand events are tagged `mature` (see Relationships 2.0).
 
 **Quick wins.** Petty actions: throw a tantrum to squeeze money out of your parents,
 toilet-paper someone's house, yell at people (detention at school, a write-up at work), spread
@@ -384,6 +385,30 @@ nightlife, snowy, historic, industrial), shown on a new City page.
   (City Hopper, Big City Dreams, Landlord, House Hacker, Tenant Power, Slumlord), 2 goals and the
   Real Estate Baron legacy title.
 
+**Chaos mode** (behind the Chaos switch, off by default). A new Supernatural menu.
+- **Superpowers:** flight, super strength, laser eyes, invisibility, telepathy, super speed, a
+  healing factor, weather control, telekinesis and shapeshifting. You get them from a meteorite,
+  a lab accident, lightning, a street vendor's very special tea, a hooded stranger, or as a kid
+  whose toys float. Each power has its own uses (lift a car off a driver, read your partner's
+  mind, nudge a slot machine; the casino ones are 18+). A control meter grows with training, and
+  mishaps in public can blow your secret identity. Healing keeps you healthy, speed and strength
+  build skills, and invisibility or shapeshifting make crime easier.
+- **Heroes and villains:** put on a mask, pick an alias, and climb five ranks (rookie vigilante to
+  world guardian, or petty crook to world-ending threat). Heroes patrol, answer big alarms and earn
+  sponsorships once known; villains pull super heists, unveil doomsday schemes and pay henchmen.
+  Everyone gets a nemesis with powers of their own. Ambushes, a team that wants you, a reporter
+  closing in on your identity, and a giant robot that forces a truce.
+- **Vampires:** bitten at a nightclub, or offered eternity by an old aristocrat. You stop aging
+  (your health, looks and life events follow the age you look), feed on strangers, a shady blood
+  supplier or rats, and draw hunters when you kill. Turn adults who say yes, outlive everyone you
+  knew, take a witch's cure to age again, or walk into the sunrise. Vampires can't have children.
+- **Ascension:** a saint (karma 92+) may be offered a place among the archangels, and someone
+  wicked enough a demon lord's throne. Either ends the life, and the family line hears from them
+  for generations: healing dreams from the archangel, deals in the mirror from the demon lord.
+- **Extras:** 11 achievements (Origin Story, Masked Hero, Evil Laugh, World Guardian, World-Ending
+  Threat, Arch-Rival, Fangs Out, Two Hundred Candles, Sire, Heaven Sent, Throne of Ashes) and five
+  legacy titles (Archangel, Demon Lord, Vampire, Superhero, Supervillain).
+
 **Real currencies.** Every country shows money in its own currency: dollars, pounds, euros,
 pesos, reais, kronor, yen, won, rupees (in lakhs and crores), naira, rand and more, 14 in all.
 Prices never jitter, because each currency keeps a fixed rate for display. A Settings switch
@@ -406,29 +431,26 @@ shows everything in US dollars instead.
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Chaos mode** (`chaos` tag). Random events that grant superpowers (laser eyes, flight...),
-    superhero and supervillain careers, ascending as an archangel or a demon lord. Vampire
-    lives: feeding, slow aging, hunters, and turning others.
-2. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
+1. **Challenges.** Generated challenge goals and starting scenarios ("born broke, retire rich").
     A daily challenge with streaks. Every challenge stays available, free.
-3. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
-4. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
+2. **Pet depth.** Pet shows, horse racing, exotic pets, breeding.
+3. **More business types.** A casino (house edge, high rollers, cheating scandals) and a zoo
     (collect animals, build exhibits, breeding programs), both on the business engine.
-5. **Military depth.** Wars, desertion, veterans' benefits.
-6. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+4. **Military depth.** Wars, desertion, veterans' benefits.
+5. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
     double agents, and getting burned.
-7. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+6. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-8. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+7. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-9. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+8. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-10. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+9. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
     purges, coups and declared wars. Builds on Royalty and Military depth.
-11. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+10. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-12. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-13. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+11. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+12. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 

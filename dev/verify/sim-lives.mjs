@@ -124,6 +124,8 @@ const t0 = Date.now();
 for (let i = 0; i < N; i++) {
   for (const t of TAG_IDS) { META.settings[t] = chance(0.5); if (META.settings[t]) stats.tagLives[t] = (stats.tagLives[t] || 0) + 1; }
   META.settings.currency = chance(0.15) ? 'usd' : 'local';
+  // The chaos persona (i % 10 = 4) needs Chaos on.
+  if (i % 10 === 4 && !META.settings.chaos) { META.settings.chaos = true; stats.tagLives.chaos = (stats.tagLives.chaos || 0) + 1; }
   let s;
   // One life in ten is born royal, so royal life gets played (random births rarely are).
   try { s = ctx.createLife(i % 10 === 0 ? { country: pick(['uk', 'es', 'se', 'jp']), royal: true } : {}); } catch (e) { fail('createLife threw: ' + e.stack); continue; }
@@ -151,7 +153,8 @@ for (let i = 0; i < N; i++) {
     // their actions and events get tested: parents (i % 10 = 1: three kids at 30, a company,
     // half of them a crime family too, and lots of parenting), cities (2: rents at 20, moves
     // city at 26 and 41, and at 30 buys a duplex to live in plus two more homes to rent out,
-    // then plays landlord and tenant every year), sports (3), fame (5), the
+    // then plays landlord and tenant every year), chaos (4: powers, a cape career, half of them
+    // vampires), sports (3), fame (5), the
     // underworld (7), romance (8: a partner at 24, then hookups, affairs and open
     // relationships), and the courts (9: a judge or a lawyer at 36, sometimes already high
     // on the ladder).
@@ -201,6 +204,24 @@ for (let i = 0; i < N; i++) {
           for (const a of ctx.actionList(s, 'home')) if (a.id.startsWith('ll_')) acts.push([a.id, undefined], [a.id, undefined]);
           if (acts.length) { const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'cities:' + id); }
         }
+        // Chaos (4): powers at 14, a hero or a villain at 18, Chaos actions most years, and every
+        // other one turned into a vampire at 45 who walks into the sunrise at 130.
+        if (i % 10 === 4 && age === 14) { ctx.grantPower(s); ctx.grantPower(s); }
+        if (i % 10 === 4 && age === 18) {
+          ctx.doAction(s, 'cape_start');
+          const side = i % 20 === 4 ? 'hero' : 'villain';
+          if (s.pending[0] && s.pending[0].handler === 'capeSide') ctx.resolvePopup(s, s.pending[0].id, s.pending[0].choices.findIndex((c) => c.value === side));
+          resolveAll(s, 'persona');
+        }
+        if (i % 10 === 4 && age === 45 && i % 20 === 14) { ctx.makeVampire(s, s.people[s.playerId]); }
+        if (i % 10 === 4 && age > 14) for (let k = 0; k < 2 && !s.dead; k++) {
+          const hungry = s.player.blood && s.player.blood.hunger >= 50;
+          let acts = ctx.actionList(s, 'super').map((a) => [a.id, undefined]).filter(([id]) => id !== 'vp_sunrise' && (!hungry || ['vp_feed', 'vp_bank', 'vp_animal'].includes(id)));
+          if (!hungry) for (const pid in s.player.rels) for (const a of ctx.actionList(s, 'person', pid)) if (a.id === 'vp_turn') acts.push([a.id, pid]);
+          if (!acts.length) acts = ctx.actionList(s, 'super').map((a) => [a.id, undefined]).filter(([id]) => id !== 'vp_sunrise');
+          if (acts.length) { const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'chaos:' + id); }
+        }
+        if (i % 10 === 4 && age >= 130 && s.people[s.playerId].vamp) { ctx.doAction(s, 'vp_sunrise'); if (s.pending[0] && s.pending[0].handler === 'vpSunrise') ctx.resolvePopup(s, s.pending[0].id, 0); stats.actionsRun.vp_sunrise = (stats.actionsRun.vp_sunrise || 0) + 1; resolveAll(s, 'sunrise'); }
         if (i % 10 === 5 && age === 20) { const job = ['musician', 'author', 'comedian', 'director', 'producer', 'actor', 'model'][Math.floor(i / 10) % 7]; if (s.player.career) ctx.leaveJob(s, 'switched'); Object.assign(s.player.skills, { music: 50, writing: 50, acting: 50, art: 50, charisma: 40 }); s.people[s.playerId].stats.looks = Math.max(75, s.people[s.playerId].stats.looks); ctx.hire(s, job, 0); }
       } catch (e) { fail('persona setup threw: ' + e.stack.split('\n').slice(0, 3).join(' | '), s); }
     }

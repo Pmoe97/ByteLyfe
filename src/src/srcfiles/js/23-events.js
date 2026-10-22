@@ -26,7 +26,7 @@ function EV(id, def) {
 }
 
 function eventEligible(s, ev) {
-  const a = A(s);
+  const a = bodyAge(s, P(s)); // a vampire's events follow the age they look
   if (ev.ages && (a < ev.ages[0] || a > ev.ages[1])) return false;
   if (!!ev.prison !== inPrison(s)) return false;
   if (!tagsOn(ev.tags)) return false;
