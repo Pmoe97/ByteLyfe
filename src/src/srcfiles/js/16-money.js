@@ -165,16 +165,60 @@ onChoice('loan', (s, ctx, amt) => {
   add(s, { money: amt });
   return { text: `The bank approved your ${fmtMoney(amt)} loan.`, tone: 'good' };
 });
+function payLoanCustom(s, loanId, rawAmt) {
+  const l = M(s).loans.find((x) => x.id === loanId);
+  if (!l) return;
+  const num = typeof rawAmt === 'string' ? parseFloat(rawAmt.replace(/[^0-9.]/g, '')) : Number(rawAmt);
+  if (!Number.isFinite(num) || num <= 0) return { text: 'Enter a valid payment amount.', nolog: true };
+  const amt = Math.max(1, Math.round(num));
+  if (M(s).money < 1) return cantAfford(amt);
+  const actual = Math.min(amt, l.balance, Math.max(1, M(s).money));
+  if (!pay(s, actual)) return cantAfford(actual);
+  l.balance -= actual;
+  if (l.balance <= 0) {
+    M(s).loans = M(s).loans.filter((x) => x !== l);
+    if (l.assetId) { const a = M(s).assets.find((x) => x.id === l.assetId); if (a) a.loanId = null; }
+    add(s, { happy: 5 });
+    return { text: `You paid ${fmtMoney(actual)} and paid off your ${l.name.toLowerCase()} completely!`, tone: 'good', emoji: '🎉' };
+  }
+  l.payment = Math.max(1, Math.round(amortize(l.balance, l.rate, Math.max(1, l.years))));
+  add(s, { happy: 1 });
+  return { text: `You paid ${fmtMoney(actual)} towards your ${l.name.toLowerCase()}. ${fmtMoney(l.balance)} left to pay (~${fmtMoney(l.payment)}/yr).`, tone: 'good', emoji: '🏦' };
+}
+
 function payOffLoan(s, loanId) {
   const l = M(s).loans.find((x) => x.id === loanId);
   if (!l) return;
-  if (M(s).money < l.balance) return cantAfford(l.balance);
-  M(s).money -= l.balance;
-  M(s).loans = M(s).loans.filter((x) => x !== l);
-  if (l.assetId) { const a = M(s).assets.find((x) => x.id === l.assetId); if (a) a.loanId = null; }
-  add(s, { happy: 4 });
-  return { text: `You paid off your ${l.name.toLowerCase()}.`, tone: 'good', emoji: '🎉' };
+  popup(s, {
+    emoji: '🏦', title: l.name, text: `Balance: ${fmtMoney(l.balance)} · Interest: ${Math.round(l.rate * 1000) / 10}% · Yearly payment: ${fmtMoney(l.payment)}/yr. You have ${fmtMoney(M(s).money)} cash.`,
+    handler: 'loanManage', ctx: { id: loanId },
+    choices: [
+      { label: `Pay full balance (${fmtMoney(l.balance)})`, value: 'full', disabled: M(s).money < l.balance },
+      { label: `Pay 1 year payment (${fmtMoney(Math.min(l.balance, l.payment))})`, value: 'year', disabled: M(s).money < Math.min(l.balance, l.payment) },
+      { label: 'Pay custom amount...', value: 'custom', disabled: M(s).money < 1 },
+      { label: 'Cancel', value: null },
+    ],
+  });
 }
+onChoice('loanManage', (s, ctx, v) => {
+  const l = M(s).loans.find((x) => x.id === ctx.id);
+  if (!l || !v) return;
+  if (v === 'full') return payLoanCustom(s, ctx.id, l.balance);
+  if (v === 'year') return payLoanCustom(s, ctx.id, l.payment);
+  if (v === 'custom') {
+    popup(s, {
+      emoji: '🏦', title: `Pay on ${l.name}`, text: `Balance: ${fmtMoney(l.balance)}. Enter the exact amount you wish to pay.`,
+      handler: 'loanCustomInput', ctx: { id: ctx.id },
+      input: { label: 'Amount (e.g. 250.14 or 5000)', value: String(Math.min(M(s).money, l.payment || 500)), max: 15 },
+      choices: [{ label: 'Pay Amount' }, { label: 'Cancel', value: null }],
+    });
+  }
+});
+onChoice('loanCustomInput', (s, ctx, v, input) => {
+  if (v === null || v === undefined && input === undefined) return;
+  return payLoanCustom(s, ctx.id, input);
+});
+
 function investMoney(s, k, amt) {
   amt = Math.round(amt);
   if (amt <= 0) return;

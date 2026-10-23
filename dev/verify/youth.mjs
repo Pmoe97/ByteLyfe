@@ -24,11 +24,13 @@ const ok = (cond, msg) => { if (!cond) { failures++; console.log('  ✖ ' + msg)
 const SUBJECT_IDS = g('SUBJECT_IDS');
 // A child in a city, aged up year by year with every popup answered by its first choice.
 const kid = (age, opts) => {
-  const s = ctx.createLife(Object.assign({ country: 'us', city: 'Denver' }, opts || {}));
-  s.pending = [];
-  while (ctx.A(s) < age && !s.dead) { s.pending = []; ctx.ageUp(s); }
-  s.pending = [];
-  return s;
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const s = ctx.createLife(Object.assign({ country: 'us', city: 'Denver' }, opts || {}));
+    s.pending = [];
+    while (ctx.A(s) < age && !s.dead) { s.pending = []; ctx.ageUp(s); }
+    s.pending = [];
+    if (!s.dead && ctx.A(s) >= age) return s;
+  }
 };
 const drain = (s) => { for (let k = 0; k < 50 && s.pending.length; k++) { const p = s.pending[0]; ctx.resolvePopup(s, p.id, Math.max(0, p.choices.findIndex((c) => !c.disabled)), p.input ? 'X' : undefined); } s.pending = []; };
 const answer = (s, value) => { const pp = s.pending.find((p) => p.handler); const i = pp.choices.findIndex((c) => c.value === value); return ctx.resolvePopup(s, pp.id, i); };

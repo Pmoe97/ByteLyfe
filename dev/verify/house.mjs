@@ -246,5 +246,53 @@ const felony = (s) => s.player.record.push({ crime: 'burglary', year: s.year - 3
   ok(chain > 0, `casino companies on the market own casinos (${chain})`);
 }
 
+/* 6. pet depth (exotics, training, shows, breeding) ------------------------------------- */
+{
+  const s = adult('us', 'Miami', 1e6);
+  // Adopt an exotic tiger
+  clear(s);
+  ctx.doAction(s, 'adopt_exotic');
+  answer(s, 'tiger');
+  ctx.resolvePopup(s, s.pending[0].id, 0, 'Rajah'); // name input prompt
+  const myTiger = Object.values(s.pets).find((p) => p.species === 'tiger');
+  ok(!!myTiger, 'exotic tiger adopted successfully');
+
+  // Adopt a dog to test training, grooming, pet shows and breeding
+  clear(s);
+  ctx.doAction(s, 'adopt_pet');
+  answer(s, 'dog');
+  ctx.resolvePopup(s, s.pending[0].id, 0, 'Buddy');
+  const dog = Object.values(s.pets).find((p) => p.species === 'dog');
+  ok(!!dog, 'adopted a dog');
+
+  // Grooming
+  clear(s);
+  ctx.doAction(s, 'pet_groom', dog.id);
+  ok(dog.groomed === s.year, 'dog is groomed for the year');
+
+  // Training tricks
+  for (let k = 0; k < 6; k++) {
+    clear(s);
+    ctx.doAction(s, 'pet_train', dog.id);
+  }
+  ok((dog.tricks || []).length > 0, `dog learned trick(s): ${dog.tricks.join(', ')}`);
+
+  // Pet show
+  dog.born = s.year - 2; // 2 years old
+  dog.rel = 95;
+  clear(s);
+  ctx.doAction(s, 'pet_show', dog.id);
+  answer(s, 'local');
+  ok(dog.awards && dog.awards.length > 0, 'dog entered pet show and received placement ribbon/award');
+
+  // Breeding
+  dog.born = s.year - 3; // 3 years old (fertile)
+  clear(s);
+  ctx.doAction(s, 'pet_breed', dog.id);
+  answer(s, 'stud:' + ctx.price(s, 450));
+  answer(s, 'sell_all');
+  ok(s.player.life.petsBred > 0, `breeding produced litter, petsBred: ${s.player.life.petsBred}`);
+}
+
 console.log(failures ? `✖ house: ${failures} failure(s)` : '✓ house checks passed');
 process.exit(failures ? 1 : 0);

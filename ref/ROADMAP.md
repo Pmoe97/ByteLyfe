@@ -548,29 +548,54 @@ shows everything in US dollars instead.
 - **Extras:** 4 events (a currency slide, a surge, a jar of old foreign coins, a terrible airport
   exchange booth) and 3 achievements (Citizen of the World, Perfect Timing, Forex Fanatic).
 
+**Housing renovations & custom loans.** Contractor renovations with contractor bidding tiers (budget,
+reputable, luxury), dynamic outcomes (flawless, great, budget overrun, botched, contractor skips town
+with litigation), 10 interactive additions (swimming pool, sauna, koi pond, game room, observatory,
+aquarium, chef's kitchen, home cinema, porch, solar panels), unit-scoped vs shared renovations on
+multi-unit properties, fine price controls for setting exact rent numbers (e.g. $2,250/mo), remote
+property manager vacancy leasing after foreign moves, fine-grained payoff amounts on any loan at
+any time (e.g. $250.14), and paying off mortgages and debts for parents, siblings, children, partners,
+and friends.
+
+**Pet depth.** Exotic pet species (tiger, capuchin monkey, otter, fennec fox, alpaca, falcon,
+chameleon) adoptable from wildlife brokers, a trick training ladder across 8 distinct tricks,
+pet grooming, local, national and grand championship pet shows with ribbons, trophies and cash
+prizes, and selective breeding programs for litters to keep, sell or gift.
+
+**Zoo & Wildlife Sanctuary.** A dedicated zoo business on the company engine.
+- **Habitats & Exhibits:** build specialized biome habitats (African Savanna, Primate Jungle,
+  Arctic Tundra, Predator Ridge, Reptile Biodome, Lagoon & Wetlands, Outback Bush, Grand Aviary)
+  with capacity limits, condition degradation, and security barriers.
+- **Animals & Care:** acquire animals across 20 global species (lions, tigers, pandas, elephants,
+  polar bears, gorillas, penguins, and more). Maintain zookeeper-to-animal staffing ratios,
+  fund habitat sensory enrichment, run veterinary health campaigns, and conduct CEO park walkthroughs.
+- **Operations & Science:** 4-tier admission pricing (discount, standard, premium, VIP safari passes),
+  emergency protocols for animal containment breaches, and national wildlife conservation grants
+  earned by your zoology R&D team.
+- **Breeding:** Species Survival Plan conservation breeding pairs that produce healthy offspring,
+  triggering press coverage and attendance surges.
+- **Extras:** 3 new achievements (Zookeeper, Noah's Ark, Conservation Champion).
+
 ## Next up
 
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Pet depth.** Pet shows, exotic pets, breeding (racehorses already breed; see Owning the house).
-2. **More business types.** A zoo (collect animals, build exhibits, breeding programs) on the
-    business engine.
-3. **Military depth.** Wars, desertion, veterans' benefits.
-4. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+1. **Military depth.** Wars, desertion, veterans' benefits.
+2. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
     double agents, and getting burned.
-5. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+3. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-6. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+4. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-7. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+5. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-8. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+6. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
     purges, coups and declared wars. Builds on Royalty and Military depth.
-9. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+7. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-10. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-11. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+8. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+9. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 

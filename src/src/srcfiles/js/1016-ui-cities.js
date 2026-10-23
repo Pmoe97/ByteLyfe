@@ -85,9 +85,18 @@ function tenantSection(a) {
   const facts = [kvRow('Location', `${esc(cap(hoodName(assetCC(G, a), assetCity(G, a), assetHood(G, a))))}, ${esc(assetCity(G, a))}`)];
   if (units > 1) facts.push(kvRow('Units', `${units}${livesIn(G, a) ? ' · you live in one' : ''}`));
   if (a.rentedOut || ts.length) {
-    facts.push(kvRow('Market rent', `${fmtMoney(marketRent(G, a))}/yr${units > 1 ? ' a unit' : ''}`));
-    facts.push(kvRow('Asking', RENT_LEVELS[a.rentLvl || 'market'].name));
+    facts.push(kvRow('Market rent', `${fmtMoney(marketRent(G, a))}/yr (~${fmtMoney(Math.round(marketRent(G, a) / 12))}/mo)${units > 1 ? ' a unit' : ''}`));
+    const askLabel = a.customRent ? 'Custom' : (RENT_LEVELS[a.rentLvl || 'market'] ? RENT_LEVELS[a.rentLvl || 'market'].name : 'Market');
+    facts.push(kvRow('Asking rent', `${fmtMoney(askingRent(G, a))}/yr (~${fmtMoney(Math.round(askingRent(G, a) / 12))}/mo) · ${askLabel}`));
     facts.push(kvRow('Property manager', a.mgr ? 'Yes · 8% of the rent' : 'No'));
+  }
+  if (a.renovations && a.renovations.length) {
+    const rList = a.renovations.map((r) => {
+      const p = typeof RENOVATION_PROJECTS !== 'undefined' ? RENOVATION_PROJECTS[r.id] : null;
+      const scope = r.unit === null ? 'Shared' : `Unit ${r.unit + 1}`;
+      return `${p ? p.emoji : '✨'} ${esc(p ? p.name : r.id)} (${scope})`;
+    });
+    facts.push(kvRow('Additions & Renovations', rList.join('<br>')));
   }
   let html = `<div class="section-title">The property</div><div class="card">${facts.join('')}</div>`;
   if (!ts.length) return html + (a.rentedOut ? '<div class="note">No tenants yet. Find one below.</div>' : '');

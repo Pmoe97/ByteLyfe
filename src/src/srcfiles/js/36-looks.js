@@ -17,7 +17,7 @@ const ADULT_AGE = 18;
 
 const LOOK_OPTS = {
   face: ['oval', 'round', 'square', 'heart', 'long'],
-  hair: ['crop', 'sidepart', 'buzz', 'curls', 'afro', 'pixie', 'bob', 'long', 'wavy', 'ponytail', 'bun', 'braids', 'receding', 'bald'],
+  hair: ['crop', 'sidepart', 'fade', 'curtains', 'slick', 'buzz', 'curls', 'afro', 'locs', 'pixie', 'bob', 'shoulder', 'wolf', 'long', 'wavy', 'ponytail', 'twintails', 'bun', 'spacebuns', 'braids', 'receding', 'bald'],
   hairColor: ['black', 'espresso', 'brown', 'chestnut', 'auburn', 'ginger', 'honey', 'blonde', 'platinum', 'grey', 'white', 'rose', 'teal', 'violet'],
   eyes: ['almond', 'round', 'upturned', 'downturned', 'hooded', 'monolid'],
   eyeColor: ['brown', 'dark', 'hazel', 'green', 'blue', 'grey', 'amber'],
@@ -25,18 +25,18 @@ const LOOK_OPTS = {
   nose: ['soft', 'button', 'straight', 'wide', 'pointed', 'round'],
   mouth: ['smile', 'grin', 'neutral', 'smirk', 'laugh', 'full'],
   facial: ['none', 'stubble', 'mustache', 'goatee', 'beard', 'full'],
-  glasses: ['none', 'round', 'square'],
-  headwear: ['none', 'beanie', 'hijab'],
-  earrings: ['none', 'studs', 'hoops'],
-  outfit: ['tee', 'vneck', 'hoodie', 'collar', 'sweater', 'scoop', 'tank', 'blazer', 'suit'],
-  bottom: ['jeans', 'trousers', 'skirt', 'shorts'],
+  glasses: ['none', 'round', 'square', 'aviator', 'cateye', 'sunglasses'],
+  headwear: ['none', 'beanie', 'cap', 'beret', 'headband', 'hijab'],
+  earrings: ['none', 'studs', 'hoops', 'drops', 'pearls'],
+  outfit: ['tee', 'vneck', 'hoodie', 'collar', 'polo', 'sweater', 'cardigan', 'scoop', 'tank', 'crop', 'jacket', 'blazer', 'suit', 'dress', 'track'],
+  bottom: ['jeans', 'trousers', 'cargo', 'joggers', 'skirt', 'pleated', 'shorts', 'leggings'],
   build: ['slim', 'regular', 'broad'],
 };
 const LOOK_COLORS = {
-  outfit: ['#6C8CFF', '#3F6FD8', '#2D3A5C', '#2BB3A3', '#34D399', '#E8A33D', '#FF7A59', '#F07A8C', '#C77DFF', '#556070', '#F4F1EA'],
-  bottom: ['#3F5A8A', '#2D3A5C', '#23202E', '#6B5A4A', '#8E96BC', '#C2A27A', '#2BB3A3', '#7A2E3A'],
-  shoe: ['#F4F1EA', '#23202E', '#6B4A32', '#E35D7A', '#3F6FD8'],
-  headwear: ['#2BB3A3', '#9B6BE0', '#E35D7A', '#FFB547', '#3F6FD8', '#2D3A5C'],
+  outfit: ['#6C8CFF', '#3F6FD8', '#2D3A5C', '#2BB3A3', '#34D399', '#E8A33D', '#FF7A59', '#F07A8C', '#C77DFF', '#7A2E3A', '#556070', '#23202E', '#F4F1EA'],
+  bottom: ['#3F5A8A', '#2D3A5C', '#23202E', '#6B5A4A', '#8E96BC', '#C2A27A', '#2BB3A3', '#7A2E3A', '#4A5D4E', '#D8D2C5'],
+  shoe: ['#F4F1EA', '#23202E', '#6B4A32', '#E35D7A', '#3F6FD8', '#C8924A', '#8E2A38'],
+  headwear: ['#2BB3A3', '#9B6BE0', '#E35D7A', '#FFB547', '#3F6FD8', '#2D3A5C', '#23202E', '#F4F1EA'],
   bg: ['#FFD9C2', '#CFE0FF', '#D6F2E3', '#EADCFF', '#FFE7A8', '#FFE0EC', '#DCD6F7', '#CFE6FF'],
 };
 
@@ -88,8 +88,8 @@ function randomLook(p, o) {
   const eyeColor = skin <= 3 && chance(R.light) ? pick(LIGHT_EYES) : pick(['brown', 'brown', 'dark', 'hazel', 'amber']);
   const coily = chance(skin >= 6 ? 0.7 : skin >= 5 ? 0.45 : skin >= 4 ? 0.2 : 0.06);
   const hair = fem
-    ? pick(coily ? ['afro', 'braids', 'curls', 'bun', 'ponytail', 'bob'] : ['long', 'wavy', 'bob', 'ponytail', 'bun', 'pixie', 'long', 'wavy', 'curls'])
-    : pick(coily ? ['buzz', 'curls', 'afro', 'braids', 'crop'] : ['crop', 'sidepart', 'buzz', 'curls', 'crop', 'sidepart', 'pixie']);
+    ? pick(coily ? ['afro', 'braids', 'locs', 'curls', 'bun', 'spacebuns', 'ponytail', 'bob'] : ['long', 'wavy', 'shoulder', 'wolf', 'bob', 'ponytail', 'twintails', 'bun', 'spacebuns', 'pixie', 'long', 'wavy', 'curls'])
+    : pick(coily ? ['buzz', 'fade', 'curls', 'afro', 'locs', 'braids', 'crop'] : ['crop', 'sidepart', 'fade', 'curtains', 'slick', 'buzz', 'curls', 'wolf', 'crop', 'sidepart', 'pixie']);
   const adult = (o.age ?? 30) >= ADULT_AGE;
   return {
     skin, hair, hairColor, eyeColor,
@@ -99,13 +99,13 @@ function randomLook(p, o) {
     nose: pick(LOOK_OPTS.nose),
     mouth: pick(['smile', 'smile', 'grin', 'neutral', 'smirk', 'full']),
     facial: !fem && adult && chance(0.45) ? pick(['stubble', 'stubble', 'mustache', 'goatee', 'beard', 'full']) : 'none',
-    glasses: chance(adult ? 0.2 : 0.08) ? pick(['round', 'square']) : 'none',
+    glasses: chance(adult ? 0.22 : 0.08) ? pick(fem ? ['round', 'square', 'cateye', 'aviator'] : ['round', 'square', 'aviator']) : 'none',
     headwear: fem && adult && chance(0.03) ? 'hijab' : 'none',
     headwearColor: pick(LOOK_COLORS.headwear),
-    earrings: fem ? (chance(0.6) ? pick(['studs', 'hoops']) : 'none') : chance(0.08) ? 'studs' : 'none',
-    outfit: adult ? pick(fem ? ['tee', 'vneck', 'collar', 'sweater', 'scoop', 'blazer', 'tank'] : ['tee', 'hoodie', 'collar', 'sweater', 'blazer', 'suit', 'tee']) : pick(['tee', 'tee', 'hoodie', 'vneck']),
+    earrings: fem ? (chance(0.6) ? pick(['studs', 'hoops', 'drops', 'pearls']) : 'none') : chance(0.08) ? 'studs' : 'none',
+    outfit: adult ? pick(fem ? ['tee', 'vneck', 'collar', 'sweater', 'cardigan', 'scoop', 'crop', 'blazer', 'tank', 'dress', 'jacket'] : ['tee', 'hoodie', 'collar', 'polo', 'sweater', 'jacket', 'blazer', 'suit', 'track', 'tee']) : pick(['tee', 'tee', 'hoodie', 'vneck', 'track']),
     outfitColor: pick(LOOK_COLORS.outfit),
-    bottom: fem && chance(0.3) ? 'skirt' : pick(['jeans', 'jeans', 'trousers']),
+    bottom: fem && chance(0.32) ? pick(['skirt', 'pleated', 'leggings']) : pick(['jeans', 'jeans', 'trousers', 'cargo', 'joggers']),
     bottomColor: pick(LOOK_COLORS.bottom),
     shoeColor: pick(LOOK_COLORS.shoe),
     build: fem ? (chance(0.6) ? 'slim' : 'regular') : pick(['regular', 'regular', 'broad', 'slim']),

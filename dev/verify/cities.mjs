@@ -171,6 +171,90 @@ for (const cc in COUNTRIES) {
   ok(!!ctx.landlordOf(s) && s.player.housing.deposit === 2000, 'an old lease gets a landlord and a deposit');
 }
 
+/* 8. custom rent & manager fill on foreign moves ------------------------------- */
+{
+  const s = adultLife('mx', 'Guadalajara');
+  const a = ctx.makeHouse(s, 'duplex');
+  s.player.assets.push(a);
+  act(s, 'asset_movein', a.id);
+  act(s, 'asset_rentout', a.id);
+  answer(s, 0); // lease unit 2 to first applicant
+  ok(a.tenants.length === 1 && ctx.freeUnits(s, a) === 0, 'duplex has tenant in unit 2 and player in unit 1');
+  
+  // Hire property manager
+  act(s, 'll_mgr', a.id);
+  ok(a.mgr === true, 'property manager hired');
+
+  // Test custom rent controls
+  act(s, 'll_rentlvl', a.id);
+  answer(s, 'custom');
+  ok(s.pending[0] && s.pending[0].handler === 'llCustomRentInput', 'custom rent input prompt opened');
+  ctx.resolvePopup(s, s.pending[0].id, 0, '2250/mo');
+  ok(a.customRent === 2250 * 12, `custom monthly rent parsed to yearly (${a.customRent})`);
+  ok(ctx.askingRent(s, a) === 27000, 'askingRent reflects custom rent');
+
+  // Emigrate from Guadalajara, MX to Los Angeles, US
+  const me = s.people[s.playerId];
+  me.country = 'us'; me.city = 'Los Angeles';
+  s.player.housing = { type: 'homeless', assetId: null, rent: 0, name: '' };
+  ctx.cityArrive(s);
+  ok(ctx.freeUnits(s, a) === 1, 'unit previously occupied by player in Guadalajara is now free');
+  ok(a.rentedOut === true, 'property remains marked for rentals');
+
+  // Property manager can immediately fill the newly vacated unit remotely!
+  act(s, 'll_mgr_fill', a.id);
+  ok(a.tenants.length === 2 && ctx.freeUnits(s, a) === 0, 'property manager filled both units of the duplex');
+}
+
+/* 9. contractor renovations & interactive features ----------------------------- */
+{
+  const s = adultLife('us', 'Seattle');
+  const a = ctx.makeHouse(s, 'house');
+  s.player.assets.push(a);
+  act(s, 'asset_movein', a.id);
+  
+  const v0 = a.value;
+  // Build a pool with reputable contractor
+  ctx.completeRenovation(s, a, g('RENOVATION_PROJECTS').pool, null, 'flawless', 45000);
+  ok(ctx.hasRenovation(a, 'pool'), 'pool renovation is recorded on the house');
+  ok(a.value > v0, `flawless pool increased property value from ${v0} to ${a.value}`);
+
+  // Test interactive pool action
+  const res = act(s, 'renov_pool', a.id);
+  ok(!!res, 'renov_pool action executed successfully');
+
+  // Build solar array and verify upkeep reduction
+  const up0 = ctx.assetUpkeep(s, a);
+  ctx.completeRenovation(s, a, g('RENOVATION_PROJECTS').solar, null, 'great', 18000);
+  ok(ctx.hasRenovation(a, 'solar'), 'solar renovation recorded');
+  const up1 = ctx.assetUpkeep(s, a);
+  ok(up1 < up0, `solar cut upkeep from ${up0} to ${up1}`);
+}
+
+/* 10. custom fine loan payment & family debt payoff ---------------------------- */
+{
+  const s = adultLife('us', 'Boston');
+  const loan = ctx.addLoan(s, { kind: 'car', name: 'Car loan', amount: 15000, rate: 0.07, years: 5 });
+  const b0 = loan.balance;
+  s.player.money = 20000;
+
+  // Pay exact amount with cents: $250.14
+  ctx.payLoanCustom(s, loan.id, '250.14');
+  ok(loan.balance === b0 - 250, `loan balance reduced from ${b0} to ${loan.balance} after paying 250.14`);
+
+  // Create a parent with a mortgage and pay it off
+  const mom = ctx.makeAdultNear(s, { gender: 'f' });
+  ctx.setRel(s, mom.id, 'parent', 60);
+  const d = ctx.npcDebt(s, mom);
+  ok(d && d.balance > 0, `parent has debt: ${d.name} of ${d.balance}`);
+  
+  s.player.money = d.balance + 10000;
+  act(s, 'p_pay_debt', mom.id);
+  answer(s, 'full');
+  ok(d.balance === 0, 'parent mortgage is fully paid off');
+  ok(ctx.relOf(s, mom.id).rel === 100, 'parent relationship maxed out after paying off mortgage');
+}
+
 if (failures) { console.log(`\n❌ ${failures} cities check failures.`); process.exit(1); }
 console.log(`Cities checks: pass (${Object.values(CITY_INFO).reduce((n, c) => n + Object.keys(c).length, 0)} cities)`);
 console.log('✅ Cities checks passed.');

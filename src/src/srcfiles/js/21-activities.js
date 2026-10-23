@@ -471,6 +471,7 @@ onChoice('emigrate', (s, ctx, c) => {
   if (!chance(clamp(odds, 0.05, 0.95))) return { text: `Your visa to ${COUNTRIES[c].name} was denied.`, tone: 'bad', emoji: '🛂' };
   const me = P(s), from = me.country;
   const dep = leaveRental(s, 'moved');
+  const oldHomeId = M(s).housing.type === 'own' ? M(s).housing.assetId : null;
   me.country = c;
   me.city = pick(COUNTRIES[c].cities);
   cityArrive(s);
@@ -480,11 +481,24 @@ onChoice('emigrate', (s, ctx, c) => {
   M(s).ptJob = null;
   if (M(s).edu.current) { M(s).edu.current = null; }
   if (M(s).housing.type !== 'homeless') M(s).housing = { type: 'homeless', assetId: null, rent: 0, name: '' };
+  let vacateNote = '';
+  if (oldHomeId) {
+    const oldH = myAsset(s, oldHomeId);
+    if (oldH) {
+      oldH.rentedOut = true;
+      if (oldH.mgr && freeUnits(s, oldH) > 0) {
+        const mgrPlaced = managerFill(s, oldH);
+        vacateNote = mgrPlaced.length ? ` Your property manager in ${oldH.city} placed a new tenant in your vacated unit: ${listJoin(mgrPlaced)}.` : ` Your property manager in ${oldH.city} is listing your vacated unit.`;
+      } else {
+        vacateNote = ` Your unit at ${oldH.name} in ${oldH.city} is now vacant and ready to rent out.`;
+      }
+    }
+  }
   for (const pid in M(s).rels) if (['friend', 'classmate', 'coworker', 'boss'].includes(M(s).rels[pid].kind)) M(s).rels[pid].rel = clamp100(M(s).rels[pid].rel - 20);
   s.listings = {};
   tally(s, 'countries');
   add(s, { happy: 6 });
-  return { text: `You moved to ${me.city}, ${COUNTRIES[c].name}! ${COUNTRIES[c].flag} Find a place to live and a new job.${dep ? ' ' + dep : ''}${fx ? ' ' + fx : ''}`, tone: 'good', emoji: '🛂' };
+  return { text: `You moved to ${me.city}, ${COUNTRIES[c].name}! ${COUNTRIES[c].flag} Find a place to live and a new job.${dep ? ' ' + dep : ''}${fx ? ' ' + fx : ''}${vacateNote}`, tone: 'good', emoji: '🛂' };
 });
 
 /* ---- crime menu ---------------------------------------------------- */

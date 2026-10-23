@@ -576,11 +576,24 @@ onChoice('cityGo', (s, ctx, yes) => {
   const h = M(s).housing;
   const dep = h.type === 'rent' ? leaveRental(s, 'moved') : '';
   if (dep) lines.push(dep);
+  const oldHomeId = h.type === 'own' ? h.assetId : null;
   M(s).housing = { type: 'homeless', assetId: null, rent: 0, name: '' };
   const comes = relocate(s, ctx.cc, ctx.city);
   if (comes) lines.push(comes);
   if (fromSize === 'small' && citySize(s) === 'metro') tally(s, 'smallToMetro');
   add(s, { happy: 3 });
+  if (oldHomeId) {
+    const oldH = myAsset(s, oldHomeId);
+    if (oldH) {
+      oldH.rentedOut = true;
+      if (oldH.mgr && freeUnits(s, oldH) > 0) {
+        const mgrPlaced = managerFill(s, oldH);
+        if (mgrPlaced.length) lines.push(`Your property manager in ${from} leased your vacated unit: ${listJoin(mgrPlaced)}.`);
+      } else {
+        lines.push(`Your vacated unit at ${oldH.name} in ${from} is now available to rent out.`);
+      }
+    }
+  }
   // A place to live in the new city.
   if (ctx.home && myAsset(s, ctx.home)) { const r = moveInto(s, ctx.home); lines.push(r ? r.text : ''); }
   else {
@@ -684,14 +697,22 @@ function isRemote(s, a) { return assetCity(s, a) !== P(s).city || assetCC(s, a) 
 // Fair yearly rent for one unit: a share of the home's value, more in small cities.
 function marketRent(s, a) {
   const info = cityInfo(assetCC(s, a), assetCity(s, a));
-  return nicePrice(a.value * CITY_SIZES[info.size].yield * (0.7 + a.cond / 333) / unitsOf(a) * (unitsOf(a) > 1 ? 1.1 : 1));
+  const rBoost = sum(a.renovations || [], (r) => (typeof RENOVATION_PROJECTS !== 'undefined' && RENOVATION_PROJECTS[r.id] ? RENOVATION_PROJECTS[r.id].rentBoost : 0));
+  return nicePrice(a.value * CITY_SIZES[info.size].yield * (0.7 + a.cond / 333) / unitsOf(a) * (unitsOf(a) > 1 ? 1.1 : 1) * (1 + rBoost));
 }
-function askingRent(s, a) { return nicePrice(marketRent(s, a) * RENT_LEVELS[a.rentLvl || 'market'].mult); }
+function askingRent(s, a) {
+  if (a.customRent && a.customRent > 0) return a.customRent;
+  return nicePrice(marketRent(s, a) * (RENT_LEVELS[a.rentLvl || 'market'] ? RENT_LEVELS[a.rentLvl || 'market'].mult : 1));
+}
 function makeTenant(s, a, managed) {
-  const w = (k) => TENANT_KINDS[k].w * (managed && ['late', 'pro', 'party'].includes(k) ? 0.45 : 1);
+  const rBoost = (a.renovations || []).length * 0.15;
+  const w = (k) => TENANT_KINDS[k].w * ((managed || rBoost > 0) && ['late', 'pro', 'party'].includes(k) ? 0.45 : 1) * (rBoost > 0 && ['model', 'family'].includes(k) ? 1.4 : 1);
   const kind = weighted(Object.keys(TENANT_KINDS), w);
   const g = chance(0.5) ? 'm' : 'f', cc = assetCC(s, a);
-  return { id: uid(s, 't'), first: randomFirst(cc, g), last: randomLast(cc), g, born: s.year - (kind === 'family' ? randInt(28, 45) : randInt(21, 62)), kind, job: pick(TENANT_JOBS[kind]), rent: askingRent(s, a), since: s.year, mood: 60 + RENT_LEVELS[a.rentLvl || 'market'].mood, owed: 0 };
+  const mRent = marketRent(s, a), ask = askingRent(s, a);
+  const ratio = ask / Math.max(1, mRent);
+  const moodDelta = Math.round(clamp((1 - ratio) * 50, -30, 20));
+  return { id: uid(s, 't'), first: randomFirst(cc, g), last: randomLast(cc), g, born: s.year - (kind === 'family' ? randInt(28, 45) : randInt(21, 62)), kind, job: pick(TENANT_JOBS[kind]), rent: askingRent(s, a), since: s.year, mood: clamp100(60 + moodDelta), owed: 0 };
 }
 function tenantHint(t, honest) { return pick(TENANT_HINTS[honest ? t.kind : pick(['model', 'family'])]); }
 function tenantAge(s, t) { return s.year - t.born; }
@@ -871,23 +892,73 @@ function startEviction(s, a, t) {
 const ownedHouse = (s, id) => free(s) && !!myAsset(s, id) && myAsset(s, id).kind === 'house';
 defAction({
   id: 'll_find', cat: 'asset', target: 'asset', label: 'Find a tenant', emoji: '🗝️',
-  when: (s, id) => ownedHouse(s, id) && myAsset(s, id).rentedOut && !myAsset(s, id).mgr && freeUnits(s, myAsset(s, id)) > 0 && count(s, 'llFind_' + id) < 3,
+  when: (s, id) => ownedHouse(s, id) && myAsset(s, id).rentedOut && freeUnits(s, myAsset(s, id)) > 0 && count(s, 'llFind_' + id) < 3,
   sub: (s, id) => `${nOf(freeUnits(s, myAsset(s, id)), 'empty unit')} · asking ${fmtMoney(askingRent(s, myAsset(s, id)))}/yr`,
   run: (s, id) => { bump(s, 'llFind_' + id); screenTenants(s, myAsset(s, id), false); },
 });
 defAction({
+  id: 'll_mgr_fill', cat: 'asset', target: 'asset', label: 'Have manager fill vacancies', emoji: '📋',
+  when: (s, id) => ownedHouse(s, id) && myAsset(s, id).rentedOut && myAsset(s, id).mgr && freeUnits(s, myAsset(s, id)) > 0,
+  sub: (s, id) => `${nOf(freeUnits(s, myAsset(s, id)), 'empty unit')} available`,
+  run: (s, id) => {
+    const a = myAsset(s, id);
+    const names = managerFill(s, a);
+    return { text: names.length ? `Your property manager leased ${nOf(names.length, 'vacant unit')} in your ${a.name}: ${listJoin(names)}.` : 'Your manager is screening applicants; check back soon.', emoji: '🗝️', tone: 'good' };
+  },
+});
+defAction({
   id: 'll_rentlvl', cat: 'asset', target: 'asset', label: 'Set the rent', emoji: '🏷️',
   when: (s, id) => ownedHouse(s, id) && myAsset(s, id).rentedOut,
-  sub: (s, id) => `${RENT_LEVELS[myAsset(s, id).rentLvl || 'market'].name} · ${fmtMoney(askingRent(s, myAsset(s, id)))}/yr${unitsOf(myAsset(s, id)) > 1 ? ' a unit' : ''}`,
+  sub: (s, id) => {
+    const a = myAsset(s, id);
+    const label = a.customRent ? 'Custom' : (RENT_LEVELS[a.rentLvl || 'market'] ? RENT_LEVELS[a.rentLvl || 'market'].name : 'Market');
+    return `${label} · ${fmtMoney(askingRent(s, a))}/yr (~${fmtMoney(Math.round(askingRent(s, a) / 12))}/mo)${unitsOf(a) > 1 ? ' a unit' : ''}`;
+  },
   run: (s, id) => {
     const a = myAsset(s, id), m = marketRent(s, a);
+    const choices = [
+      { label: 'Enter custom rent amount...', value: 'custom', sub: 'Specify any exact yearly or monthly dollar amount' },
+      { label: `Market rate (${fmtMoney(m)}/yr ~${fmtMoney(Math.round(m / 12))}/mo)`, value: 'market', sub: 'The standard going rate in this neighborhood' },
+      { label: `Below market (${fmtMoney(nicePrice(m * 0.85))}/yr ~${fmtMoney(Math.round(m * 0.85 / 12))}/mo)`, value: 'low', sub: 'Happy, loyal tenants who stay long-term' },
+      { label: `Above market (${fmtMoney(nicePrice(m * 1.2))}/yr ~${fmtMoney(Math.round(m * 1.2 / 12))}/mo)`, value: 'high', sub: 'Higher profit; more vacancies and tenant complaints' },
+      { label: `Luxury premium (${fmtMoney(nicePrice(m * 1.35))}/yr ~${fmtMoney(Math.round(m * 1.35 / 12))}/mo)`, value: 'luxury', sub: 'Best for renovated homes with high-end amenities' },
+    ];
     popup(s, {
-      emoji: '🏷️', title: 'Set the rent', handler: 'llRentLvl', ctx: { id }, text: 'New tenants sign at this rent. Current tenants move toward it when their lease renews.',
-      choices: Object.keys(RENT_LEVELS).map((k) => ({ label: RENT_LEVELS[k].name, value: k, sub: `${fmtMoney(nicePrice(m * RENT_LEVELS[k].mult))}/yr · ${{ low: 'happy tenants who stay', market: 'the going rate', high: 'more money, more turnover' }[k]}` })),
+      emoji: '🏷️', title: 'Set the rent', handler: 'llRentLvl', ctx: { id },
+      text: `Current rent: ${fmtMoney(askingRent(s, a))}/yr (~${fmtMoney(Math.round(askingRent(s, a) / 12))}/mo). Neighborhood market rate: ~${fmtMoney(m)}/yr.`,
+      choices,
     });
   },
 });
-onChoice('llRentLvl', (s, ctx, k) => { const a = myAsset(s, ctx.id); if (!a || !RENT_LEVELS[k]) return; a.rentLvl = k; return { text: `The asking rent for your ${a.name} is ${fmtMoney(askingRent(s, a))} a year.`, quiet: true }; });
+onChoice('llRentLvl', (s, ctx, k) => {
+  const a = myAsset(s, ctx.id), m = marketRent(s, a);
+  if (!a || !k) return;
+  if (k === 'custom') {
+    popup(s, {
+      emoji: '🏷️', title: `Rent for ${a.name}`,
+      text: `Market rate is ${fmtMoney(m)}/yr (~${fmtMoney(Math.round(m / 12))}/month). Enter the exact rent you wish to charge (yearly or monthly):`,
+      handler: 'llCustomRentInput', ctx: { id: ctx.id },
+      input: { label: 'e.g. 1500/mo or 18000', value: String(askingRent(s, a)), max: 20 },
+      choices: [{ label: 'Set Rent' }, { label: 'Cancel', value: null }],
+    });
+    return;
+  }
+  a.customRent = null;
+  if (k === 'luxury') { a.customRent = nicePrice(m * 1.35); a.rentLvl = 'high'; }
+  else if (RENT_LEVELS[k]) a.rentLvl = k;
+  return { text: `The asking rent for your ${a.name} is now ${fmtMoney(askingRent(s, a))} a year (~${fmtMoney(Math.round(askingRent(s, a) / 12))}/mo).`, quiet: true };
+});
+onChoice('llCustomRentInput', (s, ctx, v, input) => {
+  const a = myAsset(s, ctx.id);
+  if (!a || !input) return;
+  const isMonthly = /mo|month/i.test(input);
+  const num = parseFloat(input.replace(/[^0-9.]/g, ''));
+  if (!Number.isFinite(num) || num <= 0) return { text: 'Enter a valid rent amount.', nolog: true };
+  const yearly = isMonthly || num < 7000 ? Math.round(num * 12) : Math.round(num);
+  a.customRent = Math.max(100, yearly);
+  a.rentLvl = 'market';
+  return { text: `The asking rent for your ${a.name} is set to ${fmtMoney(a.customRent)} a year (~${fmtMoney(Math.round(a.customRent / 12))}/month).`, quiet: true };
+});
 defAction({
   id: 'll_mgr', cat: 'asset', target: 'asset', emoji: '📋',
   label: (s, id) => (myAsset(s, id).mgr ? 'Fire your property manager' : 'Hire a property manager'),

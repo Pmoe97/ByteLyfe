@@ -66,8 +66,21 @@ function genListing(s, key) {
   return out.sort((a, b) => (a.value || a.rent) - (b.value || b.rent));
 }
 
+function hasRenovation(a, pId, unit = null) {
+  if (!a || !a.renovations) return false;
+  return a.renovations.some((r) => r.id === pId && (r.unit === null || unit === null || r.unit === unit));
+}
+function renovationsOn(a, unit = null) {
+  if (!a || !a.renovations) return [];
+  return a.renovations.filter((r) => r.unit === null || unit === null || r.unit === unit);
+}
+
 function assetUpkeep(s, a) {
-  if (a.kind === 'house') return Math.round(a.value * 0.012);
+  if (a.kind === 'house') {
+    const base = Math.round(a.value * 0.012);
+    if (hasRenovation(a, 'solar')) return Math.round(base * 0.52);
+    return base;
+  }
   if (a.kind === 'car') return price(s, 900) + Math.round(a.value * 0.02);
   if (a.kind === 'boat') return Math.round(a.value * 0.07);
   if (a.kind === 'aircraft') return Math.round(a.value * 0.09);
@@ -207,16 +220,334 @@ defAction({
   },
 });
 defAction({
-  id: 'asset_renovate', cat: 'asset', target: 'asset', label: 'Renovate', emoji: '🛠️',
-  sub: (s, id) => fmtMoney(Math.round(myAsset(s, id).value * 0.1)),
+  id: 'asset_renovate', cat: 'asset', target: 'asset', label: 'Repairs & maintenance', emoji: '🛠️',
+  sub: (s, id) => `Fix wear & tear · ${fmtMoney(Math.round(myAsset(s, id).value * 0.08))}`,
   when: (s, id) => ownedOf(['house'])(s, id) && myAsset(s, id).cond < 98,
   run: (s, id) => {
     const a = myAsset(s, id);
-    const cost = Math.round(a.value * 0.1);
+    const cost = Math.round(a.value * 0.08);
     if (!pay(s, cost)) return cantAfford(cost);
     a.cond = clamp(a.cond + randInt(25, 45), 0, 100);
-    a.value = Math.round(a.value * randFloat(1.04, 1.16));
-    return `You renovated the ${a.name}. It's worth about ${fmtMoney(a.value)} now.`;
+    a.value = Math.round(a.value * randFloat(1.03, 1.10));
+    return `You repaired and repainted the ${a.name}. Condition is up to ${a.cond}%. It's worth about ${fmtMoney(a.value)} now.`;
+  },
+});
+
+function renovProjectCost(s, a, pId, tier) {
+  const p = RENOVATION_PROJECTS[pId];
+  if (!p) return price(s, 20000);
+  const scale = Math.max(0.65, Math.min(2.8, Math.pow(a.value / 400000, 0.45)));
+  return nicePrice(price(s, p.base) * scale * (tier ? tier.mult : 1));
+}
+
+defAction({
+  id: 'asset_project', cat: 'asset', target: 'asset', label: 'Hire a contractor for a project', emoji: '🏗️',
+  sub: (s, id) => 'Build a pool, solar, sauna, game room, koi pond, observatory...',
+  when: (s, id) => ownedOf(['house'])(s, id) && A(s) >= 18,
+  run: (s, id) => {
+    const a = myAsset(s, id);
+    if (!a.renovations) a.renovations = [];
+    const units = unitsOf(a);
+    if (units > 1) {
+      const choices = [{ label: '🏢 Whole property / Shared addition', value: 'scope:null', sub: 'Pool, solar array, porch, koi pond, sauna...' }];
+      for (let i = 0; i < units; i++) {
+        const isMine = livesIn(s, a) && i === 0;
+        choices.push({
+          label: `🚪 Unit ${i + 1}${isMine ? ' (Your home unit)' : ' (Rental unit)'}`,
+          value: 'scope:' + i,
+          sub: isMine ? 'Personal luxury: game room, theater, observatory, chef’s kitchen...' : 'Upgrade unit to attract premium tenants and raise rent',
+        });
+      }
+      choices.push({ label: 'Never mind', value: null });
+      popup(s, {
+        emoji: '🏗️', title: `Renovate ${a.name}`,
+        text: `Your ${a.name} has ${units} units. Shared amenities enhance the entire property, while interior additions are built per unit.`,
+        handler: 'renovPickScope', ctx: { aid: id }, choices,
+      });
+      return;
+    }
+    openProjectCatalog(s, a, null);
+  },
+});
+
+onChoice('renovPickScope', (s, ctx, v) => {
+  if (!v || !v.startsWith('scope:')) return;
+  const a = myAsset(s, ctx.aid);
+  if (!a) return;
+  const raw = v.slice(6);
+  const scope = raw === 'null' ? null : Number(raw);
+  openProjectCatalog(s, a, scope);
+});
+
+function openProjectCatalog(s, a, scope) {
+  const isSharedScope = scope === null;
+  const avail = RENOVATION_IDS.filter((id) => {
+    const p = RENOVATION_PROJECTS[id];
+    if (isSharedScope && !p.shared) return false;
+    if (!isSharedScope && p.shared) return false;
+    return !hasRenovation(a, id, scope);
+  });
+  if (!avail.length) {
+    return popup(s, {
+      emoji: '✨', title: 'Fully upgraded!',
+      text: `Every available project for this ${isSharedScope ? 'property' : `Unit ${scope + 1}`} is already complete!`,
+      choices: [{ label: 'Great!' }],
+    });
+  }
+  popup(s, {
+    emoji: '🏗️', title: isSharedScope ? `Projects for ${a.name}` : `Projects for Unit ${scope + 1}`,
+    text: 'Choose an addition to construct. Each project adds real value, unlocks activities, or boosts rental income.',
+    handler: 'renovPickProject', ctx: { aid: a.id, scope },
+    choices: avail.map((id) => {
+      const p = RENOVATION_PROJECTS[id];
+      const est = renovProjectCost(s, a, id, CONTRACTOR_TIERS[1]);
+      return {
+        label: `${p.emoji} ${p.name}`, value: id,
+        sub: `Est. ${fmtMoney(est)} · ${p.desc}`,
+      };
+    }).concat([{ label: 'Never mind', value: null }]),
+  });
+}
+
+onChoice('renovPickProject', (s, ctx, pid) => {
+  if (!pid) return;
+  const a = myAsset(s, ctx.aid), p = RENOVATION_PROJECTS[pid];
+  if (!a || !p) return;
+  popup(s, {
+    emoji: p.emoji, title: `Hire a contractor for ${p.name}`,
+    text: `Three contractors submitted bids for your ${p.name.toLowerCase()} at ${a.name}. Who will you hire?`,
+    handler: 'renovHireContractor', ctx: { aid: a.id, scope: ctx.scope, pid },
+    choices: CONTRACTOR_TIERS.map((tier) => {
+      const cost = renovProjectCost(s, a, pid, tier);
+      return {
+        label: `${tier.emoji} ${tier.name}`, value: tier.id,
+        sub: `${fmtMoney(cost)} · ${tier.desc}`,
+        disabled: M(s).money < cost,
+      };
+    }).concat([{ label: 'Never mind', value: null }]),
+  });
+});
+
+onChoice('renovHireContractor', (s, ctx, tid) => {
+  if (!tid) return;
+  const a = myAsset(s, ctx.aid), p = RENOVATION_PROJECTS[ctx.pid];
+  const tier = CONTRACTOR_TIERS.find((t) => t.id === tid);
+  if (!a || !p || !tier) return;
+  const cost = renovProjectCost(s, a, ctx.pid, tier);
+  if (!pay(s, cost)) return cantAfford(cost);
+
+  const roll = rand();
+  // Possibility 1: Contractor skips town / abandons (mostly budget tier)
+  if (tier.id === 'budget' && roll < 0.16) {
+    a.cond = clamp(a.cond - 8, 10, 100);
+    return popup(s, {
+      emoji: '🚪', tone: 'bad', title: 'Contractor skipped town!',
+      text: `The budget crew tore up the space, took your ${fmtMoney(cost)}, and vanished into thin air. Their phone number is disconnected.`,
+      handler: 'renovSueContractor', ctx: { aid: a.id, cost, name: p.name },
+      choices: [
+        { label: 'File a lawsuit to recover the money', value: 'sue' },
+        { label: 'Cut your losses and clean up', value: 'ignore' },
+      ],
+    });
+  }
+
+  // Possibility 2: Over budget (discovers "surprise structural issues")
+  if ((tier.id === 'budget' && roll < 0.45) || (tier.id === 'reputable' && roll < 0.22)) {
+    const overrun = Math.round(cost * randFloat(0.20, 0.35));
+    return popup(s, {
+      emoji: '⚠️', tone: 'bad', title: 'Budget overrun!',
+      text: `Halfway through building the ${p.name.toLowerCase()}, the contractor called: "We found rotten subfloors and unpermitted wiring." They need another ${fmtMoney(overrun)} to finish the job.`,
+      handler: 'renovOverrunDecision', ctx: { aid: a.id, scope: ctx.scope, pid: ctx.pid, tid, overrun, baseCost: cost },
+      choices: [
+        { label: `Pay the extra ${fmtMoney(overrun)} to finish it`, value: 'pay', disabled: M(s).money < overrun },
+        { label: 'Refuse to pay and fire them', value: 'fire' },
+      ],
+    });
+  }
+
+  // Possibility 3: Botched job
+  if (tier.id === 'budget' && roll < 0.72) {
+    return completeRenovation(s, a, p, ctx.scope, 'botched', cost);
+  }
+
+  // Possibility 4: Flawless / Masterpiece
+  if (roll < (tier.id === 'luxury' ? 0.70 : tier.id === 'reputable' ? 0.30 : 0.08)) {
+    return completeRenovation(s, a, p, ctx.scope, 'flawless', cost);
+  }
+
+  // Possibility 5: Solid / Great on-time finish
+  return completeRenovation(s, a, p, ctx.scope, 'great', cost);
+});
+
+onChoice('renovOverrunDecision', (s, ctx, v) => {
+  const a = myAsset(s, ctx.aid), p = RENOVATION_PROJECTS[ctx.pid];
+  if (!a || !p) return;
+  if (v === 'pay') {
+    if (!pay(s, ctx.overrun)) return cantAfford(ctx.overrun);
+    return completeRenovation(s, a, p, ctx.scope, 'great', ctx.baseCost + ctx.overrun);
+  }
+  a.cond = clamp(a.cond - 5, 10, 100);
+  return { text: `You fired the contractor. The ${p.name.toLowerCase()} was left half-built and boarded up.`, tone: 'bad', emoji: '🚪' };
+});
+
+onChoice('renovSueContractor', (s, ctx, v) => {
+  if (v === 'sue') {
+    chooseCounsel(s, draftCase(s, 'plaintiff', 'tenancy', {
+      vs: 'Apex Handyman Services', cap: 'Apex', claim: ctx.cost,
+      merit: randInt(65, 88), their: randInt(2, 6),
+      why: `for abandoning the ${ctx.name.toLowerCase()} project and stealing your deposit`,
+    }));
+  }
+});
+
+function completeRenovation(s, a, p, scope, quality, totalCost) {
+  if (!a.renovations) a.renovations = [];
+  a.renovations.push({ id: p.id, unit: scope, quality, year: s.year });
+
+  const scopeLabel = scope === null ? 'your entire property' : `Unit ${scope + 1}`;
+  let text = '', tone = 'good';
+
+  if (quality === 'flawless') {
+    const valAdd = Math.round(a.value * p.valBoost * 1.35);
+    a.value += valAdd;
+    a.cond = 100;
+    add(s, { happy: 10 });
+    text = `✨ Masterpiece! The builders finished your ${p.name} for ${scopeLabel} with breathtaking craftsmanship! Ahead of schedule, premium materials, and flawless execution. It added ${fmtMoney(valAdd)} to your property's value!`;
+  } else if (quality === 'great') {
+    const valAdd = Math.round(a.value * p.valBoost);
+    a.value += valAdd;
+    a.cond = clamp(a.cond + 25, 0, 100);
+    add(s, { happy: 6 });
+    text = `🎉 Finished! Your new ${p.name} for ${scopeLabel} is complete, on schedule and looking gorgeous. It increased your property value by ${fmtMoney(valAdd)}.`;
+  } else if (quality === 'botched') {
+    tone = 'bad';
+    const valAdd = Math.round(a.value * p.valBoost * 0.45);
+    a.value += valAdd;
+    a.cond = clamp(a.cond - 8, 20, 100);
+    add(s, { happy: -2 });
+    text = `😬 Botched job! The crew finished your ${p.name} for ${scopeLabel}, but cut corners everywhere: crooked trim, cheap materials, and sloppy finishes. It only added ${fmtMoney(valAdd)} in value.`;
+  }
+
+  // Multi-unit rental boost:
+  if (scope !== null && a.tenants && a.tenants[scope]) {
+    const t = a.tenants[scope];
+    t.mood = clamp100(t.mood + (quality === 'flawless' ? 25 : quality === 'great' ? 15 : -5));
+    text += ` ${tenantName(t)} in Unit ${scope + 1} was thrilled with the upgrade!`;
+  }
+
+  return { text, emoji: p.emoji, tone, title: `${p.name} Complete!` };
+}
+
+/* ---- interactive renovation actions -------------------------------- */
+const hasFeature = (feat) => (s, id) => ownedOf(['house'])(s, id) && hasRenovation(myAsset(s, id), feat);
+
+defAction({
+  id: 'renov_pool', cat: 'asset', target: 'asset', label: 'Use swimming pool', emoji: '🏊',
+  when: hasFeature('pool'),
+  run: (s, id) => {
+    if (bump(s, 'act_pool_' + id) > 3) return { text: 'You’ve spent enough time by the pool for one year!', nolog: true };
+    const r = rand();
+    if (r < 0.5) {
+      add(s, { health: 3, happy: 4 });
+      addSkill(s, 'fitness', randFloat(1.5, 3.5));
+      return 'You swam 30 continuous laps under the warm sunshine. You feel energized, lean and refreshed!';
+    }
+    for (const p of relPeople(s, ['friend', 'bestie', 'partner', 'spouse'])) addRel(s, p.id, randInt(3, 8));
+    add(s, { happy: 7 });
+    return 'You threw an afternoon pool party with cocktails, music, and floating loungers. Everyone had a blast!';
+  },
+});
+
+defAction({
+  id: 'renov_sauna', cat: 'asset', target: 'asset', label: 'Take a cedar sauna session', emoji: '🧖',
+  when: hasFeature('sauna'),
+  run: (s, id) => {
+    if (bump(s, 'act_sauna_' + id) > 3) return { text: 'You’ve already had plenty of steam sessions this year.', nolog: true };
+    add(s, { health: 3, happy: 5 });
+    return 'You ladled eucalyptus water over the glowing volcanic stones. The soothing dry heat relaxed every muscle in your body.';
+  },
+});
+
+defAction({
+  id: 'renov_koi', cat: 'asset', target: 'asset', label: 'Feed the koi & meditate', emoji: '🐟',
+  when: hasFeature('koi_pond'),
+  run: (s, id) => {
+    if (bump(s, 'act_koi_' + id) > 3) return { text: 'The koi are happily fed for now.', nolog: true };
+    add(s, { happy: 4, karma: 3 });
+    return 'You sat beside the stone waterfall scattering pellets to the swirling, colorful koi. A deep sense of peace washed over you.';
+  },
+});
+
+defAction({
+  id: 'renov_gameroom', cat: 'asset', target: 'asset', label: 'Play in the game room', emoji: '🕹️',
+  when: hasFeature('gameroom'),
+  run: (s, id) => {
+    if (bump(s, 'act_game_' + id) > 3) return { text: 'Your thumbs need a break from the arcade sticks!', nolog: true };
+    add(s, { happy: randInt(3, 7) });
+    return pick([
+      'You set the all-time high score on your vintage pinball machine!',
+      'You spent hours playing retro arcade classics and sunk the 8-ball in billiards.',
+      'You invited friends over for an intense game tournament into the early morning.',
+    ]);
+  },
+});
+
+defAction({
+  id: 'renov_observatory', cat: 'asset', target: 'asset', label: 'Stargaze in the observatory', emoji: '🔭',
+  when: hasFeature('observatory'),
+  run: (s, id) => {
+    if (bump(s, 'act_scope_' + id) > 3) return { text: 'The night sky will be waiting for you next year.', nolog: true };
+    P(s).stats.smarts = clamp100(P(s).stats.smarts + 2);
+    add(s, { happy: 5 });
+    const sighting = pick([
+      'the rings of Saturn with crystal clarity',
+      'the swirling red storm clouds of Jupiter',
+      'a rare green comet passing through the constellation Orion',
+      'the spiral arms of the Andromeda galaxy',
+    ]);
+    return `You rotated the rooftop dome and peered through the telescope eyepiece. You observed ${sighting}!`;
+  },
+});
+
+defAction({
+  id: 'renov_aquarium', cat: 'asset', target: 'asset', label: 'Watch coral reef aquarium', emoji: '🐠',
+  when: hasFeature('aquarium'),
+  run: (s, id) => {
+    if (bump(s, 'act_aqua_' + id) > 3) return { text: 'The reef tank is thriving quietly.', nolog: true };
+    add(s, { happy: 4 });
+    return 'You watched the vibrant clownfish dart through living sea anemones and fed the corals. Pure tranquility.';
+  },
+});
+
+defAction({
+  id: 'renov_chef', cat: 'asset', target: 'asset', label: 'Cook gourmet dinner', emoji: '🍳',
+  when: hasFeature('chef_kitchen'),
+  run: (s, id) => {
+    if (bump(s, 'act_chef_' + id) > 3) return { text: 'Your chef’s kitchen needs time to restock.', nolog: true };
+    add(s, { happy: 5 });
+    for (const p of relPeople(s, ['partner', 'spouse', 'friend', 'child'])) addRel(s, p.id, randInt(2, 6));
+    return 'You fired up the six-burner commercial range and cooked an exquisite pan-seared steak dinner with red wine reduction. Michelin-worthy!';
+  },
+});
+
+defAction({
+  id: 'renov_theater', cat: 'asset', target: 'asset', label: 'Home cinema movie night', emoji: '🎬',
+  when: hasFeature('theater'),
+  run: (s, id) => {
+    if (bump(s, 'act_film_' + id) > 3) return { text: 'You’ve watched plenty of movies in the cinema this year!', nolog: true };
+    add(s, { happy: 6 });
+    for (const p of relPeople(s, ['partner', 'spouse', 'bestie'])) addRel(s, p.id, randInt(3, 7));
+    return 'You loaded up fresh buttered popcorn, reclined the leather theater seats, and enjoyed an epic sci-fi blockbuster with rumbling bass.';
+  },
+});
+
+defAction({
+  id: 'renov_porch', cat: 'asset', target: 'asset', label: 'Relax on the front porch', emoji: '🏡',
+  when: hasFeature('porch'),
+  run: (s, id) => {
+    if (bump(s, 'act_porch_' + id) > 3) return { text: 'A gentle evening breeze carries your thoughts.', nolog: true };
+    add(s, { happy: 3 });
+    return 'You poured an iced lemonade and sat in the rocking chair, listening to crickets and watching neighbors stroll by.';
   },
 });
 defAction({

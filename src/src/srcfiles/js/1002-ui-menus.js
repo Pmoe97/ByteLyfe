@@ -233,7 +233,7 @@ SHEETS.finance = () => {
     ${kvRow('Income tax', Math.round(country(G).tax * 100) + '%')}
   </div>${currencyCard()}`;
   if (m.loans.length) {
-    html += `<div class="section-title">Loans</div><div class="list">${m.loans.map((l) => itemRow({ a: 'payLoan', ds: { id: l.id }, ico: '🏦', t: esc(l.name), s: `${fmtMoney(l.balance)} left · ${Math.round(l.rate * 1000) / 10}% · ${fmtMoney(l.payment)}/yr`, end: m.money >= l.balance ? 'Pay off' : '', disabled: m.money < l.balance })).join('')}</div>`;
+    html += `<div class="section-title">Loans</div><div class="list">${m.loans.map((l) => itemRow({ a: 'payLoan', ds: { id: l.id }, ico: '🏦', t: esc(l.name), s: `${fmtMoney(l.balance)} left · ${Math.round(l.rate * 1000) / 10}% · ${fmtMoney(l.payment)}/yr`, end: m.money >= l.balance ? 'Pay off' : 'Pay', chev: true })).join('')}</div>`;
   }
   const inv = INVEST_IDS.filter((k) => m.invest[k]);
   if (inv.length) html += `<div class="section-title">Investments</div><div class="list">${inv.map((k) => itemRow({ a: 'act', ds: { id: 'investments', t: '' }, ico: INVESTMENTS[k].emoji, t: esc(INVESTMENTS[k].name), s: fmtMoney(m.invest[k]) })).join('')}</div>`;

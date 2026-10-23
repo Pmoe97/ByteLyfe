@@ -57,6 +57,7 @@ SHEETS.company = (id) => {
     ${kvRow('This year, projected', `${fmtMoneyShort(f.revenue)} revenue · <span class="${f.profit >= 0 ? 'good' : 'bad'}">${fmtMoneyShort(f.profit)}</span> before tax`)}
   </div>`;
   html += casinoSection(co); // 1022-ui-house.js
+  if (typeof zooSection === 'function') html += zooSection(co); // 1024-ui-zoo.js
   const acts = actionRows('company', id);
   html += `<div class="section-title">Run the company</div>${acts ? listOf(acts) : '<div class="note">You have no say in day-to-day decisions right now.</div>'}`;
   if (godOn()) html += `<div class="section-title">God Mode</div><div class="chips">${[100000, 1000000, 100000000].map((v) => `<button class="chip" data-a="sbCoCash" data-id="${co.id}" data-v="${v}">+${fmtMoneyShort(v)} company cash</button>`).join('')}<button class="chip" data-a="sbCoRep" data-id="${co.id}">Max reputation</button></div>`;

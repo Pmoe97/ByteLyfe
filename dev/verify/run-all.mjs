@@ -53,6 +53,7 @@ const tasks = [
   { label: 'challenge checks', args: ['dev/verify/challenges.mjs'] },
   { label: 'gambling checks', args: ['dev/verify/gambling.mjs'] },
   { label: 'house checks', args: ['dev/verify/house.mjs'] },
+  { label: 'zoo checks', args: ['dev/verify/zoo.mjs'] },
   { label: 'youth checks', args: ['dev/verify/youth.mjs'] },
 ];
 function run(task) {

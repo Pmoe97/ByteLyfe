@@ -89,10 +89,18 @@ SHEETS.pet = (id) => {
   const pet = G.pets[id];
   if (!pet) return null;
   const S = PET_SPECIES[pet.species];
+  const tricks = pet.tricks && pet.tricks.length ? pet.tricks.join(', ') : 'None yet';
+  const awards = pet.awards && pet.awards.length ? pet.awards.join('<br>') : '';
   return {
     title: pet.name,
     html: `<div class="card p-card"><div class="avatar" style="background:color-mix(in srgb, #D99A5B 22%, var(--surface-2))">${emo(S.emoji, 56)}</div><div class="p-name">${esc(pet.name)}</div><div class="p-meta">${esc(pet.breed)} ${esc(S.name.toLowerCase())} · ${petAge(G, pet)} years old</div>
-      <div class="rel-bar"><div class="muted">Bond · ${Math.round(pet.rel)}%</div>${bar(pet.rel)}</div></div>
+      <div class="rel-bar"><div class="muted">Bond · ${Math.round(pet.rel)}%</div>${bar(pet.rel)}</div>
+      <div class="mini-stats" style="margin-top:8px">
+        ${kvRow('Tricks known', esc(tricks))}
+        ${pet.training ? kvRow('Training progress', pet.training + '%') : ''}
+        ${awards ? kvRow('Show titles & ribbons', awards) : ''}
+        ${pet.groomed === G.year ? kvRow('Grooming', '✨ Show-ready') : ''}
+      </div></div>
       ${pet.race ? horseCard(pet) : ''}
       <div class="section-title">Interact</div>${listOf(actionRows('pet', id))}`,
   };

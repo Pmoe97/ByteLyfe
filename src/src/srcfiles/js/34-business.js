@@ -235,8 +235,12 @@ function bizForecast(s, co) {
   return { revenue, fees, cogs, salaries, rent, mkt, rnd, draw, interest, support, extra, profit: revenue + fees - cogs - salaries - rent - mkt - rnd - draw - interest - support - extra, units, demand, q, eff, cap, staff, idle: Math.max(0, t.ops.n + t.sales.n - cap), rep: mods.rep };
 }
 // What an industry with its own layer adds to the forecast: a revenue multiplier, a
-// reputation pull and running costs. Only the casino has one (casinoMods, 54-house.js).
-function industryMods(s, co) { return co.ind === 'casino' ? casinoMods(s, co) : { rev: 1, rep: 0, cost: 0 }; }
+// reputation pull and running costs. (casinoMods: 54-house.js, zooMods: 58-zoo.js).
+function industryMods(s, co) {
+  if (co.ind === 'casino') return casinoMods(s, co);
+  if (co.ind === 'zoo' && typeof zooMods === 'function') return zooMods(s, co);
+  return { rev: 1, rep: 0, cost: 0 };
+}
 
 /* ---- franchising ----------------------------------------------------
  * Franchisees open outlets under your brand and pay a royalty on their sales.
@@ -299,9 +303,11 @@ function companyYear(s, co) {
   const revenue = Math.max(0, Math.round(f.revenue * noise));
   const cogs = Math.round(revenue * I.cogs);
   let profit = revenue + f.fees - cogs - f.salaries - f.rent - f.mkt - f.rnd - f.draw - f.interest - f.support - f.extra;
-  // A casino's year brings what no forecast sees: whales, cheats, fines and the skim (54-house.js).
-  const ev = co.ind === 'casino' ? casinoYear(s, co, revenue) : null;
-  if (ev) profit += ev.whales - ev.cost;
+  // A casino or zoo brings what no forecast sees: whales/cheats (54-house.js) or grants/incidents (58-zoo.js).
+  let ev = null;
+  if (co.ind === 'casino') ev = casinoYear(s, co, revenue);
+  else if (co.ind === 'zoo' && typeof zooYear === 'function') ev = zooYear(s, co, revenue);
+  if (ev) profit += (ev.whales || ev.extraRev || 0) - ev.cost;
   if (co.closed || s.dead) return;
   const principal = co.debt > 0 ? Math.min(co.debt, Math.round(co.debt * 0.2)) : 0;
   co.debt -= principal;
@@ -310,7 +316,7 @@ function companyYear(s, co) {
   profit -= tax;
   co.cash += profit - principal;
   if (f.draw > 0) M(s).bizIncome.push(['Salary from ' + co.name, f.draw]);
-  co.last = { year: s.year, revenue, fees: f.fees, cogs, salaries: f.salaries, rent: f.rent, mkt: f.mkt, rnd: f.rnd, draw: f.draw, interest: f.interest, support: f.support, extra: f.extra, whales: ev ? ev.whales : 0, special: ev ? ev.cost : 0, tax, profit, principal };
+  co.last = { year: s.year, revenue, fees: f.fees, cogs, salaries: f.salaries, rent: f.rent, mkt: f.mkt, rnd: f.rnd, draw: f.draw, interest: f.interest, support: f.support, extra: f.extra, whales: ev ? (ev.whales || ev.extraRev || 0) : 0, special: ev ? ev.cost : 0, tax, profit, principal };
   if (profit > 0) tally(s, 'profitableYears');
 
   // Reputation settles toward what your products and marketing earn. A big franchise
@@ -330,7 +336,7 @@ function companyYear(s, co) {
   co.trend = co.trend == null ? growth : co.trend * 0.6 + clamp(growth, -0.5, 1.5) * 0.4;
   const mult = I.mult * clamp(1 + co.trend * 1.5, 0.4, 3) * (0.6 + co.rep / 125);
   const hype = I.hype ? f.q * 5000 * I.hype * Math.min(1, (headcount(co) + 1) / 10) * econ(s) : 0;
-  const luck = ev ? Math.round(ev.whales * 0.8) : 0; // a lucky year with the whales doesn't make a casino worth more
+  const luck = ev ? Math.round((ev.whales || ev.extraRev || 0) * 0.8) : 0;
   co.val = Math.max(0, Math.round(Math.max(0, co.cash - co.debt) + co.locations * price(s, I.locBuild) * 0.5 + Math.max((revenue + f.fees * 3) * mult, (profit - luck) * 8, hype)));
   let stockLine = '';
   if (co.public) {

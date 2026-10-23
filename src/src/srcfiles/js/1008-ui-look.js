@@ -27,21 +27,22 @@ const LOOK_TABS = [
   { id: 'mouth', label: 'Mouth', icon: 'part-mouth', crop: 'mouth', key: 'mouth', locked: true },
 ];
 const LOOK_NAMES = {
-  crop: 'Short crop', sidepart: 'Side part', buzz: 'Buzz cut', curls: 'Curls', afro: 'Afro', pixie: 'Pixie', bob: 'Bob', long: 'Long', wavy: 'Wavy', ponytail: 'Ponytail', bun: 'Top bun', braids: 'Braids', receding: 'Receding', bald: 'Bald',
+  crop: 'Short crop', sidepart: 'Side part', fade: 'High fade', curtains: 'Curtain bangs', slick: 'Slicked back', buzz: 'Buzz cut', curls: 'Curls', afro: 'Afro', locs: 'Locs', pixie: 'Pixie', bob: 'Bob', shoulder: 'Shoulder lob', wolf: 'Wolf cut', long: 'Long', wavy: 'Wavy', ponytail: 'Ponytail', twintails: 'Twin tails', bun: 'Top bun', spacebuns: 'Space buns', braids: 'Braids', receding: 'Receding', bald: 'Bald',
   oval: 'Oval', round: 'Round', square: 'Square', heart: 'Heart', almond: 'Almond', upturned: 'Upturned', downturned: 'Downturned', hooded: 'Hooded', monolid: 'Monolid',
   natural: 'Natural', straight: 'Straight', arched: 'Arched', thick: 'Thick', thin: 'Thin', angled: 'Angled', soft: 'Soft', button: 'Button', wide: 'Wide', pointed: 'Pointed',
   smile: 'Smile', grin: 'Grin', neutral: 'Calm', smirk: 'Smirk', laugh: 'Laugh', full: 'Full',
   none: 'None', stubble: 'Stubble', mustache: 'Mustache', goatee: 'Goatee', beard: 'Short beard',
-  tee: 'T-shirt', vneck: 'V-neck', hoodie: 'Hoodie', collar: 'Button-up', sweater: 'Turtleneck', scoop: 'Scoop neck', tank: 'Tank top', blazer: 'Blazer', suit: 'Suit and tie',
-  jeans: 'Jeans', trousers: 'Trousers', skirt: 'Skirt', shorts: 'Shorts',
+  tee: 'T-shirt', vneck: 'V-neck', hoodie: 'Hoodie', collar: 'Button-up', polo: 'Polo shirt', sweater: 'Turtleneck', cardigan: 'Cardigan', scoop: 'Scoop neck', tank: 'Tank top', crop: 'Crop top', jacket: 'Leather jacket', blazer: 'Blazer', suit: 'Suit and tie', dress: 'Fitted dress', track: 'Track jacket',
+  jeans: 'Jeans', trousers: 'Tailored trousers', cargo: 'Cargo pants', joggers: 'Joggers', skirt: 'A-line skirt', pleated: 'Pleated skirt', shorts: 'Shorts', leggings: 'Leggings',
+  cateye: 'Cat-eye', aviator: 'Aviator', sunglasses: 'Shades', cap: 'Baseball cap', beret: 'Beret', headband: 'Headband', drops: 'Drop earrings', pearls: 'Pearl studs',
 };
 function lookName(key, v) {
   if (key === 'skin') return 'Tone ' + (Number(v) + 1);
   if (key === 'facial' && v === 'none') return 'Clean-shaven';
   if (key === 'facial' && v === 'full') return 'Full beard';
-  if (key === 'glasses') return v === 'none' ? 'No glasses' : cap(v) + ' glasses';
-  if (key === 'headwear') return v === 'none' ? 'No headwear' : cap(v);
-  if (key === 'earrings') return v === 'none' ? 'No earrings' : cap(v);
+  if (key === 'glasses') return v === 'none' ? 'No glasses' : (LOOK_NAMES[v] || cap(v) + ' glasses');
+  if (key === 'headwear') return v === 'none' ? 'No headwear' : (LOOK_NAMES[v] || cap(v));
+  if (key === 'earrings') return v === 'none' ? 'No earrings' : (LOOK_NAMES[v] || cap(v));
   return LOOK_NAMES[v] || cap(String(v));
 }
 const HAIR_HEX = { black: '#1F1B1E', espresso: '#3B2519', brown: '#6A4129', chestnut: '#8A4A2B', auburn: '#9E3E22', ginger: '#CF6D33', honey: '#C8924A', blonde: '#E4C077', platinum: '#EFE4CB', grey: '#A9A6A4', white: '#ECEAE6', rose: '#E58FB2', teal: '#38ABA4', violet: '#7A5BD8' };
@@ -77,7 +78,13 @@ function lookPreview(d) {
     : avatarSVG(d.look, { age: d.age, frame: 'none', size: 232, label: `${whose} portrait` });
 }
 function lookOptions(d, tab) {
-  if (tab.extras) return [['glasses', 'none'], ['glasses', 'round'], ['glasses', 'square'], ['headwear', 'beanie'], ['headwear', 'hijab'], ['earrings', 'studs'], ['earrings', 'hoops']];
+  if (tab.extras) {
+    return [
+      ...LOOK_OPTS.glasses.map((v) => ['glasses', v]),
+      ...LOOK_OPTS.headwear.filter((v) => v !== 'none').map((v) => ['headwear', v]),
+      ...LOOK_OPTS.earrings.filter((v) => v !== 'none').map((v) => ['earrings', v]),
+    ];
+  }
   if (tab.key === 'skin') return SKIN_HEX.map((_, i) => ['skin', i]);
   return (LOOK_OPTS[tab.key] || []).map((v) => [tab.key, v]);
 }

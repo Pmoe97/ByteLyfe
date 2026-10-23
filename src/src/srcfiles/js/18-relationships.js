@@ -102,6 +102,95 @@ onChoice('gift', (s, ctx, amt) => {
   const item = pick(['a book', 'a scarf', 'a watch', 'concert tickets', 'a fancy candle', 'a framed photo', 'a gift card', 'a plant', 'chocolates', 'a video game']);
   return `You gave ${nm(s, ctx.pid)} ${item}. ${boost > 10 ? 'They were overwhelmed.' : 'They appreciated it.'}`;
 });
+function npcDebt(s, p) {
+  if (p.debt !== undefined) return p.debt;
+  const age = ageOf(s, p);
+  if (age < 18) return (p.debt = null);
+  const k = relKind(s, p.id);
+  const isOlder = ['parent', 'stepparent', 'grandparent', 'inlaw'].includes(k) || age >= 38;
+  const type = isOlder ? 'mortgage' : (age < 30 && p.edu ? 'student' : pick(['mortgage', 'car', 'personal']));
+  const base = type === 'mortgage' ? randInt(60000, 260000) : type === 'student' ? randInt(15000, 55000) : randInt(6000, 30000);
+  const name = type === 'mortgage' ? 'Mortgage' : type === 'student' ? 'Student loan debt' : type === 'car' ? 'Car loan' : 'Personal bank loan';
+  const balance = price(s, base);
+  p.debt = { type, name, balance, original: balance, paidByYou: 0 };
+  return p.debt;
+}
+
+defAction({
+  id: 'p_pay_debt', cat: 'person', target: 'person', label: 'Help with mortgage & loans', emoji: '🏡',
+  when: (s, pid) => reachable(s, pid) && A(s) >= 18 && tAge(s, pid) >= 18 && (isFamilyKind(relKind(s, pid)) || ['friend', 'bestie', 'partner', 'spouse', 'inlaw'].includes(relKind(s, pid))),
+  sub: (s, pid) => {
+    const d = npcDebt(s, tgt(s, pid));
+    return d && d.balance > 0 ? `${d.name}: ${fmtMoney(d.balance)} owed` : 'Debt-free!';
+  },
+  run: (s, pid) => {
+    const p = tgt(s, pid), d = npcDebt(s, p);
+    if (!d || d.balance <= 0) return { text: `${p.first} is currently completely debt-free!`, emoji: '🎉', nolog: true };
+    const bal = d.balance;
+    const choices = [
+      { label: `Pay off entire ${d.name.toLowerCase()} (${fmtMoney(bal)})`, value: 'full', disabled: M(s).money < bal },
+      { label: `Gift ${fmtMoney(price(s, 5000))} toward ${d.name.toLowerCase()}`, value: '5k', disabled: M(s).money < price(s, 5000) || bal < price(s, 5000) },
+      { label: `Gift ${fmtMoney(price(s, 1000))} toward ${d.name.toLowerCase()}`, value: '1k', disabled: M(s).money < price(s, 1000) || bal < price(s, 1000) },
+      { label: 'Pay custom amount...', value: 'custom', disabled: M(s).money < 1 },
+      { label: 'Never mind', value: null },
+    ];
+    popup(s, {
+      emoji: '🏡', title: `${p.first}’s ${d.name}`,
+      text: `${p.first} owes ${fmtMoney(bal)} on their ${d.name.toLowerCase()}. How much would you like to contribute? You have ${fmtMoney(M(s).money)} cash.`,
+      handler: 'pPayDebtChoice', ctx: { pid }, choices,
+    });
+  },
+});
+onChoice('pPayDebtChoice', (s, ctx, v) => {
+  const p = tgt(s, ctx.pid);
+  if (!p || !v) return;
+  const d = npcDebt(s, p);
+  if (!d) return;
+  if (v === 'full') return applyNpcDebtPayment(s, p, d, d.balance);
+  if (v === '5k') return applyNpcDebtPayment(s, p, d, price(s, 5000));
+  if (v === '1k') return applyNpcDebtPayment(s, p, d, price(s, 1000));
+  if (v === 'custom') {
+    popup(s, {
+      emoji: '💸', title: `Pay towards ${p.first}’s ${d.name}`,
+      text: `${d.name} balance: ${fmtMoney(d.balance)}. Enter the exact amount you want to pay:`,
+      handler: 'pPayDebtCustom', ctx: { pid: ctx.pid },
+      input: { label: 'Amount (e.g. 250.14 or 15000)', value: String(Math.min(M(s).money, d.balance)), max: 15 },
+      choices: [{ label: 'Send Payment' }, { label: 'Cancel', value: null }],
+    });
+  }
+});
+onChoice('pPayDebtCustom', (s, ctx, v, input) => {
+  const p = tgt(s, ctx.pid);
+  if (!p || v === null || v === undefined && input === undefined) return;
+  const d = npcDebt(s, p);
+  if (!d) return;
+  const num = typeof input === 'string' ? parseFloat(input.replace(/[^0-9.]/g, '')) : Number(input);
+  if (!Number.isFinite(num) || num <= 0) return { text: 'Enter a valid payment amount.', nolog: true };
+  return applyNpcDebtPayment(s, p, d, Math.max(1, Math.round(num)));
+});
+function applyNpcDebtPayment(s, p, d, rawAmt) {
+  const amt = Math.min(rawAmt, d.balance);
+  if (!pay(s, amt)) return cantAfford(amt);
+  d.balance -= amt;
+  d.paidByYou = (d.paidByYou || 0) + amt;
+  if (d.balance <= 0) {
+    d.balance = 0;
+    addRel(s, p.id, 45);
+    add(s, { happy: 12, karma: 6 });
+    return {
+      text: `You paid ${fmtMoney(amt)} and paid off ${p.first}’s ${d.name.toLowerCase()} completely! They broke down in tears of relief and hugged you with all their heart. "You just changed my entire life."`,
+      emoji: '💖', tone: 'good',
+    };
+  }
+  const boost = clamp(Math.round(Math.log10(Math.max(10, amt)) * 5), 4, 25);
+  addRel(s, p.id, boost);
+  add(s, { happy: 4, karma: 2 });
+  return {
+    text: `You put ${fmtMoney(amt)} towards ${p.first}’s ${d.name.toLowerCase()}. They have ${fmtMoney(d.balance)} remaining. ${p.first} was incredibly moved by your generosity.`,
+    emoji: '🏡', tone: 'good',
+  };
+}
+
 defAction({
   id: 'p_ask_money', cat: 'person', target: 'person', label: 'Ask for money', emoji: '🙏',
   when: (s, pid) => reachable(s, pid) && A(s) >= 5 && tAge(s, pid) >= 16 && (isKind(s, pid, ['parent', 'stepparent', 'grandparent']) || relOf(s, pid).rel >= 70),
@@ -821,19 +910,41 @@ defAction({
 function petAge(s, pet) { return s.year - pet.born; }
 function myPets(s) { return Object.values(s.pets).filter((p) => p.alive); }
 defAction({
-  id: 'adopt_pet', cat: 'family', label: 'Adopt a pet', emoji: '🐾', desc: 'Visit the shelter or a breeder.',
+  id: 'adopt_pet', cat: 'family', label: 'Adopt a pet', emoji: '🐾', desc: 'Visit the shelter or domestic breeder.',
   when: (s) => free(s) && A(s) >= 6,
   run: (s) => {
     if (A(s) < 18 && M(s).housing.type === 'parents') {
       const ok = relPeople(s, ['parent']).some((p) => chance(relOf(s, p.id).rel / 120));
       if (!ok) return 'Your parents said absolutely not. No pets.';
     }
+    const standardKeys = Object.keys(PET_SPECIES).filter((k) => !PET_SPECIES[k].exotic);
     popup(s, {
       emoji: '🐾', title: 'Adopt a pet', text: 'Which animal?', handler: 'petSpecies',
-      choices: Object.keys(PET_SPECIES).map((k) => ({ label: PET_SPECIES[k].emoji + ' ' + PET_SPECIES[k].name, value: k, sub: fmtMoney(price(s, PET_SPECIES[k].cost)) + ' · upkeep ' + fmtMoney(price(s, PET_SPECIES[k].upkeep)) + '/yr', disabled: M(s).money < price(s, PET_SPECIES[k].cost) && A(s) >= 18 })).concat([{ label: 'Never mind', value: null }]),
+      choices: standardKeys.map((k) => ({
+        label: PET_SPECIES[k].emoji + ' ' + PET_SPECIES[k].name, value: k,
+        sub: fmtMoney(price(s, PET_SPECIES[k].cost)) + ' · upkeep ' + fmtMoney(price(s, PET_SPECIES[k].upkeep)) + '/yr',
+        disabled: M(s).money < price(s, PET_SPECIES[k].cost) && A(s) >= 18,
+      })).concat([{ label: 'Never mind', value: null }]),
     });
   },
 });
+
+defAction({
+  id: 'adopt_exotic', cat: 'family', label: 'Buy an exotic pet', emoji: '🐅', desc: 'Monkeys, tigers, otters, falcons and rare species.',
+  when: (s) => free(s) && A(s) >= 18,
+  run: (s) => {
+    const exoticKeys = Object.keys(PET_SPECIES).filter((k) => PET_SPECIES[k].exotic);
+    popup(s, {
+      emoji: '🐅', title: 'Exotic Pet Dealer', text: 'Specialty captive-bred exotic animals with private paperwork.', handler: 'petSpecies',
+      choices: exoticKeys.map((k) => ({
+        label: PET_SPECIES[k].emoji + ' ' + PET_SPECIES[k].name, value: k,
+        sub: fmtMoney(price(s, PET_SPECIES[k].cost)) + ' · upkeep ' + fmtMoney(price(s, PET_SPECIES[k].upkeep)) + '/yr',
+        disabled: M(s).money < price(s, PET_SPECIES[k].cost),
+      })).concat([{ label: 'Leave dealership', value: null }]),
+    });
+  },
+});
+
 onChoice('petSpecies', (s, ctx, sp) => {
   if (!sp) return;
   const S = PET_SPECIES[sp];
@@ -848,10 +959,15 @@ onChoice('petName', (s, ctx, v, input) => {
   const cost = A(s) >= 18 ? price(s, S.cost) : 0;
   if (!pay(s, cost)) return cantAfford(cost);
   const id = uid(s, 'pet');
-  s.pets[id] = { id, species: ctx.sp, breed: ctx.breed, name: cleanName(input) || pick(PET_NAMES), born: s.year - randInt(0, Math.min(3, S.life[0] - 1)), alive: true, rel: 65, life: randInt(S.life[0], S.life[1]), owner: s.playerId };
+  s.pets[id] = {
+    id, species: ctx.sp, breed: ctx.breed, name: cleanName(input) || pick(PET_NAMES),
+    born: s.year - randInt(0, Math.min(3, S.life[0] - 1)), alive: true, rel: 65,
+    life: randInt(S.life[0], S.life[1]), owner: s.playerId,
+    tricks: [], training: 0, awards: [],
+  };
   tally(s, 'pets');
   add(s, { happy: 6 });
-  return { text: `You adopted ${s.pets[id].name}, a ${ctx.breed.toLowerCase()}! ${S.emoji}`, tone: 'good' };
+  return { text: `You brought home ${s.pets[id].name}, a ${ctx.breed.toLowerCase()}! ${S.emoji}`, tone: 'good' };
 });
 function petReachable(s, id) { const p = s.pets[id]; return !!p && p.alive && free(s); }
 defAction({
@@ -862,8 +978,15 @@ defAction({
 defAction({
   id: 'pet_walk', cat: 'pet', target: 'pet', emoji: '🦮',
   label: (s, id) => (s.pets[id].species === 'horse' ? 'Go riding' : 'Go for a walk'),
-  when: (s, id) => petReachable(s, id) && ['dog', 'horse', 'pig', 'goat', 'ferret'].includes(s.pets[id].species),
-  run: (s, id) => { const p = s.pets[id]; p.rel = clamp100(p.rel + randInt(3, 8)); addSkill(s, 'fitness', randFloat(1, 2)); add(s, { health: 1, happy: 2 }); return p.species === 'horse' ? `You went riding on ${p.name}.` : `You took ${p.name} for a walk around the neighborhood.`; },
+  when: (s, id) => petReachable(s, id) && ['dog', 'horse', 'pig', 'goat', 'ferret', 'tiger', 'alpaca'].includes(s.pets[id].species),
+  run: (s, id) => {
+    const p = s.pets[id];
+    p.rel = clamp100(p.rel + randInt(3, 8));
+    addSkill(s, 'fitness', randFloat(1, 2));
+    add(s, { health: 1, happy: 2 });
+    if (p.species === 'tiger') return `You walked your tiger on a heavy steel chain. The whole street emptied out in terror! 🐅`;
+    return p.species === 'horse' ? `You went riding on ${p.name}.` : `You took ${p.name} for a walk around the neighborhood.`;
+  },
 });
 defAction({
   id: 'pet_vet', cat: 'pet', target: 'pet', label: 'Take to the vet', emoji: '🩺',
@@ -877,6 +1000,226 @@ defAction({
     return `The vet says ${p.name} is ${pick(['healthy as can be', 'a little chubby', 'in great shape', 'very dramatic about shots'])}.`;
   },
 });
+defAction({
+  id: 'pet_groom', cat: 'pet', target: 'pet', label: 'Groom & pamper', emoji: '✂️',
+  when: petReachable,
+  sub: (s) => fmtMoney(price(s, 60)),
+  run: (s, id) => {
+    const cost = price(s, 60);
+    if (!pay(s, cost)) return cantAfford(cost);
+    const p = s.pets[id];
+    p.groomed = s.year;
+    p.rel = clamp100(p.rel + randInt(4, 8));
+    add(s, { happy: 2 });
+    return `You bathed, brushed and pampered ${p.name}. Their coat is glossy and smelling wonderful! 🛁`;
+  },
+});
+
+/* ---- training & tricks --------------------------------------------- */
+defAction({
+  id: 'pet_train', cat: 'pet', target: 'pet', label: 'Train tricks', emoji: '🎪',
+  when: (s, id) => petReachable(s, id) && ['dog', 'cat', 'monkey', 'otter', 'parrot', 'ferret', 'falcon', 'horse', 'pig', 'fennec'].includes(s.pets[id].species),
+  sub: (s, id) => {
+    const p = s.pets[id];
+    const n = (p.tricks || []).length;
+    return n >= PET_TRICKS.length ? 'Mastered all tricks!' : `Next: ${PET_TRICKS[n]} (${p.training || 0}%)`;
+  },
+  run: (s, id) => {
+    const p = s.pets[id];
+    if (!p.tricks) p.tricks = [];
+    if (bump(s, 'train_' + id) > 4) return { text: `${p.name} is worn out for today. Give them a treat and rest!`, nolog: true };
+    p.rel = clamp100(p.rel + 3);
+    const n = p.tricks.length;
+    if (n >= PET_TRICKS.length) {
+      add(s, { happy: 3 });
+      return `You ran through the master trick routine with ${p.name}. Flawless performance! 🌟`;
+    }
+    const targetTrick = PET_TRICKS[n];
+    p.training = (p.training || 0) + randInt(25, 45);
+    if (p.training >= 100 || chance(0.35)) {
+      p.training = 0;
+      p.tricks.push(targetTrick);
+      add(s, { happy: 5 });
+      tally(s, 'petTricks');
+      return { text: `🎉 Amazing! ${p.name} just mastered how to "${targetTrick}"!`, emoji: '🎪', tone: 'good' };
+    }
+    return `You practiced "${targetTrick}" with ${p.name}. They are making solid progress (${p.training}%).`;
+  },
+});
+
+/* ---- pet shows & competitions ------------------------------------- */
+defAction({
+  id: 'pet_show', cat: 'pet', target: 'pet', label: 'Enter pet show', emoji: '🏆',
+  when: (s, id) => petReachable(s, id) && petAge(s, s.pets[id]) >= 1 && count(s, 'petshow_' + id) < 1,
+  sub: () => 'Compete for ribbons, titles & cash prizes',
+  run: (s, id) => {
+    const p = s.pets[id];
+    popup(s, {
+      emoji: '🏆', title: `Enter ${p.name} in a Pet Show`,
+      text: `${p.name} will be judged on conformation, temperament, bond, and trick performance.`,
+      handler: 'petShowLevel', ctx: { pid: id },
+      choices: PET_SHOW_LEVELS.map((lvl) => ({
+        label: `${lvl.name}`, value: lvl.id,
+        sub: `Fee: ${fmtMoney(price(s, lvl.fee))} · 1st Prize: ${fmtMoney(price(s, lvl.purse))} · ${lvl.desc}`,
+        disabled: M(s).money < price(s, lvl.fee) || p.rel < lvl.minRel,
+      })).concat([{ label: 'Not ready yet', value: null }]),
+    });
+  },
+});
+onChoice('petShowLevel', (s, ctx, lvlId) => {
+  if (!lvlId) return;
+  const p = s.pets[ctx.pid];
+  const lvl = PET_SHOW_LEVELS.find((l) => l.id === lvlId);
+  if (!p || !lvl) return;
+  const fee = price(s, lvl.fee);
+  if (!pay(s, fee)) return cantAfford(fee);
+  bump(s, 'petshow_' + ctx.pid);
+  if (!p.awards) p.awards = [];
+
+  const tricksScore = (p.tricks || []).length * 8;
+  const groomBonus = p.groomed === s.year ? 15 : 0;
+  const bondScore = p.rel * 0.4;
+  const base = lvl.id === 'national' ? 65 : lvl.id === 'regional' ? 50 : 35;
+  const total = bondScore + tricksScore + groomBonus + gauss(0, 12);
+
+  if (total >= base + 35) {
+    // 1st Place / Best in Show
+    const purse = price(s, lvl.purse);
+    M(s).money += purse;
+    const title = lvl.id === 'national' ? '🏆 National Best in Show' : lvl.id === 'regional' ? '🥇 Regional Champion' : '🥇 1st Place Ribbon';
+    p.awards.push(title);
+    tally(s, 'petShowWins');
+    add(s, { happy: 12 });
+    M(s).fame = clamp100(M(s).fame + (lvl.id === 'national' ? 6 : 2));
+    return {
+      text: `🏆 BEST IN SHOW! ${p.name} won 1st Place at the ${lvl.name}! The judges praised their flawless condition and radiant bond with you. You were awarded ${fmtMoney(purse)} and the championship trophy!`,
+      emoji: '🏆', tone: 'good',
+    };
+  } else if (total >= base + 15) {
+    // 2nd Place / Reserve
+    const purse = Math.round(price(s, lvl.purse) * 0.4);
+    M(s).money += purse;
+    p.awards.push('🥈 2nd Place');
+    add(s, { happy: 5 });
+    return {
+      text: `🥈 2nd Place! ${p.name} took the Reserve Ribbon at the ${lvl.name} and won ${fmtMoney(purse)}. A proud moment!`,
+      emoji: '🥈', tone: 'good',
+    };
+  } else {
+    add(s, { happy: 1 });
+    return {
+      text: `The judges at the ${lvl.name} thanked ${p.name} for participating. They didn't place on the podium, but everyone loved their cheerful spirit!`,
+      emoji: '🎖️',
+    };
+  }
+});
+
+/* ---- breeding ------------------------------------------------------ */
+defAction({
+  id: 'pet_breed', cat: 'pet', target: 'pet', label: 'Breed', emoji: '🍼',
+  when: (s, id) => {
+    if (!petReachable(s, id)) return false;
+    const p = s.pets[id];
+    const age = petAge(s, p);
+    return age >= 1 && age <= p.life - 2 && !p.race && ['dog', 'cat', 'rabbit', 'monkey', 'otter', 'fennec', 'ferret', 'pig', 'goat', 'alpaca', 'tiger'].includes(p.species) && count(s, 'breed_' + id) < 1;
+  },
+  sub: (s, id) => `Produce a purebred litter of ${s.pets[id].breed}s`,
+  run: (s, id) => {
+    const p = s.pets[id];
+    const sameSpecies = myPets(s).filter((x) => x.id !== id && x.species === p.species);
+    const studFee = price(s, Math.round(PET_SPECIES[p.species].cost * 1.5));
+    const choices = sameSpecies.map((x) => ({
+      label: `Breed with ${x.name} (your ${x.breed})`, value: 'own:' + x.id, sub: 'Free home mating',
+    })).concat([
+      { label: `Hire registered champion stud (${fmtMoney(studFee)})`, value: 'stud:' + studFee, sub: 'Certified purebred pedigree', disabled: M(s).money < studFee },
+      { label: 'Not this year', value: null },
+    ]);
+    popup(s, {
+      emoji: '🍼', title: `Breed ${p.name}`,
+      text: `Select a mate for your ${p.breed} ${PET_SPECIES[p.species].name.toLowerCase()}.`,
+      handler: 'petBreedPair', ctx: { pid: id }, choices,
+    });
+  },
+});
+onChoice('petBreedPair', (s, ctx, v) => {
+  if (!v) return;
+  const p = s.pets[ctx.pid];
+  if (!p) return;
+  let studName = 'Champion Stud';
+  if (v.startsWith('stud:')) {
+    const fee = Number(v.slice(5));
+    if (!pay(s, fee)) return cantAfford(fee);
+  } else if (v.startsWith('own:')) {
+    const mate = s.pets[v.slice(4)];
+    if (mate) studName = mate.name;
+  }
+  bump(s, 'breed_' + ctx.pid);
+  const countLitter = randInt(2, 4);
+  const S = PET_SPECIES[p.species];
+  const valuePerBaby = Math.round(price(s, S.cost) * randFloat(1.2, 1.8));
+  const totalLitterValue = countLitter * valuePerBaby;
+
+  popup(s, {
+    emoji: '🍼', title: 'A new litter!',
+    text: `🎉 Congratulations! ${p.name} gave birth to a healthy litter of ${countLitter} purebred ${p.breed} ${countLitter > 1 ? S.name + 's' : S.name}! What would you like to do?`,
+    handler: 'petLitterChoice', ctx: { pid: ctx.pid, countLitter, valuePerBaby, totalLitterValue },
+    choices: [
+      { label: 'Keep one baby & sell the rest', value: 'keep_one', sub: `Receive ${fmtMoney(totalLitterValue - valuePerBaby)} and keep one` },
+      { label: `Sell all ${countLitter} puppies/babies to families`, value: 'sell_all', sub: `Earn ${fmtMoney(totalLitterValue)}` },
+      { label: 'Keep the whole litter', value: 'keep_all', sub: 'Fill your home with animals!' },
+    ],
+  });
+});
+onChoice('petLitterChoice', (s, ctx, v) => {
+  const p = s.pets[ctx.pid];
+  if (!p) return;
+  const S = PET_SPECIES[p.species];
+  if (v === 'sell_all') {
+    M(s).money += ctx.totalLitterValue;
+    add(s, { happy: 5 });
+    tally(s, 'petsBred', ctx.countLitter);
+    return {
+      text: `You sold the purebred litter of ${ctx.countLitter} ${p.breed}s to loving homes for ${fmtMoney(ctx.totalLitterValue)}! 💵`,
+      emoji: '🍼', tone: 'good',
+    };
+  }
+  if (v === 'keep_one') {
+    const earn = ctx.totalLitterValue - ctx.valuePerBaby;
+    M(s).money += earn;
+    const babyId = uid(s, 'pet');
+    const babyName = pick(PET_NAMES);
+    s.pets[babyId] = {
+      id: babyId, species: p.species, breed: p.breed, name: babyName,
+      born: s.year, alive: true, rel: 80, life: randInt(S.life[0], S.life[1]),
+      owner: s.playerId, tricks: [], training: 0, awards: [],
+    };
+    add(s, { happy: 8 });
+    tally(s, 'pets');
+    tally(s, 'petsBred', ctx.countLitter);
+    return {
+      text: `You welcomed baby ${babyName} into your family, and sold the remaining ${ctx.countLitter - 1} for ${fmtMoney(earn)}! 🐾`,
+      emoji: '🍼', tone: 'good',
+    };
+  }
+  if (v === 'keep_all') {
+    for (let i = 0; i < ctx.countLitter; i++) {
+      const babyId = uid(s, 'pet');
+      const bName = pick(PET_NAMES);
+      s.pets[babyId] = {
+        id: babyId, species: p.species, breed: p.breed, name: bName,
+        born: s.year, alive: true, rel: 75, life: randInt(S.life[0], S.life[1]),
+        owner: s.playerId, tricks: [], training: 0, awards: [],
+      };
+      tally(s, 'pets');
+    }
+    add(s, { happy: 10 });
+    return {
+      text: `You kept all ${ctx.countLitter} babies! Your house is full of playful little paws. 🐾`,
+      emoji: '🍼', tone: 'good',
+    };
+  }
+});
+
 defAction({
   id: 'pet_rehome', cat: 'pet', target: 'pet', label: 'Rehome', emoji: '🏠',
   when: petReachable,

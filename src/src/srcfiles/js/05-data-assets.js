@@ -109,8 +109,22 @@ const PET_SPECIES = {
   pig: { name: 'Pig', emoji: '🐖', life: [12, 18], cost: 400, upkeep: 900, breeds: ['Potbellied', 'Mini Pig'] },
   goat: { name: 'Goat', emoji: '🐐', life: [12, 16], cost: 250, upkeep: 600, breeds: ['Pygmy Goat', 'Nubian'] },
   horse: { name: 'Horse', emoji: '🐎', life: [25, 32], cost: 8000, upkeep: 6000, breeds: ['Thoroughbred', 'Arabian', 'Mustang', 'Clydesdale', 'Appaloosa', 'Pony'] },
+  tiger: { name: 'Tiger', emoji: '🐅', life: [15, 22], cost: 35000, upkeep: 14000, breeds: ['Bengal Tiger', 'Siberian Tiger', 'White Tiger'], exotic: true },
+  monkey: { name: 'Capuchin Monkey', emoji: '🐒', life: [20, 35], cost: 9000, upkeep: 2800, breeds: ['Capuchin', 'Squirrel Monkey', 'Tamarin'], exotic: true },
+  otter: { name: 'Otter', emoji: '🦦', life: [12, 16], cost: 5000, upkeep: 2000, breeds: ['Asian Small-Clawed', 'River Otter'], exotic: true },
+  fennec: { name: 'Fennec Fox', emoji: '🦊', life: [10, 14], cost: 4000, upkeep: 1400, breeds: ['Desert Fennec', 'Silver Morph'], exotic: true },
+  alpaca: { name: 'Alpaca', emoji: '🦙', life: [15, 20], cost: 3200, upkeep: 1500, breeds: ['Huacaya', 'Suri'], exotic: true },
+  falcon: { name: 'Falcon', emoji: '🦅', life: [14, 20], cost: 6000, upkeep: 1800, breeds: ['Peregrine Falcon', 'Gyrfalcon', 'Harris Hawk'], exotic: true },
+  chameleon: { name: 'Chameleon', emoji: '🦎', life: [5, 8], cost: 800, upkeep: 350, breeds: ['Panther Chameleon', 'Veiled Chameleon'], exotic: true },
 };
-const PET_NAMES = ['Biscuit', 'Luna', 'Max', 'Bella', 'Charlie', 'Coco', 'Pepper', 'Milo', 'Daisy', 'Rocky', 'Nala', 'Oreo', 'Ziggy', 'Mochi', 'Pickles', 'Waffles', 'Bandit', 'Shadow', 'Peanut', 'Ginger', 'Tofu', 'Gizmo', 'Noodle', 'Juniper', 'Sir Fluffington', 'Beans', 'Clover', 'Duke', 'Hazel', 'Pumpkin', 'Sprout', 'Mango'];
+const PET_NAMES = ['Biscuit', 'Luna', 'Max', 'Bella', 'Charlie', 'Coco', 'Pepper', 'Milo', 'Daisy', 'Rocky', 'Nala', 'Oreo', 'Ziggy', 'Mochi', 'Pickles', 'Waffles', 'Bandit', 'Shadow', 'Peanut', 'Ginger', 'Tofu', 'Gizmo', 'Noodle', 'Juniper', 'Sir Fluffington', 'Beans', 'Clover', 'Duke', 'Hazel', 'Pumpkin', 'Sprout', 'Mango', 'Simba', 'Thor', 'Cleo', 'Bao', 'Kiko'];
+
+const PET_TRICKS = ['Sit', 'Shake', 'Fetch', 'Roll over', 'High-five', 'Speak', 'Play dead', 'Backflip'];
+const PET_SHOW_LEVELS = [
+  { id: 'local', name: 'Neighborhood Pet Fair', fee: 50, purse: 300, minRel: 30, desc: 'Fun community pet show for local pets.' },
+  { id: 'regional', name: 'Regional Kennel & Pet Championship', fee: 200, purse: 1500, minRel: 50, desc: 'Competitive show with certified judges.' },
+  { id: 'national', name: 'National Grand Pet Championship', fee: 600, purse: 6000, minRel: 70, desc: 'The most prestigious all-breed show in the country.' },
+];
 
 const VACATIONS = [
   { id: 'camping', name: 'Camping trip', emoji: '🏕️', cost: 400, happy: [3, 9], minAge: 12 },
@@ -136,3 +150,26 @@ const INVESTMENTS = {
   crypto: { name: 'Crypto', emoji: '💠', mean: 0.12, sd: 0.75 },
 };
 const INVEST_IDS = Object.keys(INVESTMENTS);
+
+// Home renovation projects. Shared projects enhance the entire property;
+// unit-specific projects can be built in specific units of multi-unit buildings.
+const RENOVATION_PROJECTS = {
+  solar: { id: 'solar', name: 'Rooftop Solar Array', emoji: '☀️', shared: true, base: 18000, valBoost: 0.08, rentBoost: 0.05, desc: 'Clean solar power that cuts annual upkeep by up to 50%.' },
+  pool: { id: 'pool', name: 'In-Ground Swimming Pool', emoji: '🏊', shared: true, base: 45000, valBoost: 0.14, rentBoost: 0.15, desc: 'Heated luxury pool with flagstone patio and night lighting.' },
+  porch: { id: 'porch', name: 'Wraparound Front Porch', emoji: '🏡', shared: true, base: 15000, valBoost: 0.07, rentBoost: 0.08, desc: 'Classic covered cedar porch with rocking chairs.' },
+  koi_pond: { id: 'koi_pond', name: 'Japanese Koi Pond', emoji: '🐟', shared: true, base: 12000, valBoost: 0.06, rentBoost: 0.06, desc: 'Tranquil landscaped water garden with stone waterfall and live koi.' },
+  sauna: { id: 'sauna', name: 'Cedar Barrel Sauna', emoji: '🧖', shared: true, base: 14000, valBoost: 0.07, rentBoost: 0.08, desc: 'Aromatic red cedar dry sauna with heated volcanic stones.' },
+  gameroom: { id: 'gameroom', name: 'Arcade & Game Room', emoji: '🕹️', shared: false, base: 22000, valBoost: 0.09, rentBoost: 0.14, desc: 'Custom game lounge with retro arcade cabinets, billiards and pinball.' },
+  aquarium: { id: 'aquarium', name: 'Coral Reef Aquarium', emoji: '🐠', shared: false, base: 16000, valBoost: 0.07, rentBoost: 0.10, desc: 'Spectacular built-in saltwater living reef tank with exotic fish.' },
+  observatory: { id: 'observatory', name: 'Rooftop Observatory', emoji: '🔭', shared: false, base: 35000, valBoost: 0.12, rentBoost: 0.16, desc: 'Motorized revolving dome with a computerized optical telescope.' },
+  chef_kitchen: { id: 'chef_kitchen', name: 'Chef’s Kitchen', emoji: '🍳', shared: false, base: 38000, valBoost: 0.15, rentBoost: 0.20, desc: 'Commercial six-burner gas range, marble waterfall island and wine fridge.' },
+  theater: { id: 'theater', name: 'Private Home Cinema', emoji: '🎬', shared: false, base: 28000, valBoost: 0.11, rentBoost: 0.15, desc: 'Acoustically treated theater with 4K laser projector and leather recliners.' },
+};
+const RENOVATION_IDS = Object.keys(RENOVATION_PROJECTS);
+
+const CONTRACTOR_TIERS = [
+  { id: 'budget', name: 'Budget Handyman Crew', emoji: '🔨', mult: 0.7, reliable: 0.45, skill: 0.4, desc: 'Cheapest bid. High risk of delays, cutting corners or surprises.' },
+  { id: 'reputable', name: 'Licensed General Contractor', emoji: '👷', mult: 1.0, reliable: 0.85, skill: 0.78, desc: 'Bonded and insured with a solid portfolio and written guarantee.' },
+  { id: 'luxury', name: 'Master Architectural Firm', emoji: '📐', mult: 1.5, reliable: 0.98, skill: 0.96, desc: 'Top-tier luxury builders. Flawless craftsmanship and bespoke finishes.' },
+];
+

@@ -116,10 +116,18 @@ const AVLIB = (() => {
   const LONGFRONT = 'M100 36 C76 36 58 52 57 82 C56 110 55 140 54 176 C58 182 66 184 72 180 C70 156 68 132 67 112 C66 96 70 82 78 70 C86 60 94 54 100 50 C106 54 114 60 122 70 C130 82 134 96 133 112 C132 132 130 156 128 180 C134 184 142 182 146 176 C145 140 144 110 143 82 C142 52 124 36 100 36 Z';
 
   // Each style returns { back: [layers], front: [layers] } in head space.
+  // When `fig` is true, long shoulder locks are handled by FIG.figHairLayers in body space so they never clip collars or traps.
+  const LONGFRONT_FIG = 'M100 36 C76 36 58 52 57 82 C56 102 58 120 62 134 C66 138 71 136 72 130 C69 116 67 102 67 92 C66 80 71 70 79 62 C86 55 94 51 100 48 C106 51 114 55 121 62 C129 70 134 80 133 92 C133 102 131 116 128 130 C129 136 134 138 138 134 C142 120 144 102 143 82 C142 52 124 36 100 36 Z';
   const HAIRSTYLES = {
     none: () => ({}),
     bald: (c, sk) => ({ front: [{ d: ell(88, 58, 9, 4.5), f: sk.hi, o: 0.5, t2: 'rotate(-15 88 58)' }] }),
     buzz: (c) => ({ front: [{ d: 'M60.5 90 C59 62 76 41 100 41 C124 41 141 62 139.5 90 C137 80 132 72.5 124 68.5 C112 64.5 88 64.5 76 68.5 C68 72.5 63 80 60.5 90 Z', f: c.base, o: 0.9 }] }),
+    fade: (c) => ({ front: [
+      { d: 'M61 88 C60 72 64 58 72 50 L128 50 C136 58 140 72 139 88 C136 78 131 71 124 67 L76 67 C69 71 64 78 61 88 Z', f: c.base, o: 0.35 },
+      { d: 'M68 58 C68 41 82 32 100 32 C118 32 132 41 132 58 C126 63 114 65 100 65 C86 65 74 63 68 58 Z', f: c.base },
+      { d: 'M78 44 C88 38 106 37 120 42', s: c.hi, w: 2.8, o: 0.55 },
+      { d: 'M84 52 C92 49 108 49 118 53', s: c.shade, w: 1.5, o: 0.5 },
+    ] }),
     crop: (c) => ({ front: [
       { d: 'M57 95 C55 64 72 36 100 35 C128 36 145 64 143 95 L139 95 C138 84 136 77 131 72 C126 71 121 70 116 71 C112 68 106 68 100 69 C94 68 88 68 84 71 C79 70 74 71 69 72 C64 77 62 85 61 95 Z', f: c.base },
       { d: 'M88 44 C92 52 92 60 90 68 M108 43 C112 52 113 60 111 68', s: c.shade, w: 1.4, o: 0.5 },
@@ -129,6 +137,16 @@ const AVLIB = (() => {
       { d: 'M57 96 C54 62 72 34 102 34 C130 35 146 62 143 96 L139 96 C139 84 137 74 131 67 C124 64 114 62 104 60 C97 58.5 91 57 87 55 C82 60 74 64 68 70 C64 76 61 86 61 96 Z', f: c.base },
       { d: 'M86 38 C84.5 44 85.5 50 87 55 M92 50 C104 52 118 56 128 62', s: c.shade, w: 1.5, o: 0.55 },
       { d: 'M96 43 C108 41 122 45 130 53', s: c.hi, w: 3, o: 0.55 },
+    ] }),
+    curtains: (c) => ({ front: [
+      { d: 'M56 98 C53 62 72 34 100 34 C128 34 147 62 144 98 C140 92 137 82 133 73 C124 81 112 76 100 56 C88 76 76 81 67 73 C63 82 60 92 56 98 Z', f: c.base },
+      { d: 'M100 35 V56 M82 48 C78 60 72 70 64 76 M118 48 C122 60 128 70 136 76', s: c.shade, w: 1.5, o: 0.55 },
+      { d: 'M74 48 C82 41 91 39 97 42 M126 48 C118 41 109 39 103 42', s: c.hi, w: 2.6, o: 0.55 },
+    ] }),
+    slick: (c) => ({ front: [
+      { d: 'M58 95 C56 62 73 33 100 32 C127 33 144 62 142 95 L138 93 C137 78 132 66 122 60 C110 55 90 55 78 60 C68 66 63 78 62 93 Z', f: c.base },
+      { d: 'M76 56 C82 42 92 35 100 34 M90 55 C96 41 104 35 112 36 M106 56 C114 43 122 39 128 42', s: c.shade, w: 1.4, o: 0.5 },
+      { d: 'M80 43 C94 37 110 37 124 44', s: c.hi, w: 2.8, o: 0.58 },
     ] }),
     curls: (c) => ({ front: [
       { d: 'M58.5 92 C58.5 68 76 50 100 50 C124 50 141.5 68 141.5 92 C138 82 131 76 123 73.5 C115 71 107 72 100 71.5 C93 72 85 71 77 73.5 C69 76 62 82 58.5 92 Z ' + curlBlobs.map(([x, y, r]) => circ(x, y, r)).join(' '), f: c.base },
@@ -143,42 +161,77 @@ const AVLIB = (() => {
       ],
       front: [{ d: 'M58 96 C55 60 74 36 100 36 C126 36 145 60 142 96 C138 82 129 72 118 67.5 C108 64 92 64 82 67.5 C71 72 62 82 58 96 Z', f: c.base }, { d: curlMarks([[76, 50, 8], [94, 44, 8], [112, 46, 8], [128, 56, 8]]), s: c.shade, w: 1.6, o: 0.5 }],
     }),
+    locs: (c, sk, fig) => ({
+      back: [{ d: fig ? 'M58 84 C55 108 56 128 60 142 L140 142 C144 128 145 108 142 84 Z' : 'M56 84 C52 120 50 158 48 196 L152 196 C150 158 148 120 144 84 Z', f: c.back }],
+      front: [
+        { d: fig ? LONGFRONT_FIG : LONGFRONT, f: c.base },
+        { d: fig ? 'M62 76 C59 96 60 116 63 132 M69 72 C66 94 67 114 70 130 M138 76 C141 96 140 116 137 132 M131 72 C134 94 133 114 130 130' : 'M60 78 C57 112 56 146 56 178 M67 74 C65 110 64 146 64 180 M140 78 C143 112 144 146 144 178 M133 74 C135 110 136 146 136 180', s: c.shade, w: 3.2, o: 0.55 },
+        { d: 'M76 46 C86 40 114 40 124 46', s: c.hi, w: 2.6, o: 0.45 },
+        ...(fig ? [] : [{ d: rr(54, 152, 5, 4, 1) + ' ' + rr(62, 164, 5, 4, 1) + ' ' + rr(141, 152, 5, 4, 1) + ' ' + rr(133, 164, 5, 4, 1), f: GOLD }]),
+      ],
+    }),
     pixie: (c) => ({ front: [
       { d: 'M58 98 C54 66 70 38 100 36 C128 36 145 58 143 90 C142 93 140 96 139 98 C138 86 136 78 130 72 C121 77 105 81 90 81 C80 82 72 85 66 89 C63 92 62 95 61 98 Z M60 92 C59 98 59 104 60 109 C62 104 63.5 99 64 94 Z M140 92 C141 98 141 104 140 109 C138 104 136.5 99 136 94 Z', f: c.base },
       { d: 'M128 70 C116 75 102 78 90 79 M118 50 C110 58 100 64 88 68', s: c.shade, w: 1.5, o: 0.5 },
       { d: 'M84 44 C96 39 112 40 124 47', s: c.hi, w: 3, o: 0.55 },
     ] }),
     bob: (c) => ({
-      back: [{ d: 'M59 96 C58 120 60 138 66 146 L134 146 C140 138 142 120 141 96 Z', f: c.back }],
+      back: [{ d: 'M58 92 C56 118 59 136 66 145 L134 145 C141 136 144 118 142 92 Z', f: c.back }],
       front: [
-        { d: 'M100 36 C72 36 55 54 55 86 C55 106 55 124 58 142 C64 147 74 147 80 143 C74 126 70 110 70 94 C70 87 72 81 75.5 77 C84 78.5 92 79 100 79 C108 79 116 78.5 124.5 77 C128 81 130 87 130 94 C130 110 126 126 120 143 C126 147 136 147 142 142 C145 124 145 106 145 86 C145 54 128 36 100 36 Z', f: c.base },
-        { d: 'M84 60 C82 66 82 72 84 78 M100 58 C99 66 99 72 100 79 M116 60 C118 66 118 72 116 78 M64 92 C64 110 66 126 70 140 M136 92 C136 110 134 126 130 140', s: c.shade, w: 1.4, o: 0.45 },
+        { d: 'M100 36 C72 36 55 54 55 86 C55 106 56 122 60 139 C65 144 74 144 79 139 C74 123 70 108 70 94 C70 87 72 81 75.5 77 C84 78.5 92 79 100 79 C108 79 116 78.5 124.5 77 C128 81 130 87 130 94 C130 108 126 123 121 139 C126 144 135 144 140 139 C144 122 145 106 145 86 C145 54 128 36 100 36 Z', f: c.base },
+        { d: 'M84 60 C82 66 82 72 84 78 M100 58 C99 66 99 72 100 79 M116 60 C118 66 118 72 116 78 M64 92 C64 108 66 122 70 136 M136 92 C136 108 134 122 130 136', s: c.shade, w: 1.4, o: 0.45 },
         { d: 'M70 50 C80 42 94 39 106 40', s: c.hi, w: 3, o: 0.55 },
       ],
     }),
-    long: (c) => ({
-      back: [{ d: 'M60 84 C56 120 54 160 52 198 L148 198 C146 160 144 120 140 84 Z', f: c.back }],
+    shoulder: (c, sk, fig) => ({
+      back: [{ d: fig ? 'M58 86 C56 110 58 128 63 140 L137 140 C142 128 144 110 142 86 Z' : 'M58 86 C54 118 53 148 56 172 L144 172 C147 148 146 118 142 86 Z', f: c.back }],
       front: [
-        { d: LONGFRONT, f: c.base },
-        { d: 'M100 37 L100 50 M63 92 C61 116 60 144 59 172 M137 92 C139 116 140 144 141 172', s: c.shade, w: 1.5, o: 0.5 },
-        { d: 'M70 66 C65 90 63 120 62 152 M130 66 C135 90 137 120 138 152', s: c.hi, w: 2.5, o: 0.45 },
+        { d: fig ? LONGFRONT_FIG : 'M100 36 C74 36 56 54 56 84 C56 112 56 140 58 164 C63 170 72 170 77 164 C72 144 69 120 69 96 C69 82 76 68 92 56 L100 50 L108 56 C124 68 131 82 131 96 C131 120 128 144 123 164 C128 170 137 170 142 164 C144 140 144 112 144 84 C144 54 126 36 100 36 Z', f: c.base },
+        { d: 'M100 37 V50 M68 50 C80 41 96 39 112 41', s: c.hi, w: 2.8, o: 0.52 },
       ],
     }),
-    wavy: (c) => ({
-      back: [{ d: 'M58 86 C52 110 58 130 52 150 C48 166 54 184 52 198 L148 198 C146 184 152 166 148 150 C142 130 148 110 142 86 Z', f: c.back }],
+    wolf: (c, sk, fig) => ({
+      back: [{ d: fig ? 'M55 82 C50 104 52 124 58 140 L142 140 C148 124 150 104 145 82 Z' : 'M55 82 C48 112 50 146 46 178 C54 182 62 178 66 172 L134 172 C138 178 146 182 154 178 C150 146 152 112 145 82 Z', f: c.back }],
       front: [
-        { d: 'M100 35 C74 35 56 52 55 82 C53 100 58 112 54 128 C50 144 58 156 54 172 C58 182 70 184 76 178 C72 162 78 150 72 134 C68 120 70 104 70 94 C72 80 82 66 100 52 C118 66 128 80 130 94 C130 104 132 120 128 134 C122 150 128 162 124 178 C130 184 142 182 146 172 C142 156 150 144 146 128 C142 112 147 100 145 82 C144 52 126 35 100 35 Z', f: c.base },
-        { d: 'M100 36 L100 52 M64 84 C61 98 66 110 62 124 C59 136 64 148 61 160 M136 84 C139 98 134 110 138 124 C141 136 136 148 139 160', s: c.shade, w: 1.5, o: 0.45 },
-        { d: 'M66 70 C60 90 66 104 61 122 C57 138 64 150 60 166 M134 70 C140 90 134 104 139 122 C143 138 136 150 140 166', s: c.hi, w: 2.5, o: 0.45 },
+        { d: fig ? 'M100 34 C72 34 54 52 54 82 C51 94 53 108 50 118 C56 118 60 114 62 126 C66 122 69 112 68 96 C70 84 78 74 86 68 C92 75 96 70 100 62 C104 70 108 75 114 68 C122 74 130 84 132 96 C131 112 134 122 138 126 C140 114 144 118 150 118 C147 108 149 94 146 82 C146 52 128 34 100 34 Z' : 'M100 34 C72 34 54 52 54 82 C51 94 53 108 50 118 C56 118 59 114 58 134 C56 150 53 164 56 176 C64 176 70 166 73 152 C70 132 68 112 68 96 C70 84 78 74 86 68 C92 75 96 70 100 62 C104 70 108 75 114 68 C122 74 130 84 132 96 C132 112 130 132 127 152 C130 166 136 176 144 176 C147 164 144 150 142 134 C141 114 144 118 150 118 C147 108 149 94 146 82 C146 52 128 34 100 34 Z', f: c.base },
+        { d: 'M72 48 C84 39 102 38 118 43', s: c.hi, w: 2.8, o: 0.55 },
+        { d: 'M84 54 C80 62 76 68 70 72 M116 54 C120 62 124 68 130 72', s: c.shade, w: 1.5, o: 0.5 },
+      ],
+    }),
+    long: (c, sk, fig) => ({
+      back: [{ d: fig ? 'M59 84 C56 108 57 128 62 142 L138 142 C143 128 144 108 141 84 Z' : 'M60 84 C56 120 54 160 52 198 L148 198 C146 160 144 120 140 84 Z', f: c.back }],
+      front: [
+        { d: fig ? LONGFRONT_FIG : LONGFRONT, f: c.base },
+        { d: fig ? 'M100 37 L100 48 M64 88 C62 104 62 118 65 130 M136 88 C138 104 138 118 135 130' : 'M100 37 L100 50 M63 92 C61 116 60 144 59 172 M137 92 C139 116 140 144 141 172', s: c.shade, w: 1.5, o: 0.5 },
+        { d: fig ? 'M70 62 C66 80 65 102 67 122 M130 62 C134 80 135 102 133 122' : 'M70 66 C65 90 63 120 62 152 M130 66 C135 90 137 120 138 152', s: c.hi, w: 2.5, o: 0.45 },
+      ],
+    }),
+    wavy: (c, sk, fig) => ({
+      back: [{ d: fig ? 'M58 86 C53 106 58 122 56 140 L144 140 C142 122 147 106 142 86 Z' : 'M58 86 C52 110 58 130 52 150 C48 166 54 184 52 198 L148 198 C146 184 152 166 148 150 C142 130 148 110 142 86 Z', f: c.back }],
+      front: [
+        { d: fig ? LONGFRONT_FIG : 'M100 35 C74 35 56 52 55 82 C53 100 58 112 54 128 C50 144 58 156 54 172 C58 182 70 184 76 178 C72 162 78 150 72 134 C68 120 70 104 70 94 C72 80 82 66 100 52 C118 66 128 80 130 94 C130 104 132 120 128 134 C122 150 128 162 124 178 C130 184 142 182 146 172 C142 156 150 144 146 128 C142 112 147 100 145 82 C144 52 126 35 100 35 Z', f: c.base },
+        { d: fig ? 'M100 36 L100 48 M64 82 C61 96 66 110 64 124 M136 82 C139 96 134 110 136 124' : 'M100 36 L100 52 M64 84 C61 98 66 110 62 124 C59 136 64 148 61 160 M136 84 C139 98 134 110 138 124 C141 136 136 148 139 160', s: c.shade, w: 1.5, o: 0.45 },
+        { d: fig ? 'M68 64 C63 82 67 100 65 118 M132 64 C137 82 133 100 135 118' : 'M66 70 C60 90 66 104 61 122 C57 138 64 150 60 166 M134 70 C140 90 134 104 139 122 C143 138 136 150 140 166', s: c.hi, w: 2.5, o: 0.45 },
       ],
     }),
     ponytail: (c) => ({
-      back: [{ d: 'M126 46 C147 44 159 61 157 85 C155 109 147 130 151 158 C140 152 134 134 134 113 C134 93 140 75 130 60 Z', f: c.back }, { d: 'M144 70 C146 92 142 116 146 140', s: c.hi, w: 2.2, o: 0.4 }],
+      back: [{ d: 'M126 46 C147 44 159 61 157 85 C155 109 147 130 151 154 C140 148 134 132 134 112 C134 93 140 75 130 60 Z', f: c.back }, { d: 'M144 70 C146 92 142 116 146 138', s: c.hi, w: 2.2, o: 0.4 }],
       front: [
         { d: SLEEK, f: c.base },
         { d: 'M84 63 C90 52 100 46 116 44 M70 72 C76 58 86 48 100 44', s: c.shade, w: 1.4, o: 0.5 },
         { d: 'M78 46 C90 40 110 40 122 46', s: c.hi, w: 3, o: 0.55 },
         { d: rr(130, 47, 9, 9, 3), f: '#E35D7A', t2: 'rotate(30 134.5 51.5)' },
+      ],
+    }),
+    twintails: (c, sk, fig) => ({
+      back: fig ? [] : [
+        { d: both('M62 52 C40 50 28 74 32 108 C35 134 42 154 38 176 C48 172 54 154 54 128 C54 102 48 80 58 64 Z'), f: c.back },
+        { d: both('M42 74 C38 100 42 130 40 156'), s: c.hi, w: 2.2, o: 0.42 },
+      ],
+      front: [
+        { d: SLEEK, f: c.base },
+        { d: 'M100 37 V60 M78 46 C90 40 110 40 122 46', s: c.hi, w: 2.6, o: 0.5 },
+        { d: circ(58, 54, 5.5) + ' ' + circ(142, 54, 5.5), f: '#E35D7A' },
       ],
     }),
     bun: (c) => ({
@@ -189,13 +242,24 @@ const AVLIB = (() => {
         { d: 'M78 46 C90 40 110 40 122 46', s: c.hi, w: 3, o: 0.55 },
       ],
     }),
-    braids: (c) => ({
-      back: [{ d: 'M58 84 C53 120 52 160 50 198 L150 198 C148 160 147 120 142 84 Z', f: c.back }],
+    spacebuns: (c) => ({
+      back: [
+        { d: circ(66, 38, 13.5) + ' ' + circ(134, 38, 13.5), f: c.base },
+        { d: 'M58 35 C62 29 70 29 74 35 M126 35 C130 29 138 29 142 35', s: c.shade, w: 1.5, o: 0.55 },
+      ],
       front: [
-        { d: LONGFRONT, f: c.base },
-        { d: 'M61 84 C60 110 59 140 58 174 M67 86 C66 112 65 142 64 178 M139 84 C140 110 141 140 142 174 M133 86 C134 112 135 142 136 178 M86 42 C88 48 90 54 92 58 M114 42 C112 48 110 54 108 58', s: c.hi, w: 2.2, o: 0.55, da: '3.2 2.4' },
+        { d: SLEEK + ' M62 88 C58 104 59 118 63 130 C65 120 65 106 67 92 Z M138 88 C142 104 141 118 137 130 C135 120 135 106 133 92 Z', f: c.base },
+        { d: 'M100 36 V62', s: c.shade, w: 1.5, o: 0.55 },
+        { d: 'M78 46 C90 40 110 40 122 46', s: c.hi, w: 2.8, o: 0.52 },
+      ],
+    }),
+    braids: (c, sk, fig) => ({
+      back: [{ d: fig ? 'M58 84 C55 108 56 128 60 142 L140 142 C144 128 145 108 142 84 Z' : 'M58 84 C53 120 52 160 50 198 L150 198 C148 160 147 120 142 84 Z', f: c.back }],
+      front: [
+        { d: fig ? LONGFRONT_FIG : LONGFRONT, f: c.base },
+        { d: fig ? 'M63 82 C61 100 62 116 64 130 M68 84 C66 102 67 118 69 130 M137 82 C139 100 138 116 136 130 M132 84 C134 102 133 118 131 130 M86 42 C88 48 90 54 92 58 M114 42 C112 48 110 54 108 58' : 'M61 84 C60 110 59 140 58 174 M67 86 C66 112 65 142 64 178 M139 84 C140 110 141 140 142 174 M133 86 C134 112 135 142 136 178 M86 42 C88 48 90 54 92 58 M114 42 C112 48 110 54 108 58', s: c.hi, w: 2.2, o: 0.55, da: '3.2 2.4' },
         { d: 'M100 37 L100 50', s: c.shade, w: 1.6, o: 0.6 },
-        { d: circ(58, 177, 2.4) + ' ' + circ(64, 181, 2.4) + ' ' + circ(142, 177, 2.4) + ' ' + circ(136, 181, 2.4), f: GOLD },
+        ...(fig ? [] : [{ d: circ(58, 177, 2.4) + ' ' + circ(64, 181, 2.4) + ' ' + circ(142, 177, 2.4) + ' ' + circ(136, 181, 2.4), f: GOLD }]),
       ],
     }),
     receding: (c, sk) => ({ front: [
@@ -213,6 +277,11 @@ const AVLIB = (() => {
     tee: (c) => [
       { d: 'M22 200 C22 182 32 170 52 165 C64 162 76 159 85 156 C89 163 111 163 115 156 C124 159 136 162 148 165 C168 170 178 182 178 200 Z', f: c.c },
       { d: 'M85 156 C89 163 111 163 115 156', s: c.s, w: 3.4 },
+      { d: both('M52 166 C49 176 49 188 51 200'), s: c.s, w: 1.4, o: 0.4 },
+    ],
+    crop: (c) => [
+      { d: 'M22 200 C22 182 32 170 52 165 C64 162 76 159 83 156 C88 166 112 166 117 156 C124 159 136 162 148 165 C168 170 178 182 178 200 Z', f: c.c },
+      { d: 'M83 156 C88 166 112 166 117 156', s: c.s, w: 3 },
       { d: both('M52 166 C49 176 49 188 51 200'), s: c.s, w: 1.4, o: 0.4 },
     ],
     vneck: (c) => [
@@ -233,6 +302,30 @@ const AVLIB = (() => {
       { d: 'M100 163 L100 200', s: c.s, w: 1.4 },
       { d: circ(100, 178, 1.7) + ' ' + circ(100, 191, 1.7), f: c.s },
       { d: both('M86 153 L79.5 166 L97 172 L100 162 Z'), f: c.h, s: c.s, w: 1 },
+    ],
+    polo: (c) => [
+      { d: 'M22 200 C22 182 32 170 52 165 C64 162 76 159 85 156 C90 162 110 162 115 156 C124 159 136 162 148 165 C168 170 178 182 178 200 Z', f: c.c },
+      { d: rr(97.5, 161, 5, 22, 1.5), f: c.s, o: 0.35 },
+      { d: circ(100, 169, 1.5) + ' ' + circ(100, 177, 1.5), f: '#F4F1EA' },
+      { d: both('M86 153 L79.5 165 L97 170 L100 161 Z'), f: c.h, s: c.s, w: 1 },
+    ],
+    cardigan: (c) => [
+      { d: 'M22 200 C22 182 32 170 52 165 C64 162 76 159 85 156 L115 156 C124 159 136 162 148 165 C168 170 178 182 178 200 Z', f: c.c },
+      { d: 'M85 156 C90 162 110 162 115 156 L108 200 H92 Z', f: '#F4F1EA' },
+      { d: 'M85 156 L92 200 M115 156 L108 200', s: c.s, w: 2.2 },
+      { d: circ(88, 178, 1.8) + ' ' + circ(89.5, 191, 1.8), f: c.s },
+    ],
+    jacket: (c) => [
+      { d: 'M22 200 C22 182 32 170 52 165 C64 162 76 159 85 156 L115 156 C124 159 136 162 148 165 C168 170 178 182 178 200 Z', f: c.c },
+      { d: 'M85 156 C90 162 110 162 115 156 L100 188 Z', f: '#F4F1EA' },
+      { d: both('M85 155 L73 169 L85 175 L80 182 L100 192 Z'), f: c.h, s: c.s, w: 1.2 },
+      { d: 'M100 188 V200', s: '#D8D2C5', w: 2 },
+    ],
+    track: (c) => [
+      { d: 'M22 200 C22 182 32 170 52 165 C64 162 76 159 85 156 L115 156 C124 159 136 162 148 165 C168 170 178 182 178 200 Z', f: c.c },
+      { d: 'M84 146 C92 149 108 149 116 146 L117 158 C108 162 92 162 83 158 Z', f: c.c, s: c.s, w: 1.2 },
+      { d: 'M100 148 V200', s: '#F4F1EA', w: 2.2 },
+      { d: both('M54 165 L28 188'), s: '#F4F1EA', w: 3 },
     ],
     blazer: (c) => [
       { d: 'M22 200 C22 182 32 170 52 165 C64 162 76 159 85 156 L100 196 L115 156 C124 159 136 162 148 165 C168 170 178 182 178 200 Z', f: c.c },
@@ -261,6 +354,11 @@ const AVLIB = (() => {
       { d: rr(59, 158, 7.5, 24, 3.75) + ' ' + rr(133.5, 158, 7.5, 24, 3.75), f: c.c },
       { d: 'M60 177 C70 181 84 185 100 185 C116 185 130 181 140 177', s: c.s, w: 2 },
     ],
+    dress: (c) => [
+      { d: 'M42 200 C43 188 50 180 60 176 C72 183 86 186 100 186 C114 186 128 183 140 176 C150 180 157 188 158 200 Z', f: c.c },
+      { d: rr(60, 157, 6.5, 23, 3.2) + ' ' + rr(133.5, 157, 6.5, 23, 3.2), f: c.c },
+      { d: 'M60 176 C72 183 86 186 100 186 C114 186 128 183 140 176', s: c.h, w: 2.2 },
+    ],
     onesie: (c) => [
       { d: 'M22 200 C22 182 32 170 52 165 C64 162 76 159 85 156 C89 163 111 163 115 156 C124 159 136 162 148 165 C168 170 178 182 178 200 Z', f: c.c },
       { d: 'M85 156 C89 164 111 164 115 156', s: c.h, w: 4.5 },
@@ -273,7 +371,7 @@ const AVLIB = (() => {
   const EAR = 'M63 92 C56 88 51 92 51 101 C51 110 56 116 63 115 Z';
   const EAR_IN = 'M59.5 96 C55.5 95 54.5 99 55.5 103 C56.5 107 58.5 108 60.5 107';
 
-  function build(look, stage, mood, ids) {
+  function build(look, stage, mood, ids, forFigure) {
     const L = Object.assign({}, DEFAULT, look || {});
     const st = STAGE[stage] || STAGE.adult;
     const baby = stage === 'baby', kid = baby || stage === 'child';
@@ -308,27 +406,28 @@ const AVLIB = (() => {
     const B = (g, arr) => add(g, BT, arr);
     const faceD = FACES[faceK];
     const hijab = headwear === 'hijab';
-    const hair = hijab ? {} : HAIRSTYLES[hairK](hc, sk);
+    const hair = hijab ? {} : HAIRSTYLES[hairK](hc, sk, !!forFigure);
     const fclip = `url(#${ids.face})`, eclip = `url(#${ids.eyes})`;
 
     // back of head, body, clothes
     if (hair.back) H('hairBack', hair.back);
-    if (outfitK === 'tank') B('body', [{ d: TORSO, f: sk.base }]);
+    if (outfitK === 'tank' || outfitK === 'dress') B('body', [{ d: TORSO, f: sk.base }]);
     B('body', [{ d: NECK, f: sk.base }]);
-    if (outfitK === 'scoop') B('body', [{ d: both('M84 165 C88 166.5 93 166.8 96 166'), s: sk.shade, w: 1.3, o: 0.6 }]);
+    if (outfitK === 'scoop' || outfitK === 'dress' || outfitK === 'tank') B('body', [{ d: both('M84 165 C88 166.5 93 166.8 96 166'), s: sk.shade, w: 1.3, o: 0.6 }]);
     B('clothes', OUTFITS[outfitK](cc));
     if (hijab) H('hair', [
-      { d: 'M100 31 C66 31 49 56 49 90 C49 118 54 140 60 156 C48 162 38 174 34 200 L166 200 C162 174 152 162 140 156 C146 140 151 118 151 90 C151 56 134 31 100 31 Z', f: mix(L.headwearColor || '#2BB3A3', '#000000', 0.12) },
-      { d: 'M60 158 C76 170 124 170 140 158', s: mix(L.headwearColor || '#2BB3A3', '#000000', 0.3), w: 1.6, o: 0.55 },
+      { d: forFigure ? 'M100 31 C68 31 51 54 51 88 C51 112 56 132 64 148 L136 148 C144 132 149 112 149 88 C149 54 132 31 100 31 Z' : 'M100 31 C66 31 49 56 49 90 C49 118 54 140 60 156 C48 162 38 174 34 200 L166 200 C162 174 152 162 140 156 C146 140 151 118 151 90 C151 56 134 31 100 31 Z', f: mix(L.headwearColor || '#2BB3A3', '#000000', 0.12) },
+      ...(forFigure ? [] : [{ d: 'M60 158 C76 170 124 170 140 158', s: mix(L.headwearColor || '#2BB3A3', '#000000', 0.3), w: 1.6, o: 0.55 }]),
     ]);
 
-    // head
+    // head with subtle cheek highlight & jawline sculpting
     H('face', [
-      { d: both(EAR), f: sk.base },
+      { d: both(EAR), f: sk.base, s: sk.shade, w: 0.9 },
       { d: both(EAR_IN), s: sk.shade, w: 1.6 },
-      { d: 'M86.5 134 C92 145 108 145 113.5 134 L113.5 149 C108 155 92 155 86.5 149 Z', f: sk.shade, o: 0.55 },
-      { d: faceD, f: sk.base },
-      { d: 'M128 50 C142 66 144 108 128 134 C120 146 110 152 100 153 L156 153 L156 50 Z', f: sk.shade, o: 0.16, c: fclip },
+      { d: 'M86.5 134 C92 145 108 145 113.5 134 L113.5 149 C108 155 92 155 86.5 149 Z', f: sk.shade, o: 0.52 },
+      { d: faceD, f: sk.base, s: sk.shade, w: 0.9 },
+      { d: 'M128 50 C142 66 144 108 128 134 C120 146 110 152 100 153 L156 153 L156 50 Z', f: sk.shade, o: 0.15, c: fclip },
+      { d: ell(76, 108, 7, 3.8) + ' ' + ell(124, 108, 7, 3.8), f: sk.hi, o: 0.2, c: fclip },
     ]);
     if (stage === 'senior' && !L.smooth) H('features', [
       { d: 'M85 69 C92 67 108 67 115 69 M88 75 C94 73.6 106 73.6 112 75', s: sk.shade, w: 1.3, o: 0.5 },
@@ -355,22 +454,23 @@ const AVLIB = (() => {
     if (['mustache', 'goatee', 'full', 'beard'].includes(facialK)) H('features', [{ d: 'M86 126.5 C89.5 120.5 96 119.5 100 122 C104 119.5 110.5 120.5 114 126.5 C110 125 105 124.6 100 125.2 C95 124.6 90 125 86 126.5 Z', f: fh }]);
     H('features', NOSES[noseK](sk));
 
-    // eyes
+    // eyes with upper sclera shadow & iris luminance
     const sc = st.eye;
     const eL = eyeGeo(EYES[eyeK], 84, 99, 1, sc), eR = eyeGeo(EYES[eyeK], 116, 99, -1, sc);
     const ir = st.iris, line = '#2A1C17';
     const eyes = [
       { d: eL.full + ' ' + eR.full, f: '#FBF7F2' },
+      { d: 'M68 92 H132 V97.5 H68 Z', f: '#E4DCD5', o: 0.65, c: eclip },
       { d: circ(84.3, 99.3, ir) + ' ' + circ(115.7, 99.3, ir), f: eyeC, c: eclip },
-      { d: circ(84.3, 99.3, ir) + ' ' + circ(115.7, 99.3, ir), s: mix(eyeC, '#000000', 0.45), w: 0.8, c: eclip },
+      { d: circ(84.3, 99.3, ir) + ' ' + circ(115.7, 99.3, ir), s: mix(eyeC, '#000000', 0.45), w: 0.85, c: eclip },
       { d: circ(84.3, 99.3, ir * 0.46) + ' ' + circ(115.7, 99.3, ir * 0.46), f: '#17100E', c: eclip },
-      { d: circ(82.9, 97.6, ir * 0.27) + ' ' + circ(114.3, 97.6, ir * 0.27), f: '#FFFFFF', c: eclip },
-      { d: circ(85.8, 100.8, ir * 0.12) + ' ' + circ(117.2, 100.8, ir * 0.12), f: '#FFFFFF', o: 0.8, c: eclip },
-      { d: eL.upper + ' ' + eR.upper, s: line, w: 1.8 },
-      { d: eL.lower + ' ' + eR.lower, s: sk.shade, w: 1, o: 0.6 },
+      { d: circ(82.9, 97.6, ir * 0.28) + ' ' + circ(114.3, 97.6, ir * 0.28), f: '#FFFFFF', c: eclip },
+      { d: circ(85.8, 100.8, ir * 0.13) + ' ' + circ(117.2, 100.8, ir * 0.13), f: '#FFFFFF', o: 0.85, c: eclip },
+      { d: eL.upper + ' ' + eR.upper, s: line, w: 1.9 },
+      { d: eL.lower + ' ' + eR.lower, s: sk.shade, w: 1.05, o: 0.65 },
     ];
     if (EYES[eyeK].crease) eyes.push({ d: eL.crease + ' ' + eR.crease, s: sk.shade, w: EYES[eyeK].crease === 2 ? 1.7 : 1.2, o: 0.6 });
-    if (L.lashes) eyes.push({ d: eL.lash + ' ' + eR.lash, s: line, w: 1.6 });
+    if (L.lashes) eyes.push({ d: eL.lash + ' ' + eR.lash, s: line, w: 1.65 });
     if (stage === 'senior' && !L.smooth) eyes.push({ d: eL.bag + ' ' + eR.bag, s: sk.shade, w: 1.1, o: 0.5 });
     H('features', eyes);
 
@@ -378,20 +478,41 @@ const AVLIB = (() => {
     const bk = BROWS[L.brows] || BROWS.natural;
     H('features', [{ d: browGeo(bk, 84, 87, 1, lift) + ' ' + browGeo(bk, 116, 87, -1, lift), f: browC, o: baby ? 0.3 : stage === 'child' ? 0.75 : 1 }]);
 
-    // extras under the hair
-    if (L.earrings === 'studs' && !hijab && !baby) H('extras', [{ d: circ(55.5, 113.5, 2.2) + ' ' + circ(144.5, 113.5, 2.2), f: GOLD }]);
-    if (L.earrings === 'hoops' && !hijab && !baby) H('extras', [{ d: circ(55.5, 118.5, 4.2) + ' ' + circ(144.5, 118.5, 4.2), s: GOLD, w: 1.8 }]);
+    // earrings & glasses
+    if (L.earrings === 'studs' && !hijab && !baby) H('extras', [{ d: circ(55.5, 113.5, 2.3) + ' ' + circ(144.5, 113.5, 2.3), f: GOLD }]);
+    if (L.earrings === 'hoops' && !hijab && !baby) H('extras', [{ d: circ(55.5, 118.5, 4.3) + ' ' + circ(144.5, 118.5, 4.3), s: GOLD, w: 1.8 }]);
+    if (L.earrings === 'drops' && !hijab && !baby) H('extras', [
+      { d: 'M55.5 113.5 V117 M144.5 113.5 V117', s: GOLD, w: 1.4 },
+      { d: 'M55.5 116 C52.5 120 53 124 55.5 124.5 C58 124 58.5 120 55.5 116 Z M144.5 116 C141.5 120 142 124 144.5 124.5 C147 124 147.5 120 144.5 116 Z', f: '#E35D7A', s: GOLD, w: 1 },
+    ]);
+    if (L.earrings === 'pearls' && !hijab && !baby) H('extras', [
+      { d: circ(55.5, 114.5, 2.8) + ' ' + circ(144.5, 114.5, 2.8), f: '#FBF7F2', s: '#D8D2C5', w: 0.8 },
+      { d: circ(54.8, 113.6, 0.9) + ' ' + circ(143.8, 113.6, 0.9), f: '#FFFFFF' },
+    ]);
     const gc = L.glassesColor || '#2A2140';
     if (L.glasses === 'round' && !baby) H('extras', [
-      { d: circ(84, 99, 10) + ' ' + circ(116, 99, 10), f: '#FFFFFF', o: 0.12 },
+      { d: circ(84, 99, 10) + ' ' + circ(116, 99, 10), f: '#FFFFFF', o: 0.14 },
       { d: circ(84, 99, 10) + ' ' + circ(116, 99, 10) + ' M94 98 C97 95.5 103 95.5 106 98 M74 97 L62 94 M126 97 L138 94', s: gc, w: 2.2 },
     ]);
     if (L.glasses === 'square' && !baby) H('extras', [
-      { d: rr(72.5, 90.5, 23, 17, 4.5) + ' ' + rr(104.5, 90.5, 23, 17, 4.5), f: '#FFFFFF', o: 0.12 },
+      { d: rr(72.5, 90.5, 23, 17, 4.5) + ' ' + rr(104.5, 90.5, 23, 17, 4.5), f: '#FFFFFF', o: 0.14 },
       { d: rr(72.5, 90.5, 23, 17, 4.5) + ' ' + rr(104.5, 90.5, 23, 17, 4.5) + ' M95.5 97 C98 95.5 102 95.5 104.5 97 M72.5 96 L62 94 M127.5 96 L138 94', s: gc, w: 2.4 },
     ]);
+    if (L.glasses === 'aviator' && !baby) H('extras', [
+      { d: both('M72 91 H95 C96 98 93 108 84 109 C74 109 70 100 72 91 Z'), f: '#3B78C2', o: 0.22 },
+      { d: both('M72 91 H95 C96 98 93 108 84 109 C74 109 70 100 72 91 Z') + ' M95 92 H105 M95 95.5 H105 M72 93 L62 94 M128 93 L138 94', s: '#D4A843', w: 1.9 },
+    ]);
+    if (L.glasses === 'cateye' && !baby) H('extras', [
+      { d: both('M70 91 C76 89 91 91 95 95 C95 103 89 107 82 107 C74 107 70 100 70 91 Z'), f: '#FFFFFF', o: 0.14 },
+      { d: both('M70 91 C76 89 91 91 95 95 C95 103 89 107 82 107 C74 107 70 100 70 91 Z') + ' M95 96 Q100 94 105 96 M70 93 L62 95 M130 93 L138 95', s: '#7A2E3A', w: 2.4 },
+    ]);
+    if (L.glasses === 'sunglasses' && !baby) H('extras', [
+      { d: rr(71.5, 90, 24, 17.5, 4) + ' ' + rr(104.5, 90, 24, 17.5, 4), f: '#1E192B', o: 0.88 },
+      { d: 'M76 93 L82 104 M109 93 L115 104', s: '#FFFFFF', w: 1.8, o: 0.35 },
+      { d: rr(71.5, 90, 24, 17.5, 4) + ' ' + rr(104.5, 90, 24, 17.5, 4) + ' M95.5 95 H104.5 M71.5 94 L62 93 M128.5 94 L138 93', s: gc, w: 2.5 },
+    ]);
 
-    // hair, headwear
+    // hair & headwear
     if (hair.front) H('hair', hair.front);
     if (hijab) {
       const c = L.headwearColor || '#2BB3A3';
@@ -409,6 +530,30 @@ const AVLIB = (() => {
         { d: 'M55 72 C55 68 59 66 63 66 L137 66 C141 66 145 68 145 72 L145 80 C145 84 141 86 137 86 L63 86 C59 86 55 84 55 80 Z', f: cs },
         { d: [64, 70, 76, 82, 88, 94, 100, 106, 112, 118, 124, 130, 136].map((x) => `M${x} 69 V83`).join(' '), s: mix(c, '#000000', 0.4), w: 1.2, o: 0.4 },
         { d: circ(100, 29, 7.5), f: mix(c, '#FFFFFF', 0.35) },
+      ]);
+    }
+    if (headwear === 'cap') {
+      const c = L.headwearColor || '#3F6FD8', cs = mix(c, '#000000', 0.28), ch = mix(c, '#FFFFFF', 0.25);
+      H('hair', [
+        { d: 'M57 74 C57 46 75 31 100 31 C125 31 143 46 143 74 Z', f: c },
+        { d: 'M100 31 C86 42 82 56 82 72 M100 31 C114 42 118 56 118 72', s: cs, w: 1.2, o: 0.45 },
+        { d: 'M54 72 C72 63 128 63 152 75 C136 80 72 79 54 72 Z', f: cs },
+        { d: 'M64 70 Q104 63 146 74', s: ch, w: 1.8, o: 0.55 },
+        { d: circ(100, 31, 3), f: cs },
+      ]);
+    }
+    if (headwear === 'beret') {
+      const c = L.headwearColor || '#E35D7A', cs = mix(c, '#000000', 0.26);
+      H('hair', [
+        { d: 'M54 72 C46 54 64 32 104 30 C138 29 154 46 144 66 C132 62 72 64 54 72 Z', f: c, s: cs, w: 1.1 },
+        { d: 'M60 66 C82 60 122 60 140 66 L138 72 C120 67 82 67 62 72 Z', f: cs },
+        { d: 'M102 30 L105 24', s: cs, w: 2.2 },
+      ]);
+    }
+    if (headwear === 'headband') {
+      const c = L.headwearColor || '#FFB547', cs = mix(c, '#000000', 0.22);
+      H('hair', [
+        { d: 'M58 82 C62 54 78 41 100 41 C122 41 138 54 142 82 C139 62 122 49 100 49 C78 49 61 62 58 82 Z', f: c, s: cs, w: 1 },
       ]);
     }
 
@@ -635,13 +780,11 @@ function personAvatar(p, size, o) {
  * ADULT_AGE, so a child's body is never drawn. */
 const FIG = (() => {
   const { n, mix, circ, ell } = AVLIB;
-  const HEAD_T = 'translate(100 86) scale(0.62) translate(-100 -150)';
   const pt = (x, y, c) => ({ x, y, c });
-  // A smooth closed or open path through points; points with c set are corners.
   function smooth(pts, closed) {
     const N = pts.length;
     const at = (i) => pts[closed ? (i + N) % N : Math.max(0, Math.min(N - 1, i))];
-    const tan = pts.map((p, i) => (p.c ? [0, 0] : [(at(i + 1).x - at(i - 1).x) / 2, (at(i + 1).y - at(i - 1).y) / 2]));
+    const tan = pts.map((p, i) => (p.c ? [0, 0] : [(at(i + 1).x - at(i - 1).x) * 0.42, (at(i + 1).y - at(i - 1).y) * 0.42]));
     let d = `M${n(pts[0].x)} ${n(pts[0].y)}`;
     const last = closed ? N : N - 1;
     for (let i = 0; i < last; i++) {
@@ -650,108 +793,222 @@ const FIG = (() => {
     }
     return d + (closed ? ' Z' : '');
   }
-  // Right-side offsets from the centre line -> a closed outline mirrored to the left.
   const R = (off, y, c) => pt(100 + off, y, c);
   const outline = (right) => smooth(right.concat(right.slice().reverse().map((p) => pt(200 - p.x, p.y, p.c))), true);
   const flipX = (x) => 200 - x;
-  const line = (a, b) => `M${n(a[0])} ${n(a[1])} L${n(b[0])} ${n(b[1])}`;
+  const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
   function metrics(look, b) {
     const f = b.fat / 100, mu = b.muscle / 100, ch = b.chest / 100, hp = b.hips / 100, gl = b.glutes / 100;
-    const bs = { slim: 0.95, regular: 1, broad: 1.06 }[look.build] || 1;
-    const M = { f, mu, ch, hp, gl };
-    M.neck = 9 + mu * 1.8 + f * 2;
-    M.sh = (40 + mu * 8 + f * 5) * bs;
-    M.chest = 29 + ch * 5 + f * 9 + mu * 4;
-    M.bust = M.chest + ch * 4;
-    M.waist = 21 + f * 17 + mu * 2.5;
-    M.hip = 29 + hp * 10 + f * 11 + gl * 3;
-    M.seat = M.hip + gl * 6 + f * 1.5;
-    M.thighC = (M.seat + 1.4) / 2;
-    M.thigh = 13 + f * 9 + mu * 3 + gl * 2.5;
-    M.inner = Math.max(1.6, M.thighC - M.thigh);
-    M.kneeC = 13.5 + f * 3 + hp * 2;
-    M.knee = 7.4 + f * 3.6 + mu * 1.2;
-    M.calf = 8.4 + f * 4 + mu * 2.8;
-    M.ankle = 4.6 + f * 1;
-    M.ax = M.kneeC - 1;
-    M.armU = 9.5 + f * 7 + mu * 5.5;
-    M.armL = 7.8 + f * 4 + mu * 3.2;
-    // Low enough that a round arm cap sits inside the shoulder line.
-    M.shJ = [100 + M.sh - 6.5, 110];
-    const ex = Math.max(M.sh - 1.5, M.waist + M.armU / 2 + 1.5) + f * 1.5;
-    M.elbow = [100 + ex, 166];
-    M.wrist = [100 + Math.max(ex + 1.5, M.seat + M.armL / 2 + 2), 222];
+    const hNorm = Math.max(-0.75, Math.min(0.85, ((b.height || 170) - 170) / 36));
+    const bs = { slim: 0.94, regular: 1, broad: 1.07 }[look.build] || 1;
+    const fem = ch > 0.34 || hp > 0.42;
+    const M = { f, mu, ch, hp, gl, hNorm, fem };
+    M.neck = 8.4 + mu * 2.1 + f * 1.8 - (fem ? 0.8 : 0);
+    M.trap = M.neck + 6.5 + mu * 3.2 + f * 1.5;
+    M.sh = (37.5 + mu * 9.5 + f * 4.5 - (fem ? 2.5 : 0)) * bs;
+    M.chest = (27.5 + ch * 4.5 + f * 8.5 + mu * 5) * (0.97 + (bs - 1) * 0.5);
+    M.bust = M.chest + ch * 4.8;
+    M.rib = 23.5 + f * 11 + mu * 3.5;
+    M.waist = 19.5 + f * 16.5 + mu * 2.2 - hp * 1.2;
+    M.iliac = 25.5 + hp * 7.5 + f * 11.5 + gl * 2;
+    M.hip = 28 + hp * 10.5 + f * 10.5 + gl * 3.5;
+    M.seat = M.hip + gl * 5.2 + f * 1.8;
+    M.thighC = 9.5 + M.seat * 0.36;
+    M.thighOut = M.seat + 0.6 + f * 2 + mu * 1.8 + gl * 1.2;
+    M.inner = Math.max(1.4, M.thighC * 2 - M.thighOut + 2.2 - f * 3.5);
+    M.kneeC = 13.8 + f * 2.4 + hp * 1.8;
+    M.knee = 7.2 + f * 3.1 + mu * 1.3;
+    M.calfOut = M.kneeC + 7.8 + f * 3.6 + mu * 3.2;
+    M.calfIn = Math.max(3.2, M.kneeC - (6.8 + f * 2.8 + mu * 2.2));
+    M.ax = M.kneeC - 0.6;
+    M.ankle = 4.4 + f * 0.9 + mu * 0.3;
+    M.armU = 8.6 + f * 6.2 + mu * 5.8;
+    M.armL = 7.0 + f * 3.6 + mu * 3.4;
+    const shX = M.sh - 4.2;
+    const elbX = Math.max(shX + 3.2, Math.max(M.waist, M.bust * 0.92) + M.armU * 0.58 + 2.2) + f * 1.4;
+    const wrX = Math.max(elbX + 1.2, M.seat + M.armL * 0.52 + 2.8);
+    M.shJ = [100 + shX, 108];
+    M.elbow = [100 + elbX, 165];
+    M.wrist = [100 + wrX, 220];
     return M;
   }
 
   function bodyOutline(M) {
     return outline([
-      R(M.neck, 80, 1), R(M.neck, 94), R(M.neck + 5, 99.5), R(M.sh - 6, 102), R(M.sh, 109), R(M.chest, 124), R(M.bust, 137),
-      R(M.waist, 168), R(M.hip, 196), R(M.seat, 214), R(M.thighC + M.thigh, 238), R(M.kneeC + M.knee, 300),
-      R(M.kneeC - 0.5 + M.calf, 332), R(M.ax + M.ankle, 384), R(M.ax + M.ankle, 394, 1), R(M.ax - M.ankle, 394, 1),
-      R(M.ax - M.ankle, 384), R(M.kneeC - 0.5 - M.calf * 0.82, 334), R(M.kneeC - M.knee, 300), R(M.inner, 252), R(1.4, 228, 1),
+      R(M.neck, 79, 1), R(M.neck + 0.4, 92), R(M.trap, 98.5), R(M.sh - 5, 102.5), R(M.sh, 110),
+      R(M.chest, 125), R(M.bust, 138), R(M.rib, 152), R(M.waist, 168), R(M.iliac, 184),
+      R(M.hip, 198), R(M.seat, 214), R(M.thighOut, 238), R(M.kneeC + M.knee + 1.8, 274),
+      R(M.kneeC + M.knee, 300), R(M.calfOut, 330), R(M.ax + M.ankle + 1.4, 366), R(M.ax + M.ankle, 385),
+      R(M.ax + M.ankle, 394, 1), R(M.ax - M.ankle, 394, 1), R(M.ax - M.ankle, 385),
+      R(M.ax - M.ankle - 0.8, 366), R(M.calfIn, 332), R(M.kneeC - M.knee, 300),
+      R(M.inner + 1.8, 268), R(M.inner, 244), R(1.5, 227, 1),
     ]);
   }
-  const armPath = (M, side) => {
-    const fx = side < 0 ? flipX : (x) => x;
-    return { upper: line([fx(M.shJ[0]), M.shJ[1]], [fx(M.elbow[0]), M.elbow[1]]), lower: line([fx(M.elbow[0]), M.elbow[1]], [fx(M.wrist[0]), M.wrist[1]]) };
-  };
-  // A point part-way along a segment (for sleeve ends).
-  const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-  // A tapered band from a to b, w0 wide at a and w1 wide at b (sleeves).
-  const band = (a, b, w0, w1) => {
-    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
-    return `M${n(a[0] + (nx * w0) / 2)} ${n(a[1] + (ny * w0) / 2)} L${n(b[0] + (nx * w1) / 2)} ${n(b[1] + (ny * w1) / 2)} L${n(b[0] - (nx * w1) / 2)} ${n(b[1] - (ny * w1) / 2)} L${n(a[0] - (nx * w0) / 2)} ${n(a[1] - (ny * w0) / 2)} Z`;
-  };
-  const hemLine = (a, b, w) => {
-    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
-    return `M${n(b[0] + (nx * w) / 2)} ${n(b[1] + (ny * w) / 2)} L${n(b[0] - (nx * w) / 2)} ${n(b[1] - (ny * w) / 2)}`;
-  };
 
-  const LOOSE = { tee: 0.5, vneck: 0.4, hoodie: 0.9, collar: 0.6, sweater: 0.6, scoop: 0.3, tank: 0.2, blazer: 0.55, suit: 0.55, onesie: 0.6 };
-  const HEM = { tee: 208, vneck: 206, hoodie: 212, collar: 206, sweater: 206, scoop: 204, tank: 204, blazer: 216, suit: 216, onesie: 208 };
-  const SLEEVE = { tee: 'short', vneck: 'short', scoop: 'short', hoodie: 'long', collar: 'long', sweater: 'long', blazer: 'long', suit: 'long', tank: 'none', onesie: 'short' };
+  // Sculpted anatomical arm contour (replaces stick-stroke lines).
+  function armShape(M, sd) {
+    const X = (off) => 100 + sd * off;
+    const sx = M.shJ[0] - 100, sy = M.shJ[1], ex = M.elbow[0] - 100, ey = M.elbow[1], wx = M.wrist[0] - 100, wy = M.wrist[1];
+    const rU = M.armU / 2, rL = M.armL / 2, rW = 3.4 + M.f * 0.9 + M.mu * 0.4;
+    const delt = rU + 1.2 + M.mu * 1.8;
+    const pts = [
+      pt(X(sx - rU * 0.65), sy - 5, 1),
+      pt(X(sx + rU * 0.85), sy - 2),
+      pt(X(sx + delt + 1.2), sy + 16),
+      pt(X(ex + rU * 0.92), ey - 14),
+      pt(X(ex + rL * 0.95), ey),
+      pt(X(ex + rL * 1.08 + M.mu * 0.9), ey + 14),
+      pt(X(wx + rW), wy, 1),
+      pt(X(wx - rW), wy + 0.8, 1),
+      pt(X(ex - rL * 0.88), ey + 15),
+      pt(X(ex - rL * 0.85), ey),
+      pt(X(ex - rU * 0.82), ey - 16),
+      pt(X(sx - rU * 0.78), sy + 14),
+    ];
+    return smooth(pts, true);
+  }
+
+  // Sculpted relaxed 3/4 hand with thumb & finger contour.
+  function handShape(M, sd) {
+    const wx = 100 + sd * (M.wrist[0] - 100), wy = M.wrist[1];
+    const rW = 3.3 + M.f * 0.8 + M.mu * 0.35;
+    const X = (dx) => n(wx + sd * dx), Y = (dy) => n(wy + dy);
+    const d = `M${X(-rW)} ${Y(0.4)} C${X(-rW - 1.8)} ${Y(3.5)} ${X(-rW - 3.2)} ${Y(7.5)} ${X(-rW - 1.6)} ${Y(10.5)} C${X(-rW - 0.6)} ${Y(11.5)} ${X(-rW + 0.6)} ${Y(9.8)} ${X(-rW + 0.8)} ${Y(7.8)} C${X(-rW + 0.5)} ${Y(12.5)} ${X(-1.2)} ${Y(16.8)} ${X(1.2)} ${Y(16.8)} C${X(3.8)} ${Y(16.6)} ${X(rW + 1.6)} ${Y(12.2)} ${X(rW + 1.1)} ${Y(6.2)} C${X(rW + 0.8)} ${Y(2.8)} ${X(rW)} ${Y(0)} ${X(rW)} ${Y(-0.4)} Z`;
+    const shade = `M${X(-rW + 1.2)} ${Y(7.5)} Q${X(0)} ${Y(11.5)} ${X(1.2)} ${Y(15.2)}`;
+    return { d, shade };
+  }
+
+  // Fitted sleeve that follows the sculpted arm contour.
+  function sleeveShape(M, sd, kind) {
+    const X = (off) => 100 + sd * off;
+    const sx = M.shJ[0] - 100, sy = M.shJ[1], ex = M.elbow[0] - 100, ey = M.elbow[1], wx = M.wrist[0] - 100, wy = M.wrist[1];
+    const rU = M.armU / 2 + 1.8, rL = M.armL / 2 + 1.6, rW = 4.6 + M.f * 0.9;
+    const delt = rU + 1.4 + M.mu * 1.6;
+    if (kind === 'short') {
+      const endO = lerp([sx + delt + 1.2, sy + 16], [ex + rU * 0.95, ey - 14], 0.46);
+      const endI = lerp([sx - rU * 0.78, sy + 14], [ex - rU * 0.85, ey - 16], 0.38);
+      const pts = [
+        pt(X(M.sh - 9.5), 100.5, 1), pt(X(M.sh + 1.4), 107.5), pt(X(sx + delt + 1.4), sy + 14),
+        pt(X(endO[0]), endO[1], 1), pt(X(endI[0]), endI[1], 1), pt(X(sx - rU * 0.82), sy + 11, 1),
+      ];
+      return { d: smooth(pts, true), hem: `M${n(X(endO[0]))} ${n(endO[1])} Q${n(X((endO[0] + endI[0]) / 2))} ${n((endO[1] + endI[1]) / 2 + 1.6)} ${n(X(endI[0]))} ${n(endI[1])}` };
+    }
+    const endO = lerp([ex + rL * 1.05, ey + 14], [wx + rW, wy], 0.82);
+    const endI = lerp([ex - rL * 0.88, ey + 15], [wx - rW, wy + 0.6], 0.82);
+    const cuffO = lerp([ex + rL * 1.05, ey + 14], [wx + rW, wy], 0.68);
+    const cuffI = lerp([ex - rL * 0.88, ey + 15], [wx - rW, wy + 0.6], 0.68);
+    const pts = [
+      pt(X(M.sh - 9.5), 100.5, 1), pt(X(M.sh + 1.4), 107.5), pt(X(sx + delt + 1.4), sy + 15),
+      pt(X(ex + rU * 0.96), ey - 14), pt(X(ex + rL * 1.02), ey), pt(X(ex + rL * 1.1), ey + 14),
+      pt(X(endO[0]), endO[1], 1), pt(X(endI[0]), endI[1], 1),
+      pt(X(ex - rL * 0.88), ey + 15), pt(X(ex - rL * 0.85), ey), pt(X(ex - rU * 0.82), ey - 16), pt(X(sx - rU * 0.82), sy + 12, 1),
+    ];
+    return {
+      d: smooth(pts, true),
+      cuff: `M${n(X(cuffO[0]))} ${n(cuffO[1])} L${n(X(endO[0]))} ${n(endO[1])} L${n(X(endI[0]))} ${n(endI[1])} L${n(X(cuffI[0]))} ${n(cuffI[1])} Z`,
+      crease: `M${n(X(ex - rL * 0.65))} ${n(ey - 1)} Q${n(X(ex))} ${n(ey + 2)} ${n(X(ex + rL * 0.45))} ${n(ey - 0.5)}`,
+    };
+  }
+
+  const LOOSE = { tee: 0.45, vneck: 0.35, hoodie: 0.85, collar: 0.55, polo: 0.45, sweater: 0.5, cardigan: 0.65, scoop: 0.28, tank: 0.18, crop: 0.18, jacket: 0.6, blazer: 0.52, suit: 0.52, dress: 0.25, track: 0.55, onesie: 0.6 };
+  const HEM = { tee: 207, vneck: 205, hoodie: 213, collar: 206, polo: 206, sweater: 206, cardigan: 214, scoop: 204, tank: 203, crop: 166, jacket: 209, blazer: 216, suit: 216, dress: 278, track: 209, onesie: 208 };
+  const SLEEVE = { tee: 'short', vneck: 'short', scoop: 'short', polo: 'short', crop: 'short', hoodie: 'long', collar: 'long', sweater: 'long', cardigan: 'long', jacket: 'long', blazer: 'long', suit: 'long', track: 'long', tank: 'none', dress: 'none', onesie: 'short' };
 
   function topShape(M, kind) {
-    const loose = LOOSE[kind] ?? 0.5, hemY = HEM[kind] || 208;
-    const waistTop = M.waist + 2 + loose * Math.max(0, (M.bust + M.hip) / 2 - M.waist - 2);
-    const tank = kind === 'tank';
-    const side = [
-      tank ? R(M.chest - 3, 110, 1) : R(M.neck + 3.5, 96.5, 1),
-      ...(tank ? [] : [R(M.sh - 5.5, 100.5), R(M.sh + 1.2, 108.5)]),
-      R(M.chest + 1.5, 124), R(M.bust + 1.6, 137), R(waistTop, 168), R(Math.max(M.hip + 2, waistTop), 194), R(Math.max(M.hip + 2.5, waistTop), hemY, 1),
-    ];
-    const neckY = { tee: 104, hoodie: 104, collar: 103, sweater: 99, vneck: 118, scoop: 121, tank: 125, blazer: 104, suit: 104, onesie: 104 }[kind] || 104;
+    const loose = LOOSE[kind] ?? 0.45, hemY = HEM[kind] || 207;
+    const waistTop = M.waist + 1.8 + loose * Math.max(0, (M.bust + M.hip) / 2 - M.waist - 1.5);
+    const sleeveless = kind === 'tank' || kind === 'dress';
+    const neckY = { tee: 103.5, hoodie: 103.5, collar: 102.5, polo: 103, sweater: 98.5, cardigan: 103.5, vneck: 118, scoop: 120, tank: 123, crop: 106, jacket: 103.5, blazer: 103.5, suit: 103.5, dress: 121, track: 101, onesie: 103.5 }[kind] || 103.5;
+    let side;
+    if (kind === 'crop') {
+      side = [R(M.neck + 3.5, 96.5, 1), R(M.sh - 5, 101.5), R(M.sh + 1.2, 109), R(M.chest + 1.4, 125), R(M.bust + 1.6, 138), R(M.rib + 1.4, 152), R(M.waist + 1.4, hemY, 1)];
+    } else if (kind === 'dress') {
+      side = [R(M.chest - 3.5, 110, 1), R(M.chest + 1.4, 125), R(M.bust + 1.6, 138), R(M.rib + 1.2, 152), R(M.waist + 1.6, 168), R(M.hip + 2.8, 198), R(M.seat + 5.5, 224), R(M.seat + 11.5, hemY, 1)];
+    } else {
+      side = [
+        sleeveless ? R(M.chest - 3.2, 110, 1) : R(M.neck + 3.5, 96.5, 1),
+        ...(sleeveless ? [] : [R(M.sh - 5, 101.5), R(M.sh + 1.2, 109)]),
+        R(M.chest + 1.4, 125), R(M.bust + 1.6, 138), R(M.rib + 1.5 + loose * 2, 152), R(waistTop, 168), R(Math.max(M.iliac + 1.8, waistTop), 186), R(Math.max(M.hip + 2.2, waistTop), hemY, 1),
+      ];
+    }
     const right = side.slice(1);
-    const pts = [side[0]].concat(right, [pt(100, hemY + 1.5)], right.slice().reverse().map((p) => pt(200 - p.x, p.y, p.c)), [pt(200 - side[0].x, side[0].y, 1), pt(100, neckY, kind === 'vneck' ? 1 : 0)]);
-    if (kind === 'scoop') { pts[0] = R(M.neck + 9, 98.5, 1); pts[pts.length - 2] = pt(200 - pts[0].x, 98.5, 1); }
+    const pts = [side[0]].concat(right, [pt(100, hemY + (kind === 'dress' ? 3 : 1.5))], right.slice().reverse().map((p) => pt(200 - p.x, p.y, p.c)), [pt(200 - side[0].x, side[0].y, 1), pt(100, neckY, kind === 'vneck' ? 1 : 0)]);
+    if (kind === 'scoop') { pts[0] = R(M.neck + 8.5, 98.5, 1); pts[pts.length - 2] = pt(200 - pts[0].x, 98.5, 1); }
     return { d: smooth(pts, true), hemY, waistTop };
   }
 
   function bottomShape(M, kind) {
-    const wb = M.waist + (M.hip - M.waist) * 0.55 + 2;
-    if (kind === 'skirt') {
-      return outline([R(wb, 186, 1), R(M.hip + 2.6, 198), R(M.seat + 4, 216), R(M.seat + 9, 286, 1)]).replace(/ Z$/, '') + ' Z';
+    const wb = M.waist + (M.iliac - M.waist) * 0.45 + 1.6;
+    if (kind === 'skirt' || kind === 'pleated') {
+      const flare = kind === 'pleated' ? 12.5 : 8.5, endY = kind === 'pleated' ? 274 : 284;
+      return outline([R(wb, 182, 1), R(M.hip + 2.4, 198), R(M.seat + 4.2, 218), R(M.seat + flare, endY, 1)]);
     }
     if (kind === 'shorts') {
-      return outline([R(wb, 186, 1), R(M.hip + 2.2, 198), R(M.seat + 2.3, 214), R(M.thighC + M.thigh + 2.4, 240), R(M.thighC + M.thigh * 0.95 + 2.6, 266, 1), R(Math.max(1.6, M.thighC - M.thigh * 0.95 - 2.2), 266, 1), R(1.8, 234, 1)]);
+      return outline([R(wb, 182, 1), R(M.hip + 2, 198), R(M.seat + 2.2, 214), R(M.thighOut + 2.2, 240), R(M.thighOut * 0.94 + 2.4, 266, 1), R(Math.max(1.8, M.inner - 1.8), 266, 1), R(1.6, 231, 1)]);
     }
-    const legHem = Math.max(M.ankle + 3.8, M.calf * 0.62 + 2.4);
+    if (kind === 'leggings') {
+      return outline([
+        R(wb - 0.6, 180, 1), R(M.hip + 0.9, 198), R(M.seat + 1.0, 214), R(M.thighOut + 0.9, 238),
+        R(M.kneeC + M.knee + 2.2, 274), R(M.kneeC + M.knee + 0.8, 300), R(M.calfOut + 0.8, 330),
+        R(M.ax + M.ankle + 0.8, 382, 1), R(M.ax - M.ankle - 0.8, 382, 1), R(M.calfIn - 0.8, 332),
+        R(M.kneeC - M.knee - 0.8, 300), R(M.inner + 1.2, 268), R(M.inner - 0.6, 244), R(1.5, 228, 1),
+      ]);
+    }
+    const cargo = kind === 'cargo', jog = kind === 'joggers';
+    const extra = cargo ? 3.8 : jog ? 2.8 : 2.1;
+    const legHem = jog ? M.ankle + 1.6 : Math.max(M.ankle + (cargo ? 5.2 : 3.6), (M.calfOut - M.kneeC) * 0.62 + 2.2);
     return outline([
-      R(wb, 186, 1), R(M.hip + 2.2, 198), R(M.seat + 2.3, 214), R(M.thighC + M.thigh + 2.2, 240), R(M.kneeC + M.knee + 2.6, 300),
-      R(M.kneeC - 0.5 + M.calf + 2.4, 332), R(M.ax + legHem, 388, 1), R(M.ax - legHem, 388, 1), R(M.kneeC - 0.5 - M.calf * 0.82 - 2.2, 334),
-      R(M.kneeC - M.knee - 2.4, 300), R(Math.max(1.6, M.inner - 1.4), 252), R(1.8, 232, 1),
+      R(wb, 182, 1), R(M.hip + 2, 198), R(M.seat + 2.2, 214), R(M.thighOut + extra, 240), R(M.kneeC + M.knee + extra + 0.4, 300),
+      R(M.calfOut + extra, 332), R(M.ax + legHem, 387, 1), R(M.ax - legHem, 387, 1), R(M.calfIn - extra * 0.85, 334),
+      R(M.kneeC - M.knee - extra * 0.85, 300), R(Math.max(1.6, M.inner - 1.4), 252), R(1.8, 231, 1),
     ]);
   }
 
-  function shoe(M, side, color) {
-    const ax = side > 0 ? 100 + M.ax : 100 - M.ax, s = side, a = M.ankle;
-    const X = (dx) => n(ax + dx * s);
-    return `M${X(-a - 1.5)} 385 C${X(-a - 2.5)} 394 ${X(-7)} 401 ${X(-5.5)} 404 L${X(9)} 404 C${X(13)} 404 ${X(13.5)} 398.5 ${X(9)} 396.5 C${X(6)} 395.5 ${X(a + 1.5)} 392 ${X(a + 1.5)} 385 Z`;
+  // Natural 3/4 forward-angled footwear with sole welt & tongue detail.
+  function shoeLayers(M, sd, shoeC) {
+    const ax = 100 + M.ax * sd, a = M.ankle;
+    const X = (dx) => n(ax + dx * sd);
+    const sDark = mix(shoeC, '#000000', 0.32), sHi = mix(shoeC, '#FFFFFF', 0.28), sole = '#F8F6F0';
+    return [
+      { d: `M${X(-a - 1.2)} 385 C${X(-a - 2)} 392 ${X(-a - 1.8)} 399 ${X(-a - 0.5)} 403 C${X(1.5)} 405.5 ${X(8.5)} 405.5 ${X(10.5)} 402.5 C${X(12)} 399.5 ${X(10.2)} 394.5 ${X(6.8)} 392.5 C${X(4.8)} 391 ${X(a + 1.4)} 388 ${X(a + 1.2)} 385 Z`, f: shoeC, s: sDark, w: 1 },
+      { d: `M${X(-a - 1.2)} 401.2 C${X(1.5)} 404.2 ${X(8.5)} 404.2 ${X(10.8)} 401.2 L${X(10.4)} 403.2 C${X(8.2)} 405.8 ${X(1.5)} 405.8 ${X(-a - 0.5)} 403.2 Z`, f: sole, s: sDark, w: 0.7 },
+      { d: `M${X(-1.5)} 391 Q${X(2.5)} 390 ${X(5.2)} 392.5 M${X(-0.8)} 393.5 Q${X(3.2)} 392.5 ${X(6)} 395`, s: sHi, w: 1.1, o: 0.75 },
+    ];
   }
 
-  function build(look, b, sk, ids) {
+  // Body-aware hair draping so long styles flow over/behind full-body shoulders without clipping.
+  function figHairLayers(look, M, hc) {
+    if (look.headwear === 'hijab') return { back: [], front: [] };
+    const k = look.hair || 'crop';
+    const shW = Math.min(M.sh + 2, 46), chW = M.chest + 2;
+    const back = [], front = [];
+    if (['long', 'wavy', 'braids', 'locs', 'wolf', 'shoulder'].includes(k)) {
+      const botY = k === 'shoulder' ? 116 : k === 'wolf' ? 122 : 144;
+      const w = k === 'shoulder' || k === 'wolf' ? shW * 0.78 : shW * 0.88;
+      back.push({ d: `M${n(100 - 24)} 74 C${n(100 - w - 4)} 92 ${n(100 - w - 5)} ${n(botY - 14)} ${n(100 - w + 4)} ${botY} Q100 ${n(botY + 8)} ${n(100 + w - 4)} ${botY} C${n(100 + w + 5)} ${n(botY - 14)} ${n(100 + w + 4)} 92 ${n(100 + 24)} 74 Z`, f: hc.back });
+      for (const sd of [-1, 1]) {
+        const X = (dx) => n(100 + sd * dx);
+        const lockY = k === 'shoulder' ? 114 : k === 'wolf' ? 120 : 138;
+        const lockX = Math.min(chW - 3, 27);
+        front.push({
+          d: `M${X(16)} 78 C${X(22)} 90 ${X(lockX + 4)} 104 ${X(lockX + 2)} ${lockY} C${X(lockX - 1)} ${n(lockY + 5)} ${X(lockX - 8)} ${n(lockY + 3)} ${X(lockX - 9)} ${n(lockY - 2)} C${X(lockX - 8)} 108 ${X(15)} 94 ${X(13)} 82 Z`,
+          f: hc.base,
+        });
+        front.push({ d: `M${X(18)} 84 C${X(lockX)} 102 ${X(lockX - 1)} ${n(lockY - 14)} ${X(lockX - 3)} ${n(lockY - 3)}`, s: hc.hi, w: 1.6, o: 0.48, da: k === 'braids' || k === 'locs' ? '2.8 2.2' : undefined });
+        if (k === 'braids' || k === 'locs') front.push({ d: circ(100 + sd * (lockX - 3), lockY, 1.8), f: '#F2C14E' });
+      }
+    } else if (k === 'twintails') {
+      for (const sd of [-1, 1]) {
+        const X = (dx) => n(100 + sd * dx);
+        back.push({ d: `M${X(24)} 52 C${X(38)} 54 ${X(44)} 78 ${X(41)} 106 C${X(39)} 122 ${X(34)} 132 ${X(30)} 136 C${X(26)} 128 ${X(26)} 110 ${X(27)} 92 C${X(28)} 74 ${X(25)} 62 ${X(22)} 56 Z`, f: hc.base });
+        back.push({ d: `M${X(34)} 64 C${X(37)} 84 ${X(36)} 108 ${X(32)} 128`, s: hc.hi, w: 1.8, o: 0.45 });
+      }
+    }
+    return { back, front };
+  }
+
+  function build(look, b, sk, hc, ids) {
     const M = metrics(look, b);
     const out = [];
     const add = (o) => out.push(o);
@@ -762,101 +1019,178 @@ const FIG = (() => {
     const bottom = top === 'suit' ? 'trousers' : look.bottom || 'jeans';
     const pantsC = top === 'suit' ? c : bc, pantsS = top === 'suit' ? cS : bS;
 
-    add({ d: ell(100, 405, 46, 4.5), f: '#000000', o: 0.18 });
-    // skin
-    add({ d: bodyOutline(M), f: sk.base, s: sk.shade, w: 1.1 });
-    // knee and collarbone hints on bare skin
-    add({ d: `M${n(100 + M.kneeC - 3)} 302 Q${n(100 + M.kneeC)} 305 ${n(100 + M.kneeC + 3)} 302 M${n(100 - M.kneeC - 3)} 302 Q${n(100 - M.kneeC)} 305 ${n(100 - M.kneeC + 3)} 302`, s: sk.shade, w: 1.1, o: 0.5 });
-    add({ d: `M${n(100 - M.neck - 2)} 104 Q${n(100 - M.neck - 9)} 103 ${n(100 - M.sh + 10)} 105 M${n(100 + M.neck + 2)} 104 Q${n(100 + M.neck + 9)} 103 ${n(100 + M.sh - 10)} 105`, s: sk.shade, w: 1.1, o: 0.45 });
+    // Ground shadow
+    add({ d: ell(100, 405, 44, 4.2), f: '#000000', o: 0.18 });
 
-    // bottoms, then shoes, then the top over the waistband
-    add({ d: bottomShape(M, bottom), f: pantsC, s: pantsS, w: 1 });
-    if (bottom === 'jeans' || bottom === 'trousers' || bottom === 'shorts') {
-      const wb = M.waist + (M.hip - M.waist) * 0.55 + 2;
-      add({ d: `M100 188 L100 ${bottom === 'shorts' ? 214 : 206}`, s: pantsS, w: 1.2, o: 0.8 });
-      if (bottom === 'jeans') add({ d: `M${n(100 - wb + 5)} 194 Q${n(100 - wb + 10)} 202 ${n(100 - wb + 17)} 196 M${n(100 + wb - 5)} 194 Q${n(100 + wb - 10)} 202 ${n(100 + wb - 17)} 196`, s: mix(bc, '#FFFFFF', 0.25), w: 1, o: 0.7 });
-      if (bottom === 'trousers') add({ d: `M${n(100 + M.kneeC)} 222 L${n(100 + M.kneeC - 0.6)} 386 M${n(100 - M.kneeC)} 222 L${n(100 - M.kneeC + 0.6)} 386`, s: pantsS, w: 0.9, o: 0.5 });
-    }
-    if (bottom === 'skirt') add({ d: `M${n(100 - M.seat - 6)} 270 Q100 276 ${n(100 + M.seat + 6)} 270`, s: bS, w: 1, o: 0.45 });
-    for (const sd of [1, -1]) {
-      add({ d: shoe(M, sd, shoeC), f: shoeC, s: mix(shoeC, '#000000', 0.3), w: 1 });
-      const ax = 100 + M.ax * sd;
-      add({ d: `M${n(ax - 6 * sd)} 402.5 L${n(ax + 10 * sd)} 402.5`, s: mix(shoeC, '#000000', 0.35), w: 1.6, o: 0.6 });
-    }
-
-    const T = topShape(M, top);
-    add({ d: T.d, f: c, s: cS, w: 1 });
-    // arms hang in front of the torso's sides, so they go over the top
-    const arms = [armPath(M, 1), armPath(M, -1)];
-    for (const a of arms) {
-      add({ d: a.upper, s: sk.shade, w: M.armU + 1.4 });
-      add({ d: a.lower, s: sk.shade, w: M.armL + 1.4 });
-    }
-    for (const a of arms) {
-      add({ d: a.upper, s: sk.base, w: M.armU });
-      add({ d: a.lower, s: sk.base, w: M.armL });
-    }
-    // sleeves
-    const sl = SLEEVE[top] || 'short';
-    for (const a of [1, -1]) {
-      const fx = a < 0 ? flipX : (x) => x;
-      const sj = [fx(M.shJ[0]), M.shJ[1]], el = [fx(M.elbow[0]), M.elbow[1]], wr = [fx(M.wrist[0]), M.wrist[1]];
-      const wU = M.armU + 3.4, wL = M.armL + 3;
-      if (sl === 'short') {
-        const end = lerp(sj, el, 0.45);
-        add({ d: circ(sj[0], sj[1], wU / 2) + ' ' + band(sj, end, wU, wU - 0.6), f: c });
-        add({ d: hemLine(sj, end, wU - 0.6), s: cS, w: 1.4 });
-      } else if (sl === 'long') {
-        const end = lerp(el, wr, 0.86), mid = (wU + wL) / 2;
-        add({ d: circ(sj[0], sj[1], wU / 2) + ' ' + band(sj, el, wU, mid) + ' ' + circ(el[0], el[1], mid / 2) + ' ' + band(el, end, mid, wL), f: c });
-        add({ d: band(lerp(el, wr, 0.78), end, wL, wL), f: cS, o: 0.55 });
+    // Sculpted body base + anatomical shading
+    const bodyD = bodyOutline(M);
+    const bclip = `url(#${ids.body})`;
+    add({ d: bodyD, f: sk.base, s: sk.shade, w: 1.1 });
+    // Lateral torso & leg cylinder shading (clipped to body)
+    add({ d: `M${n(100 + M.sh - 12)} 96 C${n(100 + M.waist - 5)} 150 ${n(100 + M.seat - 6)} 210 ${n(100 + M.kneeC + M.knee - 3)} 300 L195 300 L195 96 Z`, f: sk.shade, o: 0.14, c: bclip });
+    // Neck cast shadow & sternocleidomastoid / collarbone contours
+    add({ d: `M${n(100 - M.neck)} 82 C95 93 105 93 ${n(100 + M.neck)} 82 L${n(100 + M.neck)} 91 C105 97 95 97 ${n(100 - M.neck)} 91 Z`, f: sk.shade, o: 0.38, c: bclip });
+    add({ d: `M${n(100 - M.neck - 1.5)} 103.5 Q${n(100 - M.neck - 9)} 102 ${n(100 - M.sh + 11)} 104.5 M${n(100 + M.neck + 1.5)} 103.5 Q${n(100 + M.neck + 9)} 102 ${n(100 + M.sh - 11)} 104.5`, s: sk.shade, w: 1.15, o: 0.48 });
+    // Bare stomach / navel / abs when wearing crop top
+    if (top === 'crop') {
+      add({ d: ell(100, 175, 1.3, 1.8), f: sk.shade, o: 0.65 });
+      if (M.mu > 0.48 && M.f < 0.38) {
+        const ao = Math.min(0.45, (M.mu - 0.4) * 0.8);
+        add({ d: `M100 167 V180 M94.5 168 C93.5 173 93.5 177 95 181 M105.5 168 C106.5 173 106.5 177 105 181`, s: sk.shade, w: 1, o: ao });
       }
     }
-    // shape cues on the clothing
-    if (M.ch > 0.32) {
-      const y = 139 + M.ch * 6, o = Math.min(0.55, 0.15 + M.ch * 0.4);
-      add({ d: `M${n(100 - M.bust + 4)} ${n(y - 3)} Q${n(100 - M.bust * 0.5)} ${n(y + 5)} ${n(100 - 2.5)} ${n(y - 1)} M${n(100 + M.bust - 4)} ${n(y - 3)} Q${n(100 + M.bust * 0.5)} ${n(y + 5)} ${n(100 + 2.5)} ${n(y - 1)}`, s: cS, w: 1.3, o });
-    } else if (M.mu > 0.55) {
-      add({ d: `M${n(100 - M.chest + 5)} 132 Q${n(100 - M.chest * 0.45)} 139 100 133 M${n(100 + M.chest - 5)} 132 Q${n(100 + M.chest * 0.45)} 139 100 133`, s: cS, w: 1.2, o: Math.min(0.5, M.mu - 0.4) });
+    // Knee & shin definition on bare legs
+    for (const sd of [1, -1]) {
+      const kx = 100 + sd * M.kneeC;
+      add({ d: `M${n(kx - 3.2)} 299 Q${n(kx)} 303.5 ${n(kx + 3.2)} 299 M${n(kx - sd * 2.2)} 305 Q${n(kx)} 307 ${n(kx + sd * 1.8)} 305`, s: sk.shade, w: 1.05, o: 0.48 });
+      if (M.mu > 0.45) add({ d: `M${n(kx + sd * (M.knee - 2))} 252 Q${n(kx + sd * (M.knee + 1))} 274 ${n(kx + sd * (M.knee - 2.5))} 294`, s: sk.shade, w: 1, o: (M.mu - 0.4) * 0.5 });
     }
-    if (M.f > 0.52) add({ d: `M${n(100 - T.waistTop * 0.6)} 183 Q100 ${n(190 + M.f * 8)} ${n(100 + T.waistTop * 0.6)} 183`, s: cS, w: 1.3, o: Math.min(0.5, M.f - 0.35) });
 
-    // outfit details
-    if (top === 'hoodie') {
-      add({ d: `M${n(100 - M.neck - 6)} 99 Q100 110 ${n(100 + M.neck + 6)} 99`, s: cH, w: 4.5 });
-      add({ d: `M96 104 L95.4 122 M104 104 L104.6 122`, s: '#F4F1EA', w: 1.6 });
-      add({ d: `M${n(100 - 17)} 204 L${n(100 - 13)} 186 L${n(100 + 13)} 186 L${n(100 + 17)} 204`, s: cS, w: 1.2, o: 0.6 });
+    // Bottoms (skipped when wearing a full dress, or layered cleanly beneath)
+    if (top !== 'dress') {
+      const bPath = bottomShape(M, bottom);
+      add({ d: bPath, f: pantsC, s: pantsS, w: 1 });
+      const wb = M.waist + (M.iliac - M.waist) * 0.45 + 1.6;
+      if (['jeans', 'trousers', 'shorts', 'cargo', 'joggers', 'leggings'].includes(bottom)) {
+        add({ d: `M100 184 L100 ${bottom === 'shorts' ? 214 : 208}`, s: pantsS, w: 1.2, o: 0.75 });
+        // Inner thigh & outer hip seam shading
+        add({ d: `M${n(100 - M.inner)} 242 L100 227 L${n(100 + M.inner)} 242`, s: pantsS, w: 1.2, o: 0.55 });
+        if (bottom === 'jeans' || bottom === 'cargo' || bottom === 'shorts') {
+          const pCol = bottom === 'jeans' ? mix(bc, '#FFFFFF', 0.25) : pantsS;
+          add({ d: `M${n(100 - wb + 4)} 192 Q${n(100 - wb + 9)} 201 ${n(100 - wb + 16)} 194 M${n(100 + wb - 4)} 192 Q${n(100 + wb - 9)} 201 ${n(100 + wb - 16)} 194`, s: pCol, w: 1.1, o: 0.7 });
+        }
+        if (bottom === 'jeans') {
+          for (const sd of [1, -1]) {
+            const ax = 100 + sd * M.ax, lw = Math.max(M.ankle + 3.6, (M.calfOut - M.kneeC) * 0.62 + 2.2);
+            add({ d: `M${n(ax - lw)} 383 H${n(ax + lw)}`, s: mix(bc, '#FFFFFF', 0.22), w: 2.2, o: 0.65 });
+          }
+        }
+        if (bottom === 'trousers') {
+          add({ d: `M${n(100 + M.kneeC)} 218 L${n(100 + M.ax)} 385 M${n(100 - M.kneeC)} 218 L${n(100 - M.ax)} 385`, s: pantsS, w: 0.9, o: 0.5 });
+        }
+        if (bottom === 'cargo') {
+          for (const sd of [1, -1]) {
+            const px = 100 + sd * (M.thighOut + 1.8);
+            add({ d: `M${n(px - sd * 6)} 252 H${n(px + sd * 1.2)} V278 H${n(px - sd * 6)} Z`, f: mix(bc, '#000000', 0.08), s: pantsS, w: 1 });
+            add({ d: `M${n(px - sd * 6.2)} 252 H${n(px + sd * 1.4)} V258 H${n(px - sd * 6.2)} Z`, f: mix(bc, '#FFFFFF', 0.08), s: pantsS, w: 1 });
+          }
+        }
+        if (bottom === 'joggers') {
+          add({ d: `M97 185 Q95 196 96 202 M103 185 Q105 196 104 202`, s: '#F4F1EA', w: 1.3, o: 0.85 });
+          for (const sd of [1, -1]) {
+            const ax = 100 + sd * M.ax, lw = M.ankle + 1.6;
+            add({ d: `M${n(ax - lw)} 380 H${n(ax + lw)} V387 H${n(ax - lw)} Z`, f: pantsS, o: 0.55 });
+          }
+        }
+      }
+      if (bottom === 'skirt') add({ d: `M${n(100 - M.seat - 5.5)} 270 Q100 276 ${n(100 + M.seat + 5.5)} 270`, s: bS, w: 1, o: 0.45 });
+      if (bottom === 'pleated') {
+        const w0 = M.hip + 1, w1 = M.seat + 11;
+        for (const f of [-0.65, -0.32, 0, 0.32, 0.65]) {
+          add({ d: `M${n(100 + f * w0)} 194 L${n(100 + f * w1)} 273`, s: bS, w: 1, o: 0.55 });
+        }
+      }
     }
-    if (top === 'tee' || top === 'onesie') add({ d: `M${n(100 - M.neck - 3.5)} 96.5 Q100 104 ${n(100 + M.neck + 3.5)} 96.5`, s: cS, w: 2.4 });
-    if (top === 'vneck') add({ d: `M${n(100 - M.neck - 3.5)} 96.5 L100 118 L${n(100 + M.neck + 3.5)} 96.5`, s: cS, w: 2 });
-    if (top === 'scoop') add({ d: `M${n(100 - M.neck - 9)} 98.5 Q100 ${n(121 + 0)} ${n(100 + M.neck + 9)} 98.5`, s: cS, w: 2 });
-    if (top === 'tank') {
-      for (const sd of [1, -1]) add({ d: `M${n(100 + sd * (M.sh - 13))} 100 L${n(100 + sd * (M.chest - 5))} 112`, s: c, w: 5.5 });
-      add({ d: `M${n(100 - M.chest + 3)} 110 Q100 125 ${n(100 + M.chest - 3)} 110`, s: cS, w: 1.6 });
+
+    // Footwear
+    for (const sd of [1, -1]) shoeLayers(M, sd, shoeC).forEach(add);
+
+    // Sculpted arms & hands (drawn before sleeves so sleeves wrap over the upper arm cleanly, while bare forearms/hands extend naturally)
+    for (const sd of [1, -1]) {
+      const aD = armShape(M, sd), h = handShape(M, sd);
+      add({ d: aD, f: sk.base, s: sk.shade, w: 1.05 });
+      if (M.mu > 0.42) {
+        const sx = 100 + sd * (M.shJ[0] - 100), sy = M.shJ[1], ex = 100 + sd * (M.elbow[0] - 100), ey = M.elbow[1];
+        add({ d: `M${n(sx + sd * 2)} ${n(sy + 14)} Q${n(sx - sd * 2)} ${n(sy + 26)} ${n(ex - sd * 2)} ${n(ey - 10)}`, s: sk.shade, w: 1, o: (M.mu - 0.35) * 0.55 });
+      }
+      add({ d: h.d, f: sk.base, s: sk.shade, w: 1 });
+      add({ d: h.shade, s: sk.shade, w: 0.9, o: 0.45 });
+    }
+
+    // Top torso & sleeves
+    const T = topShape(M, top);
+    add({ d: T.d, f: c, s: cS, w: 1 });
+    // Subtle lateral drapery shadow on top
+    add({ d: `M${n(100 - T.waistTop + 3.5)} 148 Q${n(100 - T.waistTop + 2)} 172 ${n(100 - T.waistTop + 5)} ${n(T.hemY - 5)} M${n(100 + T.waistTop - 3.5)} 148 Q${n(100 + T.waistTop - 2)} 172 ${n(100 + T.waistTop - 5)} ${n(T.hemY - 5)}`, s: cS, w: 1.1, o: 0.35 });
+
+    const sl = SLEEVE[top] || 'short';
+    if (sl !== 'none') {
+      for (const sd of [1, -1]) {
+        const S = sleeveShape(M, sd, sl);
+        add({ d: S.d, f: c, s: cS, w: 1 });
+        if (S.hem) add({ d: S.hem, s: cS, w: 1.5 });
+        if (S.cuff) add({ d: S.cuff, f: top === 'jacket' || top === 'track' ? mix(cS, '#000000', 0.25) : cS, o: 0.65 });
+        if (S.crease) add({ d: S.crease, s: cS, w: 1, o: 0.45 });
+        if (top === 'track' && sl === 'long') {
+          const X = (off) => 100 + sd * off;
+          add({ d: `M${n(X(M.sh + 0.5))} 107 L${n(X(M.elbow[0] - 100 + M.armL * 0.52))} 165 L${n(X(M.wrist[0] - 100 + 3.8))} 208`, s: '#F4F1EA', w: 2, o: 0.88 });
+        }
+      }
+    }
+
+    // Bust, pecs, and waist/belly volume cues
+    if (M.ch > 0.28) {
+      const y = 138 + M.ch * 6.5, o = Math.min(0.58, 0.16 + M.ch * 0.42);
+      add({ d: `M${n(100 - M.bust + 3.5)} ${n(y - 3.5)} Q${n(100 - M.bust * 0.52)} ${n(y + 5.5)} ${n(100 - 2.2)} ${n(y - 1)} M${n(100 + M.bust - 3.5)} ${n(y - 3.5)} Q${n(100 + M.bust * 0.52)} ${n(y + 5.5)} ${n(100 + 2.2)} ${n(y - 1)}`, s: cS, w: 1.35, o });
+      add({ d: `M${n(100 - M.bust * 0.72)} ${n(y - 10)} Q${n(100 - M.bust * 0.42)} ${n(y - 13)} ${n(100 - 5)} ${n(y - 9.5)} M${n(100 + M.bust * 0.72)} ${n(y - 10)} Q${n(100 + M.bust * 0.42)} ${n(y - 13)} ${n(100 + 5)} ${n(y - 9.5)}`, s: cH, w: 1.4, o: o * 0.65 });
+    } else if (M.mu > 0.5) {
+      const o = Math.min(0.5, (M.mu - 0.38) * 0.85);
+      add({ d: `M${n(100 - M.chest + 4.5)} 131 Q${n(100 - M.chest * 0.45)} 139 100 132.5 M${n(100 + M.chest - 4.5)} 131 Q${n(100 + M.chest * 0.45)} 139 100 132.5 M100 120 V132.5`, s: cS, w: 1.2, o });
+    }
+    if (M.f > 0.48 && top !== 'crop') add({ d: `M${n(100 - T.waistTop * 0.62)} 182 Q100 ${n(189 + M.f * 8.5)} ${n(100 + T.waistTop * 0.62)} 182`, s: cS, w: 1.3, o: Math.min(0.5, M.f - 0.32) });
+
+    // Outfit-specific collars, hardware, pockets & trims
+    if (top === 'hoodie') {
+      add({ d: `M${n(100 - M.neck - 6.5)} 98.5 Q100 110 ${n(100 + M.neck + 6.5)} 98.5`, s: cH, w: 4.6 });
+      add({ d: `M96 104 L95.4 123 M104 104 L104.6 123`, s: '#F4F1EA', w: 1.6 });
+      add({ d: `M${n(100 - 18)} 205 L${n(100 - 13.5)} 185 L${n(100 + 13.5)} 185 L${n(100 + 18)} 205 Z`, f: mix(c, '#000000', 0.08), s: cS, w: 1.1, o: 0.75 });
+    }
+    if (top === 'tee' || top === 'onesie' || top === 'crop') add({ d: `M${n(100 - M.neck - 3.5)} 96.5 Q100 ${top === 'crop' ? 106 : 104} ${n(100 + M.neck + 3.5)} 96.5`, s: cS, w: 2.4 });
+    if (top === 'vneck') add({ d: `M${n(100 - M.neck - 3.5)} 96.5 L100 118 L${n(100 + M.neck + 3.5)} 96.5`, s: cS, w: 2.1 });
+    if (top === 'scoop') add({ d: `M${n(100 - M.neck - 8.5)} 98.5 Q100 120 ${n(100 + M.neck + 8.5)} 98.5`, s: cS, w: 2 });
+    if (top === 'tank' || top === 'dress') {
+      for (const sd of [1, -1]) add({ d: `M${n(100 + sd * (M.neck + 5.5))} 98 L${n(100 + sd * (M.chest - 4.5))} 112`, s: c, w: top === 'dress' ? 4.5 : 5.5 });
+      add({ d: `M${n(100 - M.chest + 3)} 110 Q100 ${top === 'dress' ? 121 : 123} ${n(100 + M.chest - 3)} 110`, s: cS, w: 1.6 });
+      if (top === 'dress') {
+        add({ d: `M${n(100 - M.waist - 1)} 164 Q100 167 ${n(100 + M.waist + 1)} 164`, s: cS, w: 1.4, o: 0.55 });
+        add({ d: `M${n(100 - M.seat - 9)} 266 Q100 272 ${n(100 + M.seat + 9)} 266`, s: cS, w: 1.1, o: 0.45 });
+      }
     }
     if (top === 'sweater') {
-      add({ d: `M${n(100 - M.neck - 2.5)} 99 L${n(100 - M.neck - 2)} 83 Q100 81 ${n(100 + M.neck + 2)} 83 L${n(100 + M.neck + 2.5)} 99 Q100 101 ${n(100 - M.neck - 2.5)} 99 Z`, f: c, s: cS, w: 1 });
-      add({ d: `M${n(100 - M.neck - 2.2)} 91 Q100 93 ${n(100 + M.neck + 2.2)} 91`, s: cS, w: 1.2 });
+      add({ d: `M${n(100 - M.neck - 2.5)} 99 L${n(100 - M.neck - 2)} 84 Q100 82 ${n(100 + M.neck + 2)} 84 L${n(100 + M.neck + 2.5)} 99 Q100 101.5 ${n(100 - M.neck - 2.5)} 99 Z`, f: c, s: cS, w: 1 });
+      add({ d: `M${n(100 - M.neck - 2.2)} 91.5 Q100 93.5 ${n(100 + M.neck + 2.2)} 91.5`, s: cS, w: 1.2 });
       add({ d: `M${n(100 - T.waistTop - 1)} ${T.hemY - 4} L${n(100 + T.waistTop + 1)} ${T.hemY - 4}`, s: cS, w: 1.1, o: 0.6 });
     }
-    if (top === 'collar') {
-      add({ d: `M100 104 L100 ${T.hemY}`, s: cS, w: 1.1 });
-      add({ d: [118, 140, 162, 184].map((y) => circ(100, y, 1.3)).join(' '), f: cS });
-      add({ d: `M${n(100 - M.neck - 3.5)} 96 L${n(100 - 10)} 108 L100 103 Z M${n(100 + M.neck + 3.5)} 96 L${n(100 + 10)} 108 L100 103 Z`, f: cH, s: cS, w: 1 });
+    if (top === 'collar' || top === 'polo') {
+      const endY = top === 'polo' ? 126 : T.hemY;
+      add({ d: `M100 103 L100 ${endY}`, s: cS, w: 1.2 });
+      const btns = top === 'polo' ? [111, 120] : [118, 140, 162, 184];
+      add({ d: btns.map((y) => circ(100, y, 1.3)).join(' '), f: cS });
+      add({ d: `M${n(100 - M.neck - 3.5)} 95.5 L${n(100 - 10.5)} 108 L100 102.5 Z M${n(100 + M.neck + 3.5)} 95.5 L${n(100 + 10.5)} 108 L100 102.5 Z`, f: cH, s: cS, w: 1 });
+    }
+    if (top === 'cardigan') {
+      add({ d: `M${n(100 - M.neck - 3)} 97 L${n(100 - 7)} 132 L${n(100 - 7)} ${T.hemY} H${n(100 + 7)} L${n(100 + 7)} 132 L${n(100 + M.neck + 3)} 97 Q100 104 ${n(100 - M.neck - 3)} 97 Z`, f: '#F4F1EA', s: cS, w: 0.9 });
+      add({ d: [142, 162, 182, 200].map((y) => circ(91, y, 1.4)).join(' '), f: cS });
+    }
+    if (top === 'jacket') {
+      add({ d: `M${n(100 - M.neck - 3)} 97 L100 138 L${n(100 + M.neck + 3)} 97 Q100 103 ${n(100 - M.neck - 3)} 97 Z`, f: '#F4F1EA' });
+      add({ d: `M${n(100 - M.neck - 3.5)} 96.5 L${n(100 - M.neck - 11)} 114 L${n(100 - M.neck - 4)} 120 L100 140 Z M${n(100 + M.neck + 3.5)} 96.5 L${n(100 + M.neck + 11)} 114 L${n(100 + M.neck + 4)} 120 L100 140 Z`, f: cH, s: cS, w: 1 });
+      add({ d: `M100 140 L100 ${T.hemY}`, s: '#D8D2C5', w: 1.6 });
+      add({ d: `M${n(100 - 18)} 178 L${n(100 - 11)} 192 M${n(100 + 18)} 178 L${n(100 + 11)} 192`, s: '#D8D2C5', w: 1.3 });
+    }
+    if (top === 'track') {
+      add({ d: `M${n(100 - M.neck - 2)} 98 L${n(100 - M.neck - 1.5)} 89 Q100 92 ${n(100 + M.neck + 1.5)} 89 L${n(100 + M.neck + 2)} 98 Z`, f: c, s: cS, w: 1 });
+      add({ d: `M100 91 L100 ${T.hemY}`, s: '#F4F1EA', w: 1.6 });
     }
     if (top === 'blazer' || top === 'suit') {
       add({ d: `M${n(100 - M.neck - 3)} 97 L100 150 L${n(100 + M.neck + 3)} 97 Q100 103 ${n(100 - M.neck - 3)} 97 Z`, f: '#F3F1EC' });
       if (top === 'suit') add({ d: 'M97.6 103 L102.4 103 L103.6 108 L100 140 L96.4 108 Z', f: '#B33A4A' });
-      add({ d: `M${n(100 - M.neck - 3.5)} 97 L${n(100 - M.neck - 9)} 112 L${n(100 - M.neck - 4)} 116 L${n(100 - M.neck - 7)} 121 L99 152 Z M${n(100 + M.neck + 3.5)} 97 L${n(100 + M.neck + 9)} 112 L${n(100 + M.neck + 4)} 116 L${n(100 + M.neck + 7)} 121 L101 152 Z`, f: cS });
+      add({ d: `M${n(100 - M.neck - 3.5)} 97 L${n(100 - M.neck - 9.5)} 112 L${n(100 - M.neck - 4)} 116 L${n(100 - M.neck - 7.5)} 121 L99 152 Z M${n(100 + M.neck + 3.5)} 97 L${n(100 + M.neck + 9.5)} 112 L${n(100 + M.neck + 4)} 116 L${n(100 + M.neck + 7.5)} 121 L101 152 Z`, f: cS });
       add({ d: circ(100, 168, 1.6) + ' ' + circ(100, 184, 1.6), f: cS });
     }
-    for (const sd of [1, -1]) {
-      const wx = sd > 0 ? M.wrist[0] : flipX(M.wrist[0]);
-      add({ d: ell(wx + 0.6 * sd, M.wrist[1] + 8.5, 4.2 + M.f, 7.2), f: sk.base, s: sk.shade, w: 1 });
-    }
-    return out;
+    return { layers: out, bodyD, M };
   }
-  return { build };
+  return { build, figHairLayers };
 })();
 
 // figureSVG(look, body, { age, size, label }): the standing figure, or '' for anyone under 18.
@@ -864,16 +1198,22 @@ function figureSVG(look, body, o) {
   o = o || {};
   if (!body || !(o.age >= ADULT_AGE)) return '';
   const id = 'fg' + (++_artId);
-  const ids = { frame: id + 'f', eyes: id + 'e', face: id + 'c' };
+  const ids = { frame: id + 'f', eyes: id + 'e', face: id + 'c', body: id + 'b' };
   const stage = AVLIB.stageOf(o.age);
-  const head = AVLIB.build(look, stage, o.mood || '', ids);
-  const HT = 'translate(100 86) scale(0.62) translate(-100 -150)';
-  const reT = (l) => Object.assign({}, l, { t: (HT + ' ' + (l.t || '')).trim() });
-  const back = head.layers.filter((l) => l.g === 'hairBack').map(reT);
-  const front = head.layers.filter((l) => !['hairBack', 'body', 'clothes'].includes(l.g)).map(reT);
-  const fig = FIG.build(look, body, head.sk, ids);
+  const head = AVLIB.build(look, stage, o.mood || '', ids, true);
+  const fig = FIG.build(look, body, head.sk, head.hc, ids);
+  const fh = FIG.figHairLayers(look, fig.M, head.hc);
+  // Subtle vertical scaling based on height while keeping feet planted at y=405.
+  const hScale = +(1 + fig.M.hNorm * 0.055).toFixed(3);
+  const BT = hScale !== 1 ? `translate(100 405) scale(1 ${hScale}) translate(-100 -405)` : '';
+  const headY = +(86 - (hScale - 1) * 319).toFixed(2);
+  const HT = `translate(100 ${headY}) scale(0.62) translate(-100 -150)`;
+  const reT = (T) => (l) => Object.assign({}, l, { t: (T + ' ' + (l.t || '')).trim() });
+  const back = head.layers.filter((l) => l.g === 'hairBack').map(reT(HT)).concat(fh.back.map(reT(BT)));
+  const bodyLayers = fig.layers.map(reT(BT));
+  const front = fh.front.map(reT(BT)).concat(head.layers.filter((l) => !['hairBack', 'body', 'clothes'].includes(l.g)).map(reT(HT)));
   const h = o.size || 320, w = Math.round((h * 200) / 420);
-  return `<svg class="fig" viewBox="0 0 200 420" width="${w}" height="${h}" role="img" aria-label="${esc(o.label || 'Full figure')}"><defs><clipPath id="${ids.eyes}"><path d="${head.eyeClip}"/></clipPath><clipPath id="${ids.face}"><path d="${head.faceD}"/></clipPath></defs>${layersToSvg(back)}${layersToSvg(fig)}${layersToSvg(front)}</svg>`;
+  return `<svg class="fig" viewBox="0 0 200 420" width="${w}" height="${h}" role="img" aria-label="${esc(o.label || 'Full figure')}"><defs><clipPath id="${ids.eyes}"><path d="${head.eyeClip}"/></clipPath><clipPath id="${ids.face}"><path d="${head.faceD}"/></clipPath><clipPath id="${ids.body}"><path d="${fig.bodyD}"/></clipPath></defs>${layersToSvg(back)}${layersToSvg(bodyLayers)}${layersToSvg(front)}</svg>`;
 }
 function personFigure(p, size) {
   const age = personAge(p);
