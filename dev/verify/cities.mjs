@@ -255,6 +255,50 @@ for (const cc in COUNTRIES) {
   ok(ctx.relOf(s, mom.id).rel === 100, 'parent relationship maxed out after paying off mortgage');
 }
 
+/* 11. renovations through the real menus ---------------------------------------- */
+{
+  const s = adultLife('us', 'Seattle');
+  const R = g('RENOVATION_PROJECTS');
+  // A single-unit home can be offered every project, interiors included.
+  const home = ctx.makeHouse(s, 'house');
+  s.player.assets.push(home);
+  act(s, 'asset_movein', home.id);
+  act(s, 'asset_project', home.id);
+  let offered = s.pending.find((p) => p.handler === 'renovPickProject').choices.map((c) => c.value).filter(Boolean);
+  ok(Object.keys(R).every((k) => offered.includes(k)), `a house is offered all ${Object.keys(R).length} projects (${offered.length})`);
+  answer(s, 'gameroom');
+  answer(s, 'luxury'); // flawless 70% of the time, never an overrun
+  const built = home.renovations.find((r) => r.id === 'gameroom');
+  ok(!!built && built.unit === 0, 'the game room went into the house (unit 0)');
+  s.pending = [];
+  ok(!!act(s, 'renov_gameroom', home.id), 'you can play in the game room of the home you live in');
+  s.pending = [];
+  act(s, 'asset_project', home.id);
+  offered = s.pending.find((p) => p.handler === 'renovPickProject').choices.map((c) => c.value).filter(Boolean);
+  ok(!offered.includes('gameroom') && offered.includes('pool'), 'a finished project leaves the menu');
+  s.pending = [];
+
+  // Another house you rent out has features you cannot use.
+  const rental = ctx.makeHouse(s, 'house');
+  s.player.assets.push(rental);
+  ctx.completeRenovation(s, rental, R.pool, null, 'great', 45000);
+  ok(!g('ACTIONS').renov_pool.when(s, rental.id), 'a pool at a house you do not live in is not yours to swim in');
+
+  // Duplex: an interior lifts only its own unit's rent, a shared addition lifts both.
+  const dup = ctx.makeHouse(s, 'duplex');
+  s.player.assets.push(dup);
+  const v0 = dup.value, c0 = dup.cond; // value and condition also move rent, so hold them still
+  const m0 = ctx.marketRent(s, dup);
+  ctx.completeRenovation(s, dup, R.chef_kitchen, 1, 'great', 38000);
+  dup.value = v0; dup.cond = c0;
+  const m1 = ctx.marketRent(s, dup);
+  ctx.completeRenovation(s, dup, R.pool, null, 'great', 45000);
+  dup.value = v0; dup.cond = c0;
+  const m2 = ctx.marketRent(s, dup);
+  ok(m1 > m0 * 1.05 && m1 < m0 * 1.15, `a duplex interior lifts rent by one unit's share (${m0} -> ${m1})`);
+  ok(m2 > m1 * 1.1, `a shared pool lifts every unit (${m1} -> ${m2})`);
+}
+
 if (failures) { console.log(`\n❌ ${failures} cities check failures.`); process.exit(1); }
 console.log(`Cities checks: pass (${Object.values(CITY_INFO).reduce((n, c) => n + Object.keys(c).length, 0)} cities)`);
 console.log('✅ Cities checks passed.');

@@ -266,7 +266,7 @@ defAction({
       });
       return;
     }
-    openProjectCatalog(s, a, null);
+    openProjectCatalog(s, a, null, true);
   },
 });
 
@@ -279,13 +279,15 @@ onChoice('renovPickScope', (s, ctx, v) => {
   openProjectCatalog(s, a, scope);
 });
 
-function openProjectCatalog(s, a, scope) {
+// A building with several units splits its projects into shared additions and per-unit interiors.
+// A single-unit home has one "unit", so every project is on the menu.
+function openProjectCatalog(s, a, scope, wholeHome) {
   const isSharedScope = scope === null;
   const avail = RENOVATION_IDS.filter((id) => {
     const p = RENOVATION_PROJECTS[id];
-    if (isSharedScope && !p.shared) return false;
-    if (!isSharedScope && p.shared) return false;
-    return !hasRenovation(a, id, scope);
+    if (!wholeHome && isSharedScope && !p.shared) return false;
+    if (!wholeHome && !isSharedScope && p.shared) return false;
+    return !hasRenovation(a, id, wholeHome || p.shared ? null : scope);
   });
   if (!avail.length) {
     return popup(s, {
@@ -297,7 +299,7 @@ function openProjectCatalog(s, a, scope) {
   popup(s, {
     emoji: '🏗️', title: isSharedScope ? `Projects for ${a.name}` : `Projects for Unit ${scope + 1}`,
     text: 'Choose an addition to construct. Each project adds real value, unlocks activities, or boosts rental income.',
-    handler: 'renovPickProject', ctx: { aid: a.id, scope },
+    handler: 'renovPickProject', ctx: { aid: a.id, scope, whole: !!wholeHome },
     choices: avail.map((id) => {
       const p = RENOVATION_PROJECTS[id];
       const est = renovProjectCost(s, a, id, CONTRACTOR_TIERS[1]);
@@ -316,7 +318,7 @@ onChoice('renovPickProject', (s, ctx, pid) => {
   popup(s, {
     emoji: p.emoji, title: `Hire a contractor for ${p.name}`,
     text: `Three contractors submitted bids for your ${p.name.toLowerCase()} at ${a.name}. Who will you hire?`,
-    handler: 'renovHireContractor', ctx: { aid: a.id, scope: ctx.scope, pid },
+    handler: 'renovHireContractor', ctx: { aid: a.id, scope: projectScope(p, ctx), pid },
     choices: CONTRACTOR_TIERS.map((tier) => {
       const cost = renovProjectCost(s, a, pid, tier);
       return {
@@ -328,6 +330,8 @@ onChoice('renovPickProject', (s, ctx, pid) => {
   });
 });
 
+// Shared additions belong to the whole property; an interior belongs to a unit (a single-unit home's is unit 0).
+function projectScope(p, ctx) { return p.shared ? null : (ctx.scope ?? 0); }
 onChoice('renovHireContractor', (s, ctx, tid) => {
   if (!tid) return;
   const a = myAsset(s, ctx.aid), p = RENOVATION_PROJECTS[ctx.pid];
@@ -429,8 +433,9 @@ function completeRenovation(s, a, p, scope, quality, totalCost) {
   }
 
   // Multi-unit rental boost:
-  if (scope !== null && a.tenants && a.tenants[scope]) {
-    const t = a.tenants[scope];
+  const tenant = scope !== null && a.tenants ? a.tenants[scope - (livesIn(s, a) ? 1 : 0)] : null; // tenants fill the units after your own
+  if (tenant) {
+    const t = tenant;
     t.mood = clamp100(t.mood + (quality === 'flawless' ? 25 : quality === 'great' ? 15 : -5));
     text += ` ${tenantName(t)} in Unit ${scope + 1} was thrilled with the upgrade!`;
   }
@@ -439,7 +444,8 @@ function completeRenovation(s, a, p, scope, quality, totalCost) {
 }
 
 /* ---- interactive renovation actions -------------------------------- */
-const hasFeature = (feat) => (s, id) => ownedOf(['house'])(s, id) && hasRenovation(myAsset(s, id), feat);
+// Only the home you live in has features you can use: shared ones, or the interior of your own unit.
+const hasFeature = (feat) => (s, id) => ownedOf(['house'])(s, id) && livesIn(s, myAsset(s, id)) && hasRenovation(myAsset(s, id), feat, 0);
 
 defAction({
   id: 'renov_pool', cat: 'asset', target: 'asset', label: 'Use swimming pool', emoji: '🏊',

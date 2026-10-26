@@ -697,7 +697,8 @@ function isRemote(s, a) { return assetCity(s, a) !== P(s).city || assetCC(s, a) 
 // Fair yearly rent for one unit: a share of the home's value, more in small cities.
 function marketRent(s, a) {
   const info = cityInfo(assetCC(s, a), assetCity(s, a));
-  const rBoost = sum(a.renovations || [], (r) => (typeof RENOVATION_PROJECTS !== 'undefined' && RENOVATION_PROJECTS[r.id] ? RENOVATION_PROJECTS[r.id].rentBoost : 0));
+  // Shared additions lift every unit's rent; an interior only lifts its own unit, so one unit's share of the building.
+  const rBoost = sum(a.renovations || [], (r) => (typeof RENOVATION_PROJECTS !== 'undefined' && RENOVATION_PROJECTS[r.id] ? RENOVATION_PROJECTS[r.id].rentBoost * (RENOVATION_PROJECTS[r.id].shared ? 1 : 1 / unitsOf(a)) : 0));
   return nicePrice(a.value * CITY_SIZES[info.size].yield * (0.7 + a.cond / 333) / unitsOf(a) * (unitsOf(a) > 1 ? 1.1 : 1) * (1 + rBoost));
 }
 function askingRent(s, a) {
