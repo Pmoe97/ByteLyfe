@@ -171,7 +171,7 @@ const INDUSTRIES = {
   // A zoo and wildlife sanctuary. Exhibits, animal welfare, and breeding are run by 58-zoo.js.
   zoo: {
     name: 'Zoo & Wildlife Sanctuary', emoji: '🦁', start: 1200000, locBuild: 1000000, rent: 140000, unit: 135000, perLoc: 30, cogs: 0.38, wage: 0.95, mult: 2.0, scale: 2, life: 8, skill: 'business', vol: 0.18, salesShare: 0.2,
-    roles: { ops: 'Zookeeper', sales: 'Ticket Agent', marketing: 'Promotions Lead', rnd: 'Zoologist', manager: 'Park Director' }, place: 'park', product: 'exhibit',
+    roles: { ops: 'Zookeeper', sales: 'Ticket Agent', marketing: 'Promotions Lead', rnd: 'Zoologist', manager: 'Park Director' }, place: 'park', product: 'attraction',
     prodA: ['African Savanna', 'Arctic Tundra', 'Amazon Jungle', 'Reptile Biodome', 'Predator Ridge', 'Lagoon & Wetlands', 'Outback Bush', 'Grand Aviary'], prodB: ['Expedition', 'Kingdom', 'Sanctuary', 'Pavilion', 'Enclosure', 'Trail', 'Habitat'],
     names: [['Emerald', 'Wild Heritage', 'Living Earth', 'Horizon', 'Safari', 'Golden Gate', 'Pinnacle', 'Verdant'], ['Zoo', 'Zoological Park', 'Wildlife Sanctuary', 'Fauna Reserve', 'Safari Park']],
   },

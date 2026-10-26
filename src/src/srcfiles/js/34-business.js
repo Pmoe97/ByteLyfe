@@ -636,7 +636,7 @@ onChoice('bizProductAct', (s, ctx, v) => {
 defAction({
   id: 'biz_pricing', cat: 'company', target: 'company', label: 'Pricing', emoji: '🏷️',
   sub: cosub((s, co) => PRICE_TIERS[co.tier].name),
-  when: manageable,
+  when: (s, id) => manageable(s, id) && company(s, id).ind !== 'zoo', // a zoo prices through its tickets (58-zoo.js)
   run: (s, id) => {
     const co = company(s, id);
     popup(s, { emoji: '🏷️', title: 'Pricing', text: `Your products average quality ${Math.round(effQuality(s, co))}.`, handler: 'bizPricing', ctx: { co: id }, choices: PRICE_TIER_IDS.map((k) => ({ label: PRICE_TIERS[k].emoji + ' ' + PRICE_TIERS[k].name, value: k, sub: PRICE_TIERS[k].desc + (co.tier === k ? ' (current)' : '') })) });

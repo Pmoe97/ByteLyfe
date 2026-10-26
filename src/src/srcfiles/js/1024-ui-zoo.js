@@ -18,6 +18,7 @@ function zooSection(co) {
   let html = `<div class="section-title">Wildlife Sanctuary</div><div class="card">
     ${kvRow('Animals', `${z.animals.length} animals across ${spSet.size} species`)}
     ${kvRow('Admission', esc(zooTicketLabel(G, T)))}
+    ${kvRow('Visitors expect to pay', fmtMoney(price(G, zooAppeal(z).fair)))}
     ${kvRow('Keeper staffing', keeperStatus)}
     <div class="rel-bar"><div class="muted">Animal Welfare · ${Math.round(z.welfare)}%</div>${bar(z.welfare, z.welfare >= 70 ? 'good' : z.welfare >= 45 ? 'accent' : 'bad')}</div>
     <div class="rel-bar"><div class="muted">Visitor Satisfaction · ${Math.round(z.visitorSat)}%</div>${bar(z.visitorSat, z.visitorSat >= 70 ? 'good' : 'accent')}</div>

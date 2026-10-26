@@ -15,13 +15,17 @@
  *   breeding: [ { id, sp, sireId, damId, sireName, damName, progress, target } ]
  * }
  * zooMods feeds bizForecast; zooYear runs inside companyYear.
+ *
+ * Admission: visitors have a fair price in mind that grows with how good the zoo is (zooAppeal).
+ * Charging less than that fills the park, charging more empties it, so the best ticket tier moves
+ * from Discount to the VIP pass as the collection and its care improve.
  * ===================================================================== */
 
 const ZOO_TICKET_PRICES = [
-  { id: 'discount', name: 'Discount', fee: 15, mult: 0.75, demand: 1.3, desc: 'Budget admission. Heavy crowds, thinner margins.' },
-  { id: 'standard', name: 'Standard', fee: 28, mult: 1.0, demand: 1.0, desc: 'Balanced pricing for general admission.' },
-  { id: 'premium', name: 'Premium', fee: 45, mult: 1.5, demand: 0.8, desc: 'Higher admission with tram tours and guidebooks.' },
-  { id: 'vip', name: 'VIP Safari Pass', fee: 75, mult: 2.2, demand: 0.6, desc: 'Behind-the-scenes passes and private feeding encounters.' },
+  { id: 'discount', name: 'Discount', fee: 15, desc: 'Budget admission. Heavy crowds, thinner margins.' },
+  { id: 'standard', name: 'Standard', fee: 28, desc: 'Balanced pricing for general admission.' },
+  { id: 'premium', name: 'Premium', fee: 45, desc: 'Higher admission with tram tours and guidebooks.' },
+  { id: 'vip', name: 'VIP Safari Pass', fee: 75, desc: 'Behind-the-scenes passes and private feeding encounters.' },
 ];
 
 function zooTicketLabel(s, t) {
@@ -95,7 +99,33 @@ function zooOf(co) {
     ],
     breeding: [],
   };
+  co.tier = 'standard'; // a zoo prices through its tickets (the company's own pricing is hidden)
   return co.zoo;
+}
+
+// Animals can only breed once grown.
+function zooBreedAge(def) { return Math.max(2, Math.ceil(def.life * 0.12)); }
+// Breeding progress a year: zoologists (more, and better, is faster).
+function zooBreedRate(co) { return Math.max(1, Math.round(co.team.rnd.n * (0.6 + co.team.rnd.skill / 100) * 1.2)); }
+// An emergency bill is paid from cash, and what cash can't cover goes on the company's loan.
+function zooCharge(co, amt) {
+  const fromCash = Math.min(Math.max(0, co.cash), amt);
+  co.cash -= fromCash;
+  co.debt += amt - fromCash;
+}
+// How good the zoo looks to visitors, and the ticket price they think is fair for it.
+function zooAppeal(z) {
+  let appealSum = 0;
+  const spSeen = new Set();
+  for (const a of z.animals) {
+    const def = ZOO_SPECIES[a.sp];
+    if (def) { appealSum += def.appeal * (a.happiness / 100); spSeen.add(a.sp); }
+  }
+  const animalMult = clamp(0.2 + Math.sqrt(appealSum) / 14, 0.2, 2.5);
+  const varietyMult = clamp(1 + (spSeen.size - 2) * 0.05, 0.9, 1.6);
+  const welfareMult = (0.7 + z.welfare / 250) * (0.7 + z.visitorSat / 250);
+  const Q = animalMult * varietyMult * welfareMult;
+  return { Q, fair: Math.round(34 * Q), species: spSeen.size };
 }
 
 /* ---- yearly modifiers & simulation ---------------------------------- */
@@ -105,22 +135,10 @@ function zooMods(s, co) {
   const z = zooOf(co);
   const T = ZOO_TICKET_PRICES[z.ticketPrice] || ZOO_TICKET_PRICES[1];
 
-  // Animal appeal & variety:
-  let appealSum = 0;
-  const spSeen = new Set();
-  for (const a of z.animals) {
-    const def = ZOO_SPECIES[a.sp];
-    if (def) {
-      appealSum += def.appeal * (a.happiness / 100);
-      spSeen.add(a.sp);
-    }
-  }
-  const animalMult = clamp(0.75 + Math.sqrt(appealSum) / 22, 0.75, 2.5);
-  const varietyMult = clamp(1 + (spSeen.size - 2) * 0.05, 0.9, 1.6);
-  const welfareMult = (0.7 + z.welfare / 250) * (0.7 + z.visitorSat / 250);
-
-  // Demand multiplier on revenue:
-  const revMult = clamp(T.demand * T.mult * animalMult * varietyMult * welfareMult, 0.35, 3.2);
+  // Animal appeal, variety and care set how many people come and what they think a ticket is worth.
+  const { Q, fair, species } = zooAppeal(z);
+  const crowd = Math.pow(clamp(fair / T.fee, 0.3, 1.5), 1.8); // cheaper than fair fills the park, dearer empties it
+  const revMult = clamp(Q * (T.fee / 28) * crowd * 0.48, 0.1, 8);
 
   // Upkeeps:
   const dietCosts = sum(z.animals, (a) => {
@@ -137,7 +155,7 @@ function zooMods(s, co) {
   let repPull = 0;
   if (z.welfare >= 85) repPull += 4;
   else if (z.welfare < 50) repPull -= 6;
-  if (spSeen.size >= 8) repPull += 3;
+  if (species >= 8) repPull += 3;
 
   return { rev: revMult, rep: repPull, cost: totalCost };
 }
@@ -193,33 +211,39 @@ function zooYear(s, co, revenue) {
   // 4. Enclosure Wear & Tear:
   for (const e of z.exhibits) {
     e.condition = clamp(e.condition - randInt(2, 5), 10, 100);
+    e.security = clamp(e.security - randInt(1, 3), 10, 100);
   }
+  if (!z.animals.length && mine) log(s, `🦓 ${co.name} has no animals left. Nobody pays to visit an empty zoo: acquire some.`, 'bad');
 
   // 5. Breeding Programs:
-  const zoologistPower = co.team.rnd.n * (0.6 + co.team.rnd.skill / 100);
   const remainingBreeding = [];
   for (const b of z.breeding) {
-    b.progress += Math.max(1, Math.round(zoologistPower * 1.2));
+    const def = ZOO_SPECIES[b.sp];
+    const dam = z.animals.find((a) => a.id === b.damId), sire = z.animals.find((a) => a.id === b.sireId);
+    if (!dam || !sire) {
+      if (mine) log(s, `🧬 The ${def ? def.name : 'species'} breeding program at ${co.name} ended: ${dam ? b.sireName : b.damName} is no longer in the collection.`, 'bad');
+      continue;
+    }
+    b.progress += zooBreedRate(co);
     if (b.progress >= b.target) {
-      const def = ZOO_SPECIES[b.sp];
       const babyName = pick(ZOO_BABY_NAMES);
       const babySex = chance(0.5) ? 'm' : 'f';
-      const baby = {
-        id: uid(s, 'an'),
-        sp: b.sp,
-        name: babyName,
-        sex: babySex,
-        age: 0,
-        health: 95,
-        happiness: 95,
-        exhibitId: z.animals.find((a) => a.id === b.damId)?.exhibitId || z.exhibits[0].id,
-      };
-      z.animals.push(baby);
+      // The nursery is the mother's enclosure, or another of the same biome, if either has room.
+      const roomIn = (e) => z.animals.filter((a) => a.exhibitId === e.id).length < e.cap;
+      const home = z.exhibits.find((e) => e.id === dam.exhibitId && roomIn(e)) || z.exhibits.find((e) => def && e.biome === def.biome && roomIn(e));
+      if (home) {
+        z.animals.push({ id: uid(s, 'an'), sp: b.sp, name: babyName, sex: babySex, age: 0, health: 95, happiness: 95, exhibitId: home.id });
+      } else {
+        // No room: the youngster goes to a partner zoo, which pays a placement fee.
+        const fee = price(s, Math.round((def ? def.cost : 20000) * 0.4));
+        out.extraRev += fee;
+        if (mine) log(s, `🤝 There was no room for ${babyName}, so the baby ${def ? def.name : 'animal'} went to a partner zoo for a ${fmtMoney(fee)} placement fee. Build more habitat to keep them.`, 'good');
+      }
       tally(s, 'zooBabiesBorn');
       co.rep = clamp100(co.rep + (def && (def.tier === 'rare' || def.tier === 'legendary') ? 6 : 3));
       z.visitorSat = clamp100(z.visitorSat + 10);
       co.team.rnd.morale = clamp100(co.team.rnd.morale + 12);
-      if (mine) {
+      if (mine && home) {
         log(s, `🎉 Celebration at ${co.name}! A healthy baby ${def ? def.name : 'animal'} named ${babyName} was born in the conservation program!`, 'good');
       }
     } else {
@@ -240,7 +264,7 @@ function zooYear(s, co, revenue) {
 
   // 7. Containment Breach / Escape Incident:
   const dangerousCount = z.animals.filter((a) => ZOO_SPECIES[a.sp] && ZOO_SPECIES[a.sp].danger >= 50).length;
-  const poorExhibits = z.exhibits.filter((e) => e.condition < 40).length;
+  const poorExhibits = z.exhibits.filter((e) => e.condition < 40 || e.security < 40).length;
   const escapeRisk = clamp(dangerousCount * 0.01 + poorExhibits * 0.04 - (keepers >= needKeepers ? 0.03 : 0), 0.01, 0.25);
   if (chance(escapeRisk)) {
     z.escapes++;
@@ -280,12 +304,12 @@ onChoice('zooEscape', (s, ctx, val) => {
   const z = zooOf(co);
   if (val === 'dart') {
     const cost = price(s, 15000);
-    co.cash -= cost;
+    zooCharge(co, cost);
     co.rep = clamp100(co.rep - 2);
     return { text: `The keeper dart team successfully tranquilized the animal safely and restored containment. Emergency response cost ${fmtMoney(cost)}.`, emoji: '🎯', tone: 'good' };
   } else if (val === 'evacuate') {
     const loss = price(s, 35000);
-    co.cash -= loss;
+    zooCharge(co, loss);
     co.rep = clamp100(co.rep - 6);
     z.visitorSat = clamp100(z.visitorSat - 15);
     return { text: `You evacuated all guests calmly without injuries. Refunds and lost ticket sales cost ${fmtMoney(loss)}.`, emoji: '📢', tone: 'bad' };
@@ -294,7 +318,7 @@ onChoice('zooEscape', (s, ctx, val) => {
       return { text: 'Remarkably, keepers rattled the feed buckets and the escapee strolled right back into its night quarters!', emoji: '🥩', tone: 'good' };
     } else {
       const damages = price(s, 50000);
-      co.cash -= damages;
+      zooCharge(co, damages);
       co.rep = clamp100(co.rep - 10);
       return { text: `The animal rampaged through a gift shop before being netted! Repairs and incident fines cost ${fmtMoney(damages)}.`, emoji: '💥', tone: 'bad' };
     }
@@ -316,7 +340,7 @@ defAction({
     popup(s, {
       emoji: '🎟️',
       title: 'Zoo Admission Pricing',
-      text: 'Lower ticket prices bring packed crowds and higher concession volumes. Premium passes cater to high-end visitors and safari experiences.',
+      text: `Visitors expect to pay about ${fmtMoney(price(s, zooAppeal(z).fair))} to see your zoo as it is today. Cheaper tickets pack the park; dearer ones keep people away. A better collection and happier animals raise what they will pay.`,
       handler: 'zooTicket',
       ctx: { co: id },
       choices: ZOO_TICKET_PRICES.map((t, i) => ({
@@ -488,6 +512,7 @@ defAction({
     const breedingSps = new Set(z.breeding.map((b) => b.sp));
     const spMap = {};
     for (const a of z.animals) {
+      if (a.age < (ZOO_SPECIES[a.sp] ? zooBreedAge(ZOO_SPECIES[a.sp]) : 3)) continue; // too young
       if (!spMap[a.sp]) spMap[a.sp] = { m: [], f: [] };
       if (a.sex === 'm') spMap[a.sp].m.push(a);
       else if (a.sex === 'f') spMap[a.sp].f.push(a);
@@ -498,7 +523,7 @@ defAction({
       }
     }
     if (!eligible.length) {
-      return { text: 'You do not have any eligible pairs of male and female animals of the same species ready for breeding.', nolog: true };
+      return { text: 'You have no grown male and female of the same species ready to breed. Young animals need a few years first.', nolog: true };
     }
     popup(s, {
       emoji: '🧬',
@@ -508,10 +533,11 @@ defAction({
       ctx: { co: id, eligible },
       choices: eligible.map((el, i) => {
         const def = ZOO_SPECIES[el.sp];
+        const yrs = Math.ceil((def.breedYears * 2) / zooBreedRate(co));
         return {
           label: `${def.emoji} Breed ${def.name}`,
           value: i,
-          sub: `Pair: ${el.sire.name} (♂) & ${el.dam.name} (♀) · Gestation target ~${def.breedYears} yr`,
+          sub: `Pair: ${el.sire.name} (♂) & ${el.dam.name} (♀) · about ${yrs} yr with your zoologists`,
         };
       }).concat([{ label: 'Never mind', value: null }]),
     });
@@ -586,6 +612,38 @@ defAction({
     return {
       text: `The veterinary team conducted thorough preventative examinations, booster vaccinations, and nutritional updates for every animal in the collection.`,
       emoji: '🩺',
+      tone: 'good',
+    };
+  },
+});
+
+// A tenth of what each enclosure's biome cost to build, scaled by how worn it is.
+function zooRepairCost(s, z) {
+  return sum(z.exhibits, (e) => {
+    const b = ZOO_BIOMES[e.biome];
+    const worn = (200 - e.condition - e.security) / 200;
+    return b ? price(s, Math.round(b.cost * 0.1 * worn)) : 0;
+  });
+}
+defAction({
+  id: 'zoo_repair',
+  cat: 'company',
+  target: 'company',
+  label: 'Repair & reinforce habitats',
+  emoji: '🛠️',
+  when: (s, id) => runsZoo(s, id) && zooOf(company(s, id)).exhibits.some((e) => e.condition < 90 || e.security < 90),
+  sub: (s, id) => {
+    const z = zooOf(company(s, id));
+    return `${fmtMoney(zooRepairCost(s, z))} · worst enclosure at ${Math.round(Math.min(...z.exhibits.map((e) => Math.min(e.condition, e.security))))}%`;
+  },
+  run: (s, id) => {
+    const co = company(s, id), z = zooOf(co), cost = zooRepairCost(s, z);
+    if (co.cash < cost) return { text: `${co.name} cannot afford ${fmtMoney(cost)}.`, nolog: true };
+    co.cash -= cost;
+    for (const e of z.exhibits) { e.condition = 100; e.security = 100; }
+    return {
+      text: `Crews resurfaced paths, rebuilt fencing and replaced locks across every enclosure for ${fmtMoney(cost)}. Everything is back to like-new.`,
+      emoji: '🛠️',
       tone: 'good',
     };
   },
