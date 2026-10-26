@@ -96,6 +96,17 @@ function check(s, where) {
     if (h && (!(h.spd >= 30 && h.spd <= 99 && h.sta >= 30 && h.sta <= 99) || !['yearling', 'racing', 'broodmare', 'stud', 'retired'].includes(h.state) || h.wins > h.starts)) fail(`bad racehorse ${JSON.stringify(h)} @${where}`, s);
   }
   if (m.book && !(m.book.punters >= 3)) fail(`book with ${m.book.punters} punters @${where}`, s);
+  // Zoos (58-zoo.js): care and condition stay in range, and no habitat holds more than it can.
+  for (const co of ctx.companies(s)) {
+    const z = co.zoo;
+    if (!z) continue;
+    if (!(z.welfare >= 0 && z.welfare <= 100 && z.visitorSat >= 0 && z.visitorSat <= 100) || !Number.isFinite(co.cash)) fail(`bad zoo ${co.name} welfare ${z.welfare} sat ${z.visitorSat} cash ${co.cash} @${where}`, s);
+    for (const e of z.exhibits) {
+      if (!(e.condition >= 10 && e.condition <= 100 && e.security >= 10 && e.security <= 100)) fail(`bad habitat ${JSON.stringify(e)} @${where}`, s);
+      if (z.animals.filter((a) => a.exhibitId === e.id).length > e.cap) fail(`habitat ${e.name} over capacity @${where}`, s);
+    }
+    for (const a of z.animals) if (!(a.age >= 0) || !(a.health >= 0 && a.health <= 100) || !z.exhibits.some((e) => e.id === a.exhibitId)) fail(`bad zoo animal ${JSON.stringify(a)} @${where}`, s);
+  }
   // Growing up (55-57): popularity, subject offsets, club ranks and lesson levels stay in range.
   const sc = m.edu.current;
   if (sc && sc.kind === 'school' && sc.subj) {
@@ -298,6 +309,17 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
           if (acts.length) { const [id, t] = pick(acts); ctx.doAction(s, id, t); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'house:' + id); }
         }
       } catch (e) { fail('house persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
+    // And some run a zoo: open one at 28, then a zoo action most years.
+    if (s.gen === 1 && i % 20 === 18 && !s.dead && !s.player.prison && age >= 28) {
+      try {
+        if (age === 28 && ctx.companies(s).length < 3) { s.player.money += 6e6; const co = ctx.foundCompany(s, 'zoo', 'Sim Zoo', { equity: 1, debt: 0 }); co.auto = true; resolveAll(s, 'zoo'); }
+        for (const co of ctx.companies(s)) {
+          if (co.ind !== 'zoo' || co.closed || !chance(0.8)) continue;
+          const acts = ctx.actionList(s, 'company', co.id).filter((a) => a.id.startsWith('zoo_'));
+          if (acts.length) { const a = pick(acts); ctx.doAction(s, a.id, co.id); stats.actionsRun[a.id] = (stats.actionsRun[a.id] || 0) + 1; check(s, 'action:' + a.id); resolveAll(s, 'zoo:' + a.id); }
+        }
+      } catch (e) { fail('zoo persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
     }
     const n = randInt(0, 5);
     for (let k = 0; k < n && !s.dead; k++) {

@@ -31,6 +31,7 @@ const kid = (age, opts) => {
     s.pending = [];
     if (!s.dead && ctx.A(s) >= age) return s;
   }
+  throw new Error('could not raise a child to age ' + age + ' in 20 tries');
 };
 const drain = (s) => { for (let k = 0; k < 50 && s.pending.length; k++) { const p = s.pending[0]; ctx.resolvePopup(s, p.id, Math.max(0, p.choices.findIndex((c) => !c.disabled)), p.input ? 'X' : undefined); } s.pending = []; };
 const answer = (s, value) => { const pp = s.pending.find((p) => p.handler); const i = pp.choices.findIndex((c) => c.value === value); return ctx.resolvePopup(s, pp.id, i); };

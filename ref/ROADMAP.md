@@ -569,12 +569,27 @@ prizes, and selective breeding programs for litters to keep, sell or gift.
 - **Animals & Care:** acquire animals across 20 global species (lions, tigers, pandas, elephants,
   polar bears, gorillas, penguins, and more). Maintain zookeeper-to-animal staffing ratios,
   fund habitat sensory enrichment, run veterinary health campaigns, and conduct CEO park walkthroughs.
-- **Operations & Science:** 4-tier admission pricing (discount, standard, premium, VIP safari passes),
-  emergency protocols for animal containment breaches, and national wildlife conservation grants
-  earned by your zoology R&D team.
-- **Breeding:** Species Survival Plan conservation breeding pairs that produce healthy offspring,
-  triggering press coverage and attendance surges.
+- **Operations & Science:** 4-tier admission pricing where the best tier depends on how good your zoo
+  is (visitors have a fair price in mind: cheaper fills the park, dearer empties it), habitats that wear
+  and need repairs and reinforced security, emergency protocols for animal containment breaches, and
+  national wildlife conservation grants earned by your zoology R&D team.
+- **Breeding:** Species Survival Plan conservation breeding pairs (grown animals only) that produce
+  healthy offspring, a reputation and visitor boost, or a placement fee from a partner zoo when a
+  habitat is full.
 - **Extras:** 3 new achievements (Zookeeper, Noah's Ark, Conservation Champion).
+
+**Home projects and pets.** More to do with a home and an animal.
+- **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
+  array, porch, koi pond or sauna (shared) and a game room, aquarium, observatory, chef's kitchen or
+  home cinema (an interior). Budget crews can overrun, botch it or skip town (and you can sue). Value,
+  upkeep and rent rise, and each feature unlocks something to do in the home you live in. A building with
+  several units builds shared additions and per-unit interiors.
+- **Landlord touches:** set any exact rent, have a property manager fill vacancies, and a home you move
+  out of (across the city or the world) goes up for rent.
+- **Exotic pets and pet life:** monkeys, otters, fennec foxes, alpacas, falcons, chameleons and tigers
+  from an exotic dealer; train tricks, groom, enter shows (neighborhood fair to national championship)
+  and breed mothers with a male or a stud, with a litter every other year and a home that holds 12.
+- **Money:** pay any amount toward a loan, and help a relative with their mortgage or loans.
 
 ## Next up
 
