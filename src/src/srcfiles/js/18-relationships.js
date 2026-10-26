@@ -1115,20 +1115,28 @@ onChoice('petShowLevel', (s, ctx, lvlId) => {
 });
 
 /* ---- breeding ------------------------------------------------------ */
+// Only a mother has a litter, and only with a living adult male of her species (or a hired stud).
+// A litter every other year at most, and a home only fits so many animals, so breeding is a
+// sideline rather than a money machine.
+const BREEDABLE_PETS = ['dog', 'cat', 'rabbit', 'monkey', 'otter', 'fennec', 'ferret', 'pig', 'goat', 'alpaca'];
+const MAX_HOME_PETS = 12;
+function petSex(p) { if (!p.sex) p.sex = chance(0.5) ? 'm' : 'f'; return p.sex; }
+function litterValue(s, S) { return Math.round(price(s, S.cost) * (S.exotic ? randFloat(0.4, 0.65) : randFloat(1.2, 1.8))); }
 defAction({
   id: 'pet_breed', cat: 'pet', target: 'pet', label: 'Breed', emoji: '🍼',
   when: (s, id) => {
     if (!petReachable(s, id)) return false;
     const p = s.pets[id];
     const age = petAge(s, p);
-    return age >= 1 && age <= p.life - 2 && !p.race && ['dog', 'cat', 'rabbit', 'monkey', 'otter', 'fennec', 'ferret', 'pig', 'goat', 'alpaca', 'tiger'].includes(p.species) && count(s, 'breed_' + id) < 1;
+    return age >= 1 && age <= p.life - 2 && !p.race && BREEDABLE_PETS.includes(p.species) && petSex(p) === 'f' && s.year - (p.litterYear ?? -9) >= 2 && count(s, 'breed_' + id) < 1;
   },
-  sub: (s, id) => `Produce a purebred litter of ${s.pets[id].breed}s`,
+  sub: (s, id) => `Produce a litter of ${s.pets[id].breed}s`,
   run: (s, id) => {
     const p = s.pets[id];
-    const sameSpecies = myPets(s).filter((x) => x.id !== id && x.species === p.species);
+    if (myPets(s).length >= MAX_HOME_PETS) return { text: `Your home is full: ${MAX_HOME_PETS} animals is all it can hold. Rehome some first.`, nolog: true };
+    const mates = myPets(s).filter((x) => x.id !== id && x.species === p.species && petSex(x) === 'm' && petAge(s, x) >= 1);
     const studFee = price(s, Math.round(PET_SPECIES[p.species].cost * 1.5));
-    const choices = sameSpecies.map((x) => ({
+    const choices = mates.map((x) => ({
       label: `Breed with ${x.name} (your ${x.breed})`, value: 'own:' + x.id, sub: 'Free home mating',
     })).concat([
       { label: `Hire registered champion stud (${fmtMoney(studFee)})`, value: 'stud:' + studFee, sub: 'Certified purebred pedigree', disabled: M(s).money < studFee },
@@ -1144,19 +1152,19 @@ defAction({
 onChoice('petBreedPair', (s, ctx, v) => {
   if (!v) return;
   const p = s.pets[ctx.pid];
-  if (!p) return;
-  let studName = 'Champion Stud';
+  if (!p || !p.alive || petSex(p) !== 'f') return;
   if (v.startsWith('stud:')) {
-    const fee = Number(v.slice(5));
+    const fee = price(s, Math.round(PET_SPECIES[p.species].cost * 1.5));
     if (!pay(s, fee)) return cantAfford(fee);
   } else if (v.startsWith('own:')) {
     const mate = s.pets[v.slice(4)];
-    if (mate) studName = mate.name;
-  }
+    if (!mate || !mate.alive || mate.species !== p.species || petSex(mate) !== 'm') return;
+  } else return;
   bump(s, 'breed_' + ctx.pid);
-  const countLitter = randInt(2, 4);
+  p.litterYear = s.year;
   const S = PET_SPECIES[p.species];
-  const valuePerBaby = Math.round(price(s, S.cost) * randFloat(1.2, 1.8));
+  const countLitter = randInt(2, 4);
+  const valuePerBaby = litterValue(s, S);
   const totalLitterValue = countLitter * valuePerBaby;
 
   popup(s, {
@@ -1165,59 +1173,40 @@ onChoice('petBreedPair', (s, ctx, v) => {
     handler: 'petLitterChoice', ctx: { pid: ctx.pid, countLitter, valuePerBaby, totalLitterValue },
     choices: [
       { label: 'Keep one baby & sell the rest', value: 'keep_one', sub: `Receive ${fmtMoney(totalLitterValue - valuePerBaby)} and keep one` },
-      { label: `Sell all ${countLitter} puppies/babies to families`, value: 'sell_all', sub: `Earn ${fmtMoney(totalLitterValue)}` },
+      { label: `Sell all ${countLitter} to families`, value: 'sell_all', sub: `Earn ${fmtMoney(totalLitterValue)}` },
       { label: 'Keep the whole litter', value: 'keep_all', sub: 'Fill your home with animals!' },
     ],
   });
 });
+function litterBaby(s, p, rel) {
+  const S = PET_SPECIES[p.species];
+  const id = uid(s, 'pet');
+  s.pets[id] = {
+    id, species: p.species, breed: p.breed, name: pick(PET_NAMES), sex: chance(0.5) ? 'm' : 'f',
+    born: s.year, alive: true, rel, life: randInt(S.life[0], S.life[1]),
+    owner: s.playerId, tricks: [], training: 0, awards: [],
+  };
+  tally(s, 'pets');
+  return s.pets[id];
+}
 onChoice('petLitterChoice', (s, ctx, v) => {
   const p = s.pets[ctx.pid];
   if (!p) return;
-  const S = PET_SPECIES[p.species];
-  if (v === 'sell_all') {
-    M(s).money += ctx.totalLitterValue;
-    add(s, { happy: 5 });
-    tally(s, 'petsBred', ctx.countLitter);
-    return {
-      text: `You sold the purebred litter of ${ctx.countLitter} ${p.breed}s to loving homes for ${fmtMoney(ctx.totalLitterValue)}! 💵`,
-      emoji: '🍼', tone: 'good',
-    };
-  }
-  if (v === 'keep_one') {
-    const earn = ctx.totalLitterValue - ctx.valuePerBaby;
-    M(s).money += earn;
-    const babyId = uid(s, 'pet');
-    const babyName = pick(PET_NAMES);
-    s.pets[babyId] = {
-      id: babyId, species: p.species, breed: p.breed, name: babyName,
-      born: s.year, alive: true, rel: 80, life: randInt(S.life[0], S.life[1]),
-      owner: s.playerId, tricks: [], training: 0, awards: [],
-    };
-    add(s, { happy: 8 });
-    tally(s, 'pets');
-    tally(s, 'petsBred', ctx.countLitter);
-    return {
-      text: `You welcomed baby ${babyName} into your family, and sold the remaining ${ctx.countLitter - 1} for ${fmtMoney(earn)}! 🐾`,
-      emoji: '🍼', tone: 'good',
-    };
-  }
-  if (v === 'keep_all') {
-    for (let i = 0; i < ctx.countLitter; i++) {
-      const babyId = uid(s, 'pet');
-      const bName = pick(PET_NAMES);
-      s.pets[babyId] = {
-        id: babyId, species: p.species, breed: p.breed, name: bName,
-        born: s.year, alive: true, rel: 75, life: randInt(S.life[0], S.life[1]),
-        owner: s.playerId, tricks: [], training: 0, awards: [],
-      };
-      tally(s, 'pets');
-    }
-    add(s, { happy: 10 });
-    return {
-      text: `You kept all ${ctx.countLitter} babies! Your house is full of playful little paws. 🐾`,
-      emoji: '🍼', tone: 'good',
-    };
-  }
+  // A home only fits so many animals: any babies beyond that are sold.
+  const room = Math.max(0, MAX_HOME_PETS - myPets(s).length);
+  const wantKeep = v === 'keep_all' ? ctx.countLitter : v === 'keep_one' ? 1 : 0;
+  const keep = Math.min(wantKeep, room);
+  const sold = ctx.countLitter - keep;
+  const earn = sold * ctx.valuePerBaby;
+  M(s).money += earn;
+  tally(s, 'petsBred', ctx.countLitter);
+  const kept = [];
+  for (let i = 0; i < keep; i++) kept.push(litterBaby(s, p, v === 'keep_all' ? 75 : 80));
+  add(s, { happy: keep ? 5 + keep * 2 : 5 });
+  const keptText = keep ? `You kept ${keep > 1 ? `all ${keep} babies` : `baby ${kept[0].name}`}` : 'You sold the whole litter';
+  const soldText = sold ? `${keep ? ' and sold' : ' of'} ${sold} ${p.breed}${sold > 1 ? 's' : ''} to loving homes for ${fmtMoney(earn)}` : '';
+  const fullText = wantKeep > keep ? ' (your home was full)' : '';
+  return { text: `${keptText}${soldText}${fullText}! 🐾`, emoji: '🍼', tone: 'good' };
 });
 
 defAction({

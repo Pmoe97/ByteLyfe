@@ -287,11 +287,56 @@ const felony = (s) => s.player.record.push({ crime: 'burglary', year: s.year - 3
 
   // Breeding
   dog.born = s.year - 3; // 3 years old (fertile)
+  dog.sex = 'f';
   clear(s);
   ctx.doAction(s, 'pet_breed', dog.id);
   answer(s, 'stud:' + ctx.price(s, 450));
   answer(s, 'sell_all');
   ok(s.player.life.petsBred > 0, `breeding produced litter, petsBred: ${s.player.life.petsBred}`);
+}
+
+/* 7. breeding is a sideline, not a money machine ---------------------------------------- */
+{
+  const s = adult('us', 'Miami', 1e6);
+  const adopt = (action, species, name) => { clear(s); ctx.doAction(s, action); answer(s, species); ctx.resolvePopup(s, s.pending[0].id, 0, name); clear(s); return Object.values(s.pets).find((p) => p.name === name); };
+  const dog = adopt('adopt_pet', 'dog', 'Rex');
+  dog.born = s.year - 3; dog.sex = 'm';
+  ok(!ctx.doAction(s, 'pet_breed', dog.id), 'a male pet cannot be bred');
+  dog.sex = 'f';
+  ok(ctx.doAction(s, 'pet_breed', dog.id), 'a female adult can be bred');
+  clear(s);
+  const tiger = adopt('adopt_exotic', 'tiger', 'Rajah');
+  tiger.born = s.year - 4; tiger.sex = 'f';
+  ok(!ctx.doAction(s, 'pet_breed', tiger.id), 'tigers are not bred and sold');
+  // A litter every other year at most.
+  dog.litterYear = s.year; s.player.counters = {};
+  ok(!ctx.doAction(s, 'pet_breed', dog.id), 'no second litter the same year');
+  s.year += 1; s.player.counters = {};
+  ok(!ctx.doAction(s, 'pet_breed', dog.id), 'no litter the next year either');
+  s.year += 1; s.player.counters = {};
+  ok(ctx.doAction(s, 'pet_breed', dog.id), 'a litter two years on is fine');
+  clear(s);
+  // Monkeys: keep every baby for years and the home still fills at 12, with profit kept modest.
+  const m0 = adopt('adopt_exotic', 'monkey', 'Coco'); m0.born = s.year - 3; m0.sex = 'f';
+  const m1 = adopt('adopt_exotic', 'monkey', 'Kiko'); m1.born = s.year - 3; m1.sex = 'm';
+  const start = s.player.money;
+  for (let y = 0; y < 12; y++) {
+    s.year++; s.player.counters = {};
+    for (const p of Object.values(s.pets)) { p.born = Math.min(p.born, s.year - 3); p.life = 99; }
+    for (const mother of Object.values(s.pets).filter((p) => p.alive && p.species === 'monkey' && p.sex === 'f')) {
+      clear(s);
+      if (!ctx.doAction(s, 'pet_breed', mother.id)) continue;
+      const pop = asking(s); if (!pop || pop.handler !== 'petBreedPair') continue;
+      const own = pop.choices.findIndex((c) => String(c.value).startsWith('own:'));
+      if (own < 0) continue;
+      ctx.resolvePopup(s, pop.id, own);
+      if (asking(s)) answer(s, 'keep_all');
+    }
+  }
+  clear(s);
+  const living = Object.values(s.pets).filter((p) => p.alive).length;
+  ok(living <= 12, `the home never holds more than 12 animals (${living})`);
+  ok(s.player.money - start < 400000, `12 years of monkey breeding stays a sideline (+${Math.round(s.player.money - start)})`);
 }
 
 console.log(failures ? `✖ house: ${failures} failure(s)` : '✓ house checks passed');
