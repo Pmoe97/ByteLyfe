@@ -710,6 +710,32 @@ meter that belongs to that career. They show on the Work sheet as "Your desk".
 - **Whatever you leave on the desk** is handled on autopilot at the new year, at worse odds, so you can play as
   much or as little as you like.
 
+**Mature mode, part one: the language dial and intimacy (Phase 4 of the big push).** Two new things in Settings:
+a **Language** dial (Clean, Salty, Unfiltered) and a **Mature** section whose master switch has an **Intimacy**
+switch under it. Everything stays off by default, so the game is exactly as before until you opt in.
+- **Language.** Clean is the game as it was. Salty has people swearing like people, and Unfiltered like people who are
+  really upset. It changes how people talk and nothing else: a muttered word after good and bad outcomes, six new
+  events that only exist at Salty or Unfiltered (road rage, a boss's bad plan, game night, a kid repeating what they
+  heard, a roommate fight), and some choices that only appear at the top setting.
+- **A night out has choices.** Instead of one line, hooking up is a scene: talk first, say plainly what you want, or go
+  with the flow (or "not tonight"; they can say no too), then protection (protect, ask about a test, skip it, or
+  change your mind), then the night itself, always fade-to-black, then the morning after (stay for breakfast, say you
+  want more, say it was one night, or slip out).
+- **Real consequences.** Skipping protection raises the risk of infection and pregnancy a lot. Infections are silent
+  until you get tested (a new Get tested action), a checkup finds them, or symptoms appear. Contraception is a yearly
+  choice. A quiet morning of regret, a tagged photo, and the hard conversation with a partner when a diagnosis
+  comes back (tell them, wait, or hide it, which is a secret that can leak).
+- **Spark.** Long relationships have a spark that cools with time, kids and neglect, and a cold one cools the
+  relationship. Plan a night in, take a weekend away, talk honestly about what you both want, try something new
+  together, or see a counselor.
+- **Friends with benefits.** Suggest it to a friend or an ex when you are free to. It can be spent, ended kindly, or
+  turn into dating when someone catches feelings, and it ends by itself when either of you gets serious with
+  someone else.
+- **A name.** Five nights in three years gets you a reputation, with a small cost with people looking for something
+  steady, and it fades.
+- **Still to come in Phase 4:** nightlife and a substance ladder, adult careers as card decks (dancer, companion,
+  creator, club owner), grittier crime, serial offenders and the darker adult themes.
+
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
   array, porch, koi pond or sauna (shared) and a game room, aquarium, observatory, chef's kitchen or
@@ -804,6 +830,9 @@ Retire the "work harder / ask for a raise" loop for nearly every job.
   things going wrong in orbit.
 
 ### Phase 4: Mature mode
+
+**Status: language dial and intimacy built** (see "Mature mode, part one" under Built). Only the Intimacy
+sub-switch exists so far; Substances and Violence switches arrive with their content.
 
 - **Intimacy and relationship depth.** Hooking up becomes a scene with choices (how it went,
   protection, regret) instead of one line. Chemistry and compatibility, jealousy, make-ups,

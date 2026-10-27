@@ -112,7 +112,15 @@ SHEETS.settings = () => {
         ${toggle('reduceMotion', 'Reduce motion')}
       </div>
       <div class="section-title">Content</div><div class="card">
-        ${Object.keys(CONTENT_TAGS).filter((k) => !k.startsWith('taboo')).map((k) => toggle(k, `${emo(CONTENT_TAGS[k].emoji, 18)} ${CONTENT_TAGS[k].name}`, CONTENT_TAGS[k].desc)).join('')}
+        ${Object.keys(CONTENT_TAGS).filter((k) => !k.startsWith('taboo') && !k.startsWith('mature')).map((k) => toggle(k, `${emo(CONTENT_TAGS[k].emoji, 18)} ${CONTENT_TAGS[k].name}`, CONTENT_TAGS[k].desc)).join('')}
+      </div>
+      <div class="section-title">Mature (18+ only, opt-in)</div><div class="card">
+        ${Object.keys(CONTENT_TAGS).filter((k) => k.startsWith('mature')).map((k) => toggle(k, `${emo(CONTENT_TAGS[k].emoji, 18)} ${CONTENT_TAGS[k].name}`, CONTENT_TAGS[k].desc)).join('')}
+      </div>
+      <div class="note">Mature is the master switch: the ones under it do nothing without it. Everything here is for adults, consensual, and never graphic. Off by default.</div>
+      <div class="section-title">Language</div><div class="card">
+        <div class="field"><label>How people talk</label>${seg('language', [['clean', 'Clean'], ['salty', 'Salty'], ['unfiltered', 'Unfiltered']])}</div>
+        <div class="muted" style="font-size:.85em">Clean is the game as it was. Salty has people swearing like people. Unfiltered is for people who are really upset. It changes how people talk, and nothing else.</div>
       </div>
       <div class="section-title">Taboo romance (18+ only, opt-in)</div><div class="card">
         ${toggle('taboo', `${emo(CONTENT_TAGS.taboo.emoji, 18)} ${CONTENT_TAGS.taboo.name}`, CONTENT_TAGS.taboo.desc + ' Adult-only, consensual. No teens, ever.')}

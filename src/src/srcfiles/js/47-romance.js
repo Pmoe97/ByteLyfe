@@ -270,7 +270,7 @@ function flingAgain(s, pid) {
 defAction({
   id: 'rx_fling_again', cat: 'person', group: 'romance', target: 'person', label: 'Hook up again', emoji: '🔥',
   when: (s, pid) => reachable(s, pid) && A(s) >= 18 && relKind(s, pid) === 'fling' && !count(s, 'fling_' + pid),
-  run: (s, pid) => { bump(s, 'fling_' + pid); return flingAgain(s, pid); },
+  run: (s, pid) => { bump(s, 'fling_' + pid); if (intimOn()) { intimStart(s, { pid, skipTalk: true }); return; } return flingAgain(s, pid); },
 });
 defAction({
   id: 'rx_fling_date', cat: 'person', group: 'romance', target: 'person', label: 'Ask them on a real date', emoji: '🌹',

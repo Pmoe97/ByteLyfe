@@ -473,6 +473,7 @@ function askOutOdds(s, p) {
   if (trait(s, 'charming')) odds += 0.1;
   if (trait(s, 'romantic')) odds += 0.08;
   if (netWorth(s) > 1e6) odds += 0.08;
+  odds += intimDateEdge(s); // a reputation for nights out (68-intimacy.js)
   if (relOf(s, p.id)) odds += (relOf(s, p.id).rel - 50) / 120;
   return clamp(odds, 0.05, 0.95);
 }
@@ -888,6 +889,7 @@ defAction({
   when: (s) => free(s) && A(s) >= 18,
   run: (s) => {
     if (bump(s, 'hookup') > 3) return { text: 'Maybe slow down a little this year.', nolog: true };
+    if (intimOn()) { intimStart(s, { c: makeDateCandidate(s) }); return; } // a night with choices (68-intimacy.js)
     const c = makeDateCandidate(s);
     add(s, { happy: randInt(3, 7) });
     tally(s, 'hookups');

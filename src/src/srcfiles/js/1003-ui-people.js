@@ -72,7 +72,7 @@ SHEETS.person = (pid) => {
     ${p.alive ? `<div class="rel-bar"><div class="muted">Relationship · ${Math.round(r.rel)}%</div>${bar(r.rel)}</div>
     <div class="mini-stats">${statCell('health', p.stats.health)}${statCell('smarts', p.stats.smarts)}${statCell('looks', p.stats.looks)}${statCell('happy', p.stats.happy)}</div>` : ''}
     ${traits ? `<div class="chips" style="justify-content:center;margin-top:10px">${traits}</div>` : ''}
-    ${kidFacts(p)}${romanceFacts(p)}${chaosFacts(p)}${militaryFacts(p)}${webFacts(p)}
+    ${kidFacts(p)}${romanceFacts(p)}${chaosFacts(p)}${militaryFacts(p)}${webFacts(p)}${intimFacts(p)}
   </div>`;
   const body = bodyCard(p, false);
   const sb = godRow(p); // God Mode editing (1018-ui-godmode.js)

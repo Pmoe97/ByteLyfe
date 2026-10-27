@@ -65,7 +65,8 @@ function check(s, where) {
     if (pp.handler === 'event') {
       const ev = EVENTS[pp.ctx.ev];
       if (tagOff(ev.tags)) fail(`event ${ev.id} shown with tag "${tagOff(ev.tags)}" off`, s);
-      for (const i of pp.ctx.map) { const o = ev.choices[i]; if (!Array.isArray(o) && tagOff(o.tags)) fail(`event ${ev.id} choice ${i} shown with tag "${tagOff(o.tags)}" off`, s); }
+      if (ev.lang && ctx.langLevel() < ev.lang) fail(`event ${ev.id} shown with the language dial below ${ev.lang}`, s);
+      for (const i of pp.ctx.map) { const o = ev.choices[i]; if (!Array.isArray(o) && tagOff(o.tags)) fail(`event ${ev.id} choice ${i} shown with tag "${tagOff(o.tags)}" off`, s); if (!Array.isArray(o) && o.lang && ctx.langLevel() < o.lang) fail(`event ${ev.id} choice ${i} shown with the language dial below ${o.lang}`, s); }
     }
     if (BAD_TEXT.test(pp.text) || BAD_TEXT.test(pp.title)) fail(`bad popup text "${pp.title}: ${pp.text}" @${where}`, s);
     for (const c of pp.choices) if (BAD_TEXT.test(String(c.label)) || BAD_TEXT.test(String(c.sub || ''))) fail(`bad choice "${c.label}" / "${c.sub}" @${where}`, s);
@@ -131,6 +132,13 @@ function check(s, where) {
       if (c.who !== null && !s.people[c.who]) fail(`a case about a missing person ${c.who} @${where}`, s);
       if (!CRIMES_ALL[c.crime]) fail(`a case for an unknown crime ${c.crime} @${where}`, s);
     }
+  }
+  // Intimacy (68-intimacy.js): never before 18, and every meter in range.
+  if (m.intim && (m.intim.first != null && m.intim.first < 18)) fail(`a night before 18 (${m.intim.first}) @${where}`, s);
+  for (const pid in m.rels) {
+    const r = m.rels[pid];
+    for (const k of ['chem', 'spark', 'feel']) if (r[k] != null && !(r[k] >= 0 && r[k] <= 100)) fail(`relationship ${k}=${r[k]} @${where}`, s);
+    if (r.kind === 'fwb' && s.people[pid] && s.year - s.people[pid].birthYear < 18) fail(`a friend with benefits under 18 @${where}`, s);
   }
   // Career cards (65-work.js): every meter in range, no desk piled high, every card on a desk is a real card.
   for (const wid in m.work || {}) {
@@ -221,6 +229,7 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
   if (i % opts.shard[1] !== opts.shard[0]) continue;
   for (const t of TAG_IDS) { META.settings[t] = chance(0.5); if (META.settings[t]) stats.tagLives[t] = (stats.tagLives[t] || 0) + 1; }
   META.settings.currency = chance(0.15) ? 'usd' : 'local';
+  META.settings.language = ['clean', 'salty', 'unfiltered'][randInt(0, 2)]; // the language dial (67-language.js)
   // The chaos persona (i % 10 = 4) needs Chaos on.
   if (i % 10 === 4 && !META.settings.chaos) { META.settings.chaos = true; stats.tagLives.chaos = (stats.tagLives.chaos || 0) + 1; }
   let s;

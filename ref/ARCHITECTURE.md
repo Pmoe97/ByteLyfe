@@ -62,8 +62,10 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `64` | Police casework (`64-detective.js`): a detective's caseload, ways to work a case, solving and wrong arrests, losing your own file, and strangers' crimes that hit people you know | No DOM. `careerTick` runs it through `onCareerYear('police')` (15-career.js); `invTick` calls `invWorldYear`. |
 | `65` | Career cards (`65-work.js`): the engine that deals a job's yearly hand of decisions, plays them, and settles them | No DOM. Registers every deck's year through `onCareerYear` (15-career.js); `leaveJob` calls `wkLeft`; writes to the web (`webLearn`-style confidences, reputation, `work_done` facts). |
 | `66` | Career decks (`66-work-decks.js`): doctor, surgeon, firefighter, bartender, chef, journalist, pilot, astronaut | Pure data plus a few card hooks. `wkRegister()` at the end hooks them up. |
-| `67–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1029-ui-work.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `67` | The language dial (`67-language.js`): result flavor, and events that only exist at Salty or Unfiltered | No DOM. `vary` (00-util.js) understands `{~clean|salty|unfiltered}`; `runWithResult` calls `langFlavor`; `eventEligible` and `fireEvent` check `lang`. |
+| `68` | Intimacy (`68-intimacy.js`): nights with choices, spark, friends with benefits, protection and testing, and the events around them | No DOM. All behind `mature` + `mature_intimacy`. `ageUp` reaches `intimTick` through a wrapper (after `invTick`); the hookup action, `rx_fling_again` and `askOutOdds` call into it; the web gained a `sti` secret. |
+| `69–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1030-ui-intimacy.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -597,6 +599,43 @@ four decisions with readable odds, and the way you play moves a meter that belon
   two years.
 - **Tests:** `dev/verify/work.mjs` (every card, every way, many seeds) and the simulator's work persona.
 
+**The language dial.** `67-language.js`, with `langLevel` and `langPick` in `00-util.js` and a segmented control in
+Settings (`META.settings.language`: `clean`, `salty`, `unfiltered`; default clean). It is only about how people talk.
+- **Tokens:** `{~clean|salty|unfiltered}` in any text run through `vary` picks by the dial and falls back to the last
+  option given; plain `{a|b|c}` still picks at random. New text should use it wherever someone would swear.
+- **Gated content:** `lang: 1 | 2` on an event, or on a single event choice, makes it exist only at that setting or
+  above (checked in `eventEligible`, `fireEvent` and when the answer is applied, like content tags). The simulator
+  fails if one shows up below its level.
+- **Flavor:** `langFlavor(result)` (from `runWithResult`) sometimes appends a muttered word to a good or bad outcome
+  when the dial is up: mild at Salty, strong at Unfiltered. Nothing changes at Clean, and nothing in the game is more
+  explicit at any setting.
+
+**Intimacy.** `68-intimacy.js`, `1030-ui-intimacy.js` (chips on a person's page). Behind `mature` and `mature_intimacy`
+(`INT_TAGS`; `intimOn()`), both off by default. Adults only (18+ on both sides, enforced in `intimStart`, in every
+action's `when` and in every event's `ages`), consensual, with a way out at every step, and fade-to-black.
+- **A night:** with the switches on, the hookup action (and "Hook up again") starts `intimStart` instead of the old
+  one-liner. Popups: how you start (`inScene`: talk first, say plainly what you want, go with the flow, or "Not
+  tonight"; they may say no too), protection (`inProtect`: protect, ask about a test, skip it, or change your mind),
+  the night (`intimNight`: chemistry plus how clearly you talked decides electric, good or awkward; fade-to-black text),
+  and the morning after (`inMorning`). A night while you are with someone and not open is a `fling_cheat` fact, so it
+  becomes a web secret that can leak.
+- **Consequences:** infection odds are 14% skipping protection, 2% with it, 0.6% after a test; they are **silent**
+  (`known: false`) until a test, a checkup or symptoms a year on. Pregnancy odds scale with fertility, with
+  contraception (`intim.bc`, a small yearly cost) cutting them to a quarter; a skipped night can bring a scare popup.
+  `in_test` finds infections; a known one brings `in_sti_tell` (tell them, wait, or say nothing, which becomes a web
+  secret of kind `sti`).
+- **Spark:** `rels[pid].spark` (0-100) on partners, spouses, fiances, friends with benefits and flings drifts down
+  each year (children and age cool it, a warm relationship helps) and a cold one cools the relationship. Actions on a
+  partner: a night in, a weekend away, a talk about what you both want, something new together, a counselor.
+- **Friends with benefits:** relationship kind `fwb`, asked for (`in_fwb_ask`: not with family, only when you are free
+  to), nights (`in_fwb_night`, straight to the protection step), `in_fwb_define` (date or end it), and a yearly
+  `feel` that can end in a popup where one of you wants more. It ends by itself when either of you gets serious.
+- **Reputation:** five nights in three years is a reputation (`intimRep`), which costs a little with people who want
+  something steady (`intimDateEdge`, read by `askOutOdds`) and a point of good name a year.
+- **Events:** an ex texts at 1 a.m., a spark at work, a dating-app match, a tagged photo, a dry spell, an anniversary,
+  a quiet morning of regret, and the diagnosis conversation.
+- **Tests:** `dev/verify/intim.mjs`; the simulator flips the dial per life and fails on a night before 18.
+
 **Zoos.** `58-zoo.js`, drawn on the company sheet by `zooSection` (`1024-ui-zoo.js`). A zoo is a company with
 `ind: 'zoo'` and `co.zoo = { ticketPrice, welfare, visitorSat, exhibits, animals, breeding, ... }`, made on first
 touch by `zooOf`.
@@ -704,6 +743,7 @@ never fired and actions that never ran, which usually means a `when` that can't 
 | `dev/verify/web.mjs` | The web: an affair is a secret and the partner learning it fires the caught popup; a circle weaves into symmetric, capped ties that never dangle; a rumor reaches you as a popup and every choice runs; squeezing, leaning and the hush-money call stay hidden with Mature off; a killing is a secret that chills the victim's friends and makes the city uneasy, and an uneasy city's prices grow slower; scandal costs interviews and juries and heirs inherit half; a bought silence makes a knower far less likely to talk; a throwing listener never breaks the game; teenagers hear no gossip; every web event and every choice runs. |
 | `dev/verify/inv.mjs` | Investigations: a crime opens a case with a detective who is a person and evidence in range, tied to its secret; a series links, shares a detective and earns a nickname; strong evidence ends in an arrest, a careful culprit's case goes cold and a tip reopens it, and a murder never closes; every choice in the interview and warrant popups runs and an alibi can crack; witnesses and exposure feed the case and destroying evidence thins it; laying low and skipping town work; arson, a romance scam and insider trading leave cases; a detective gets a caseload, every way of working a case runs, solving pays and wrong arrests cost, pulling your own file works or gets you fired; strangers' crimes hit people you know and old files clear; thirty years of ticks stay in range and the file saves whole. |
 | `dev/verify/work.mjs` | Career cards: every deck is on a real job and every card is complete, with real skills and clean text; a year's turn deals a hand and offers the first card; every card, every way, many seeds runs without errors and keeps the meter in range; all wins, a split and all losses come out good, so-so and bad; autopilot handles what you leave and is always a little worse than playing it yourself; a card's person becomes someone you know, the cast is capped, and a regular's confidence is a web secret; a strong meter lifts performance, a ruined one gets you fired, an astronaut cannot skip training; journalists publish (or retract), a doctor who spreads a patient's secret pays, quitting clears the desk; thirty years in every career stay in range and save whole. |
+| `dev/verify/intim.mjs` | The dial and intimacy: `{~a|b|c}` picks by the setting and falls back; flavor appears only when the dial is up and strong words only at Unfiltered; language-gated events and choices appear at their own level and answering after the dial moved does nothing; with Mature or Intimacy off the old hookup is unchanged and no new action or event exists; nothing runs for anyone under 18 on either side; every path through a scene runs, "not tonight" and "I changed my mind" leave nothing, and a cheating night is a secret; skipping protection is far riskier than protecting or testing, contraception helps, infections are silent until found; spark rises with care and falls with neglect; friends with benefits can be asked for, spent, ended or dated, and only when free; the diagnosis conversation and a hidden diagnosis; every event and choice at every setting; a long life with everything on. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |
 | `dev/verify/godmode.mjs` | God Mode's per-person rules: parent and child ages, a spouse never under 18, bodies removed and restored across 18, clean names, clamped stats, trait conflicts and the limit of four, age limits on jobs, money, education, gender, orientation and home, and which relationships can change kind. |
 | `dev/verify/run-all.mjs` | `npm run verify`: the syntax check (in-process), then every other check as its own process, in parallel (one per core, `VERIFY_JOBS=n` to cap it), with each check's output printed when it finishes. The 300-life simulator is split into shards (a count that shares no factor with 10, so the personas spread evenly) and merged into one summary. About a minute on 12 cores. |

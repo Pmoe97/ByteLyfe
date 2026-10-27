@@ -59,6 +59,7 @@ const SECRET_KINDS = {
   cheated: { sev: 2, icon: '🌙' },
   crime: { sev: 2, icon: '🧤' },
   killing: { sev: 5, icon: '🕯️' },
+  sti: { sev: 3, icon: '🧪' },
   npc_affair: { sev: 3, icon: '💔' },
   npc_debt: { sev: 2, icon: '💸' },
   npc_crime: { sev: 2, icon: '🚔' },
@@ -99,6 +100,7 @@ function webLabel(s, sec) {
   if (sec.kind === 'cheated') return `your night with ${b}`;
   if (sec.kind === 'crime') return `${CRIMES[sec.crime] ? CRIMES[sec.crime].verb : 'a crime'} nobody has pinned on you`;
   if (sec.kind === 'killing') return `what happened to ${b}`;
+  if (sec.kind === 'sti') return `a diagnosis you have not told ${webName(s, sec.rom)} about`;
   return webRumor(s, sec);
 }
 function webRumor(s, sec) {
@@ -204,6 +206,14 @@ function webCheckPublic(s, sec) {
 function webStake(s, sec, pid) {
   const rom = romanticId(s);
   if (!rom || rom !== pid || sec.out) return;
+  if (sec.kind === 'sti' && sec.rom === rom) {
+    sec.out = true;
+    sec.outYear = s.year;
+    webRepAdd(P(s), { scandal: 2, name: -3 });
+    addRel(s, rom, -22);
+    announce(s, { emoji: '🧪', title: 'They found out', text: `${nm(s, rom)} found out about your diagnosis, and that you did not tell them.${relOf(s, rom).rel < 25 && chance(0.4) ? ' ' + partnerLeaves(s, rom) : ''}`.trim(), tone: 'bad', person: rom });
+    return;
+  }
   if (sec.kind === 'affair' && sec.rom === rom && sec.other && relKind(s, sec.other) === 'lover') {
     caughtPopup(s, sec.other, rom); // 47-romance.js; it announces the fact back to us
   } else if ((sec.kind === 'affair' || sec.kind === 'cheated') && sec.rom === rom) {

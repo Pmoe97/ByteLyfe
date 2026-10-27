@@ -30,6 +30,7 @@ function eventEligible(s, ev) {
   if (ev.ages && (a < ev.ages[0] || a > ev.ages[1])) return false;
   if (!!ev.prison !== inPrison(s)) return false;
   if (!tagsOn(ev.tags)) return false;
+  if (ev.lang && langLevel() < ev.lang) return false; // only at this setting of the language dial or above
   const hist = M(s).evHist || (M(s).evHist = {});
   if (ev.once && hist[ev.id]) return false;
   if (hist[ev.id] && s.year - hist[ev.id] < (ev.cooldown ?? 3)) return false;
@@ -83,6 +84,7 @@ function fireEvent(s, ev) {
   ev.choices.forEach((raw, i) => {
     const o = Array.isArray(raw) ? { label: raw[0], fx: raw[1] } : raw;
     if (!tagsOn(o.tags)) return;
+    if (o.lang && langLevel() < o.lang) return;
     if (o.when && !o.when(s, c)) return;
     map.push(i);
     choices.push({
@@ -105,7 +107,7 @@ onChoice('event', (s, ctx, idx) => {
   if (!o || !o.fx) return;
   // Things may have changed since the event fired (a firing, a breakup, prison...).
   if (ctx.c && ctx.c.pid && (!s.people[ctx.c.pid] || !s.people[ctx.c.pid].alive)) return { text: 'The moment passed.', quiet: true, nolog: true };
-  if (!!ev.prison !== inPrison(s) || !tagsOn(ev.tags) || !tagsOn(o.tags) || (ev.when && !ev.when(s))) return { text: 'The moment passed.', quiet: true, nolog: true };
+  if (!!ev.prison !== inPrison(s) || !tagsOn(ev.tags) || !tagsOn(o.tags) || (ev.lang && langLevel() < ev.lang) || (o.lang && langLevel() < o.lang) || (ev.when && !ev.when(s))) return { text: 'The moment passed.', quiet: true, nolog: true };
   const r = o.fx(s, ctx.c || {});
   if (typeof r === 'string') return vary(r);
   if (r && r.text) r.text = vary(r.text);

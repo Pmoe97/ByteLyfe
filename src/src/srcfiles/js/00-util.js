@@ -116,9 +116,18 @@ function vary(str) {
   let out = String(str ?? '');
   const re = /\{([^{}]*)\}/;
   let guard = 0;
-  while (re.test(out) && guard++ < 60) out = out.replace(re, (m, body) => pick(body.split('|')));
+  while (re.test(out) && guard++ < 60) out = out.replace(re, (m, body) => (body.charAt(0) === '~' ? langPick(body.slice(1)) : pick(body.split('|'))));
   return out;
 }
+// The language dial (Settings): 0 clean, 1 salty, 2 unfiltered. It is only about how people talk;
+// nothing in the game gets more explicit. {~clean|salty|unfiltered} in any text picks by the dial
+// (and falls back to the last one given); plain {a|b|c} still picks at random.
+const LANG_LEVELS = ['clean', 'salty', 'unfiltered'];
+function langLevel() {
+  const l = typeof META !== 'undefined' && META.settings ? LANG_LEVELS.indexOf(META.settings.language) : 0;
+  return l < 0 ? 0 : l;
+}
+function langPick(body) { const parts = body.split('|'); return parts[Math.min(langLevel(), parts.length - 1)]; }
 function aAn(word) { return (/^[aeiou]/i.test(String(word)) ? 'an ' : 'a ') + word; }
 function plural(n, one, many) { return n === 1 ? one : (many || one + 's'); }
 function nOf(n, one, many) { return n + ' ' + plural(n, one, many); }
