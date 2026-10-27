@@ -157,6 +157,17 @@ function check(s, where) {
   // Adult careers (71-adult-work.js): never held before 18, and never dealt with a switch off.
   if (m.career && g('JOBS')[m.career.id].adult && s.year - s.people[s.playerId].birthYear < 18) fail(`a minor in an adult career (${m.career.id}) @${where}`, s);
   if (m.career && g('JOBS')[m.career.id].adult && !g('adultOn')() && m.work && m.work[m.career.id] && m.work[m.career.id].hand.length) fail(`adult cards on the desk with a switch off @${where}`, s);
+  // Violence and the serial arc (72-violence.js, 73-serial.js): meters in range, nothing before 18, nothing with a switch off.
+  if (m.vio && (!(m.vio.haunt >= 0 && m.vio.haunt <= 100) || m.vio.kills < 0 || m.vio.defense < 0)) fail(`bad violence state ${JSON.stringify(m.vio)} @${where}`, s);
+  if (m.ser && (!(m.ser.urge >= 0 && m.ser.urge <= 100) || m.ser.kills < 0 || m.ser.cool < 0)) fail(`bad serial state ${JSON.stringify(m.ser)} @${where}`, s);
+  if (m.ser && m.ser.on && s.year - s.people[s.playerId].birthYear < 18) fail(`a serial arc before 18 @${where}`, s);
+  // Dark themes (74-dark.js): meters in range, a stalker is a real adult, nothing before 18.
+  if (m.dark) {
+    if (!(m.dark.moral >= 0 && m.dark.moral <= 100)) fail(`bad moral weight ${m.dark.moral} @${where}`, s);
+    const k = m.dark.stalk;
+    if (k && (!(k.level >= 0 && k.level <= 100) || !s.people[k.by])) fail(`bad stalking ${JSON.stringify(k)} @${where}`, s);
+    if ((m.dark.moral > 0 || k) && s.year - s.people[s.playerId].birthYear < 18) fail(`dark themes before 18 @${where}`, s);
+  }
   if (m.dt && (m.dt.load.length > 12 || !(m.dt.solved >= 0) || !(m.dt.wrong >= 0))) fail(`bad detective record ${JSON.stringify(m.dt)} @${where}`, s);
   for (const id in s.people) {
     const q = s.people[id];
@@ -245,6 +256,10 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
   if (i % 10 === 4 && !META.settings.chaos) { META.settings.chaos = true; stats.tagLives.chaos = (stats.tagLives.chaos || 0) + 1; }
   // The adult-careers persona (i % 20 = 15) needs both of its switches on.
   if (i % 20 === 15) for (const t of ['mature', 'mature_adultwork']) if (!META.settings[t]) { META.settings[t] = true; stats.tagLives[t] = (stats.tagLives[t] || 0) + 1; }
+  // The violence persona (i % 20 = 19) needs its switches on.
+  if (i % 20 === 19) for (const t of ['mature', 'mature_violence']) if (!META.settings[t]) { META.settings[t] = true; stats.tagLives[t] = (stats.tagLives[t] || 0) + 1; }
+  // The dark-themes persona (i % 20 = 5) needs its switches on.
+  if (i % 20 === 5) for (const t of ['mature', 'mature_themes']) if (!META.settings[t]) { META.settings[t] = true; stats.tagLives[t] = (stats.tagLives[t] || 0) + 1; }
   let s;
   // One life in ten is born royal, and one plays a challenge (hand-made, daily or random).
   try {
@@ -486,6 +501,28 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
         }
         if (s.player.career && ACTIONS.adult_tell.when(s) && chance(0.1)) { ctx.doAction(s, 'adult_tell'); resolveAll(s, 'adult:tell'); }
       } catch (e) { fail('adult persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
+    // And one is pulled into the dark (72-violence.js, 73-serial.js): at 24, two deaths and the turn, then
+    // the year does the rest (the urge, the cases, the people at home), with random answers to every question.
+    if (s.gen === 1 && i % 20 === 19 && !s.dead && !s.player.prison && age === 24) {
+      try {
+        for (let k = 0; k < 2; k++) { const v = ctx.makeAdultNear(s, { minAge: 25, maxAge: 40 }); ctx.setRel(s, v.id, 'enemy', 5); ctx.webFact(s, 'killed', { pid: v.id, how: 'poison' }); }
+        const tp = s.pending.find((q) => q.handler === 'serTurn');
+        if (tp) ctx.resolvePopup(s, tp.id, tp.choices.findIndex((c) => c.value === 'on'));
+        const mp = s.pending.find((q) => q.handler === 'serMo');
+        if (mp) ctx.resolvePopup(s, mp.id, Math.floor(i / 20) % 3);
+        resolveAll(s, 'serial-turn');
+      } catch (e) { fail('violence persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
+    // And one has heavier years (74-dark.js): at 25 an ex who will not be forgotten, a partner and a name,
+    // and a weight on the conscience; the year does the rest, with random answers to every question.
+    if (s.gen === 1 && i % 20 === 5 && !s.dead && !s.player.prison && age === 25) {
+      try {
+        const ex = ctx.makeAdultNear(s, { minAge: 25, maxAge: 40 }); ctx.setRel(s, ex.id, 'ex', 10);
+        const f = ctx.makeAdultNear(s, { minAge: 25, maxAge: 40 }); ctx.setRel(s, f.id, 'friend', 60);
+        s.player.fame = Math.max(s.player.fame, 45); ctx.darkMoral(s, 35);
+        resolveAll(s, 'dark-setup');
+      } catch (e) { fail('dark persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
     }
     const n = randInt(0, 5);
     for (let k = 0; k < n && !s.dead; k++) {

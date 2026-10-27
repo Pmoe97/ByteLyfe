@@ -7,11 +7,11 @@
 // businessTick (34-business.js), royalTick (38-royalty.js), uwTick (39-underworld.js),
 // showbizTick (40-fame.js), sportsTick (41-sports.js), courtTick (42-courts.js), storyTick
 // (43-stories.js), familyTick (45-family.js), parentingTick (46-parenting.js) and romanceTick
-// (47-romance.js), tabooTick (48-taboo.js), cityTick (49-cities.js) fxTick (50-currency.js) chaosTick (51-chaos.js), gamblingTick (53-gambling.js), houseTick (54-house.js) and youthTick (56-growing-up.js) and militaryTick (59-military.js) and spyTick (60-spy.js) and webTick (62-web.js) and invTick (63-cases.js) and intimTick (68-intimacy.js) and subsYear (69-substances.js) live in later files, so they're called through wrappers. fxTick goes first so the whole year is told in its new exchange rates. royalTick follows npcTick so a monarch
+// (47-romance.js), tabooTick (48-taboo.js), cityTick (49-cities.js) fxTick (50-currency.js) chaosTick (51-chaos.js), gamblingTick (53-gambling.js), houseTick (54-house.js) and youthTick (56-growing-up.js) and militaryTick (59-military.js) and spyTick (60-spy.js) and webTick (62-web.js) and invTick (63-cases.js) and intimTick (68-intimacy.js) and subsYear (69-substances.js) and vioYear (72-violence.js) and serYear (73-serial.js) and darkYear (74-dark.js) live in later files, so they're called through wrappers. fxTick goes first so the whole year is told in its new exchange rates. royalTick follows npcTick so a monarch
 // who died this year is succeeded the same year.
 const AGE_PHASES = [
   (s) => fxTick(s), bodyTick, pregnancyTick, schoolTick, (s) => militaryTick(s), (s) => spyTick(s), careerTick, (s) => businessTick(s), prisonTick, financeTick,
-  assetTick, (s) => cityTick(s), fameTick, npcTick, (s) => familyTick(s), (s) => parentingTick(s), (s) => romanceTick(s), (s) => tabooTick(s), (s) => royalTick(s), (s) => uwTick(s), (s) => showbizTick(s), (s) => sportsTick(s), (s) => courtTick(s), (s) => chaosTick(s), (s) => gamblingTick(s), (s) => houseTick(s), (s) => youthTick(s), (s) => webTick(s), (s) => invTick(s), (s) => intimTick(s), (s) => subsYear(s), petTick, milestoneTick, (s) => storyTick(s), rollYearEvents, diseaseTick, deathCheck,
+  assetTick, (s) => cityTick(s), fameTick, npcTick, (s) => familyTick(s), (s) => parentingTick(s), (s) => romanceTick(s), (s) => tabooTick(s), (s) => royalTick(s), (s) => uwTick(s), (s) => showbizTick(s), (s) => sportsTick(s), (s) => courtTick(s), (s) => chaosTick(s), (s) => gamblingTick(s), (s) => houseTick(s), (s) => youthTick(s), (s) => webTick(s), (s) => invTick(s), (s) => intimTick(s), (s) => subsYear(s), (s) => vioYear(s), (s) => serYear(s), (s) => darkYear(s), petTick, milestoneTick, (s) => storyTick(s), rollYearEvents, diseaseTick, deathCheck,
 ];
 
 function ageUp(s) {

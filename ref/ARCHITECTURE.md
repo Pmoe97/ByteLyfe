@@ -67,7 +67,10 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `69` | The substance ladder (`69-substances.js`): weed, pills, party drugs, cocaine and opioids on top of the habits the game has, tolerance, cravings, withdrawal, relapse, overdose scares, recovery, dealers, and the events around them | No DOM. All behind `mature` + `mature_substances`. `ageUp` reaches `subsYear` through a wrapper (after `intimTick`); `habit()` (19-health.js) records `M(s).used[id]`; `bodyTick`'s overdose roll calls `subsOverdose`; the rehab handler calls `subsRehab`. |
 | `70` | Nightlife (`70-nightlife.js`): venues per city, a scene standing, and a night out as a chain of decisions | No DOM. The `nightlife` action (21-activities.js) calls `nightMenu` when Substances is on. Uses `wkPerson` (65-work.js), `subsDealer` and `subsUse` (69), `intimStart` (68). |
 | `71` | Adult careers (`71-adult-work.js`): a club dancer, companion, subscription creator and club manager as card decks, with boundaries, local law and who knows | No DOM. All behind `mature` + `mature_adultwork`. Decks on the career-cards engine (`defWork`); `hire` calls `adultHired`; the web gained an `adult_work` secret (`webStake` and `webExpose` call back in). |
-| `72–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `72` | Violence (`72-violence.js`): fights you can walk out of, self-defense and the inquiry, what to do after a killing, witnesses, haunting, gang and prison initiations | No DOM. All behind `mature` + `mature_violence`. `p_assault` and `pr_gang` (20-crime.js) and `mobJoin` (39-underworld.js) call in; listens to the web's `killed` fact; `ageUp` reaches `vioYear` through a wrapper. |
+| `73` | The serial arc (`73-serial.js`): the turn, how you operate, the urge, acts, close calls, copycats, the people at home, ways out, fan mail and the memoir | No DOM. Behind the same switches. Built on the case-file series (63-cases.js) and the web; `serYear` through a wrapper. |
+| `74` | Dark themes (`74-dark.js`): betrayal and revenge, stalking, moral injury | No DOM. Behind `mature` + `mature_themes`. The web records who told whom (`sec.told`); `ageUp` reaches `darkYear` through a wrapper; reads `flags.followed` from the adult careers, and the military and spy state. |
+| `75–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
 | `1000+` | UI (`1000-ui-kit.js` … `1030-ui-intimacy.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
@@ -626,6 +629,50 @@ of the interview (`JOBS[id].interview`). Age 18, and 21 for the club.
   law cards is dealt. A failed sting is `arrestMinor(s, 'solicitation')`, a citation that is on your record and never a felony.
 - **Stalking hook:** `flags.followed` (a year) is set when a regular or fan will not take no. The later stalking systems read it.
 - **Tests:** `dev/verify/adult.mjs`; the simulator's adult persona (`i % 20 === 15`) and its adult-career invariants.
+
+**Violence and the serial arc.** `72-violence.js` and `73-serial.js`. Behind `mature` and `mature_violence` (`VIO_TAGS`;
+`vioOn()`), both off by default, adults only (18+, and every other person in a scene is an adult). Violence is abstract
+(odds and outcomes), there is never anything sexual in it, nothing is a how-to, and nothing is made to look like a good
+idea. `dev/verify/violence.mjs` scans the text for what must never be there.
+- **A fight you pick:** with the switches on, `p_assault` calls `vioFight`: back down, say it out loud, or throw the first
+  punch, then how far (quickly, fight it out, all out). All out can go too far (`vioFightDeath`). Walking away is free.
+- **A fight that picks you:** the `vio_attacked` event (hand it over, run, talk, fight back). A death in self-defense
+  (`vioDefenseKill`) is no secret and no case, but it weighs, and the inquiry (`vioInquiry`) decides whether it is charged
+  as manslaughter (a non-menu crime, `CRIMES.manslaughter`).
+- **After a killing:** `onWebFact('killed')` asks what you do next (`vioAfter`): get away clean, scrub the evidence (both
+  are odds on the case's `ev`), call a friend (who then knows, a web secret), or turn yourself in. A witness
+  (`vioWitness`, from `vioYear` on a case with `ev.wit >= 40`) can be paid, threatened, avoided, or you can confess. There
+  is no way to kill one.
+- **Conscience:** `M(s).vio.haunt` (0-100) costs happiness every year, fades, and is eased by help (`vio_help`, a friend,
+  telling someone). `vioNight` is the bad nights.
+- **Proving yourself:** `vioInitiation` from `mobJoin` and `pr_gang`: take the beating, do what they ask, prove yourself
+  against someone, or back out. Two prison events (protection, someone hurt on the yard).
+- **The serial arc (73):** after the second killing, `serTurn` (get help, turn yourself in, keep going), then `serMo` (how
+  you operate: careful, quick or close to home). `M(s).ser.urge` builds every year and asks at 70 (hold on, get help,
+  give in); an act (`serAct`) is who (a stranger passing through, a neighbor, someone who knows you, or not tonight), then
+  a roll, then `webFact('killed')` so the case, the secret and "what now" all come from the existing systems; crimes of one
+  hand join into a series, one detective, and a press name (63-cases.js). Close calls, copycats (a case with `copy: true`
+  that confuses the others), the partner who notices, `ser_stop`, `ser_help`, fan mail in prison, a memoir, and the titles
+  Notorious and Never Caught. The Case files sheet shows "What you carry".
+- **Not built:** the serial kidnapper (the roadmap lists it; a captive who stays alive is a different and harder design).
+- **Tests:** `dev/verify/violence.mjs`; the simulator's persona (`i % 20 === 19`) and invariants.
+
+**Dark themes.** `74-dark.js`. Behind `mature` and `mature_themes` (`DARK_TAGS`; `darkOn()`), both off by default, adults
+only, nothing graphic, nothing sexual, and always a way out. `M(s).dark = { moral, stalk, grudge, helped, betrayed, quiet }`.
+- **Betrayal:** `webLearn` (62-web.js) records `sec.told[learner] = teller`. When one of your secrets gets out through
+  gossip, `darkYear` finds the person you trusted who passed it on (`dkBetray`: confront, forgive, cut off, make them pay).
+  `dkRevenge` is a choice with a price: let it go (always earns karma), expose what you heard about them (`webExpose`),
+  sabotage (can come back on you), or court. Events: a coworker takes your credit, a partner hides a debt.
+- **Stalking:** a fan, an ex, or a regular who `flags.followed` (adult careers) starts `stalk` (a level 0-100 that climbs
+  every year you do nothing). `dkStalk` offers document and report (odds, an order), tell people, security, confront,
+  or ignore; at 70 the scare (`dkScare`); an order can be broken (arrest); it ends, then three quiet years. The other
+  side is `dk_obsession`: an ex you cannot let go of, and what pushing it costs (a citation for harassment).
+- **Moral injury:** `moral` (0-100) is the weight of an order obeyed, a false report signed, or a source left behind.
+  Events for soldiers at war (`dk_mil_order`, `dk_mil_civilians`) and spies (`dk_spy_asset`, which marks the asset
+  `dropped` or `dead`). It costs happiness every year, fades, and `dkMoral` offers a counselor, a veterans' group, a
+  friend, drink, or carrying on. `dk_counsel` is the action.
+- **Tests:** `dev/verify/dark.mjs`; the simulator's persona (`i % 20 === 5`) and invariants. The Case files sheet shows
+  "What you carry" for conscience, urge, moral weight and a stalker.
 
 **The language dial.** `67-language.js`, with `langLevel` and `langPick` in `00-util.js` and a segmented control in
 Settings (`META.settings.language`: `clean`, `salty`, `unfiltered`; default clean). It is only about how people talk.

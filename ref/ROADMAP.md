@@ -733,8 +733,7 @@ switch under it. Everything stays off by default, so the game is exactly as befo
   someone else.
 - **A name.** Five nights in three years gets you a reputation, with a small cost with people looking for something
   steady, and it fades.
-- **Still to come in Phase 4:** grittier crime, serial offenders and the darker adult themes. (Adult careers are built; see
-  "part three" below.)
+- **Phase 4 is built** (see "Mature mode, part one" to "part five" below).
 
 **Mature mode, part two: nightlife and the substance ladder.** A new **Substances** switch under Mature (off by
 default, adults only). It is about what drugs and drinking do to a life, and never how to do anything.
@@ -778,6 +777,32 @@ control, and there is no coercion or trafficking path anywhere in it.
 - **Shortcuts cost what they cost.** The engine gained per-way effects, so a shortcut (skimming the tax return, cutting the
   performers' share, ignoring the capacity limit) pays its price in karma, trust and name even when it works, and the fair
   way earns them. Autopilot never takes a shortcut.
+
+**Mature mode, part four: grittier crime and the serial offender.** A new **Violence** switch under Mature (off by default,
+18+ only). Violence is implied and abstract, nothing is sexual, nothing is a how-to, and everyone in it is an adult.
+- **A fight is a scene.** Back down, say it out loud, or throw the first punch, then how far. Going all out can go too far.
+  Walking away is free. Strangers can come at you too, and a death in self-defense still brings an inquiry and a weight.
+- **A killing is something you carry.** What you do next is a choice (get away, scrub the evidence, call a friend, turn
+  yourself in), a witness has to be dealt with (never by killing them), and the nights are bad. A "conscience" meter costs
+  happiness every year, fades slowly, and is eased by help, a friend, or telling someone.
+- **Proving yourself.** Joining the family or a prison gang asks for proof: take the beating, do what they ask, prove
+  yourself against someone, or back out. Two new events on the yard.
+- **The serial offender,** built on the case-file series and the web. After a second killing you can get help, turn
+  yourself in or keep going; then how you operate, an urge that builds and asks you a question, acts that open linked
+  cases, a detective who takes it personally, a press name, close calls, copycats, a partner who notices, and the endings:
+  captured, a memoir and fan mail from prison, getting away with it, or stopping for good. Help, holding on and "not
+  tonight" are always offered. The serial kidnapper is not built.
+
+**Mature mode, part five: dark themes.** A new **Dark themes** switch under Mature (off by default, 18+ only). Heavier stories,
+told seriously: nothing graphic, nothing sexual, and always a way out.
+- **Betrayal.** When one of your secrets gets out, you find out who told. Confront them, forgive them, cut them off, or
+  make them pay, and revenge is a choice with a price (let it go, expose what you heard, sabotage, or court), with
+  letting go the only one that never costs you. A coworker takes your credit; a partner hides a debt.
+- **Stalking.** A fan, an ex, or a regular who will not take no. It climbs every year you ignore it. You can document and
+  report it (and get an order), tell the people around you, hire security, confront, or ignore. There is a scare, an
+  order that can be broken, and an ending. The other side is the ex you cannot let go of, and what pushing it costs.
+- **Moral injury.** An order you obeyed, a false report you signed, a source you left behind. It is a weight that costs
+  sleep and people, eased by a counselor, a veterans' group, or the truth told to someone close.
 
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
@@ -874,9 +899,9 @@ Retire the "work harder / ask for a raise" loop for nearly every job.
 
 ### Phase 4: Mature mode
 
-**Status: language dial, intimacy, nightlife, the substance ladder and the adult careers built** (see "Mature mode, part
-one", "part two" and "part three" under Built). The Intimacy, Substances and Adult careers sub-switches exist; the
-Violence switch arrives with its content.
+**Status: language dial, intimacy, nightlife, the substance ladder, the adult careers and grittier crime built** (see
+"Mature mode, part one" to "part four" under Built). The Intimacy, Substances, Adult careers and Violence sub-switches
+exist, with a Dark themes switch for part five. To do: the serial kidnapper, if it is wanted.
 
 - **Intimacy and relationship depth.** Hooking up becomes a scene with choices (how it went,
   protection, regret) instead of one line. Chemistry and compatibility, jealousy, make-ups,

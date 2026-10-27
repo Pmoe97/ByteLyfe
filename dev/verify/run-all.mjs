@@ -19,6 +19,8 @@
 //   - language dial and intimacy: the dial, gating, adults only, nights, consequences, spark, friends with benefits (67-language.js, 68-intimacy.js)
 //   - substances and nightlife: the ladder, tolerance, cravings, recovery, overdoses, dealers, a night out (69-substances.js, 70-nightlife.js)
 //   - adult careers: dancer, companion, creator and club manager as decks; gating, adults only, boundaries, walking away, who knows, the law (71-adult-work.js)
+//   - violence and the serial arc: fights, self-defense, guilt, witnesses, gangs, the urge, the series, the way out (72-violence.js, 73-serial.js)
+//   - dark themes: betrayal and revenge, stalking, moral injury (74-dark.js)
 //   - the life simulator (300 lives), split into shards across the cores, then merged
 // Each check is its own process; at most one per core runs at a time, longest first.
 // Output is held until a check finishes, so checks never interleave.
@@ -71,6 +73,8 @@ const tasks = [
   { label: 'language and intimacy checks', args: ['dev/verify/intim.mjs'] },
   { label: 'substance and nightlife checks', args: ['dev/verify/subs.mjs'] },
   { label: 'adult-career checks', args: ['dev/verify/adult.mjs'] },
+  { label: 'violence and serial checks', args: ['dev/verify/violence.mjs'] },
+  { label: 'dark-theme checks', args: ['dev/verify/dark.mjs'] },
 ];
 function run(task) {
   return new Promise((resolve) => {

@@ -191,6 +191,7 @@ function webUnease(s, cc, city) { return ((s.web && s.web.unease && s.web.unease
 function webLearn(s, sec, pid, from) {
   if (sec.knows.includes(pid) || !s.people[pid]) return;
   sec.knows.push(pid);
+  if (from && from !== pid) (sec.told || (sec.told = {}))[pid] = from; // who told whom: you find out who talked (74-dark.js)
   sec.ev = clamp100(sec.ev + 8);
   if (sec.case && sec.subj !== pid) invTip(s, sec, 6); // one more person who could tell the police (63-cases.js)
   if (pid === s.playerId) {
