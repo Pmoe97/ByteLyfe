@@ -804,6 +804,23 @@ told seriously: nothing graphic, nothing sexual, and always a way out.
 - **Moral injury.** An order you obeyed, a false report you signed, a source you left behind. It is a weight that costs
   sleep and people, eased by a counselor, a veterans' group, or the truth told to someone close.
 
+**Content and tuning.** The rest of the ladder, and the people around it.
+- **Seventy careers play their year.** Every ordinary job now deals a hand of decisions: service, office, business,
+  transport, public service, the trades, health, tech, science, law, education, media and the entertainment careers. Each
+  has its own meter, a few cards that are only about that job (a bank teller's very large deposit, a plumber's midnight
+  burst, a therapist's client in crisis, a comedian's joke that crosses a line), and a set every job shares (a bad
+  idea from above, the crunch, trouble on the team, a coworker who needs a hand, rumors of cuts, your own mistake).
+- **Shortcuts cost what they cost.** The drug-rep lunch, the quiet chart fix, the fake ID you let slide, the warm fish and
+  the cooler you moved used to beat the honest choice on the odds. They no longer do: a shortcut has worse odds, costs
+  karma, ends in its own words (and never lifts your standing), and autopilot never takes one. The honest way earns
+  karma and name.
+- **Favors.** Do someone a favor and they owe you one; ask for one and, unless they already owe you, you owe them.
+  Call one in on a card (+25 points of odds), ask for a reference, a loan or a word on your behalf, have someone vouch
+  for you, or keep a secret quiet. What you owe gets called in.
+- **Workplace venues.** The break room, the staff lounge, the truck at lunch, the green room. Hang out and you hear things,
+  coworkers who share a venue talk to each other (so secrets travel), a round buys a favor, and there is a work party
+  every few years.
+
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
   array, porch, koi pond or sauna (shared) and a game room, aquarium, observatory, chef's kitchen or
@@ -881,10 +898,10 @@ One shared engine for every crime, replacing the single "caught" roll.
 
 ### Phase 3: Interactive careers
 
-**Status: engine and first eight careers built** (see "Career cards" under Built). To do: the other seventy
-or so careers as decks (they are data now, so this is writing, not engineering), forensics and profiler tracks,
-more full systems (paramedic, teacher, lawyer, pro cook-offs, farm and fishing seasons), twists that follow a good
-result like the spy's, patrol cards for beat cops, and the adult careers as decks in Phase 4.
+**Status: built.** The engine, the first eight careers, the rest of the ordinary ladder as decks, and the adult careers (see
+"Career cards" and "Content and tuning" under Built). To do: forensics and profiler tracks, more full systems
+(paramedic, teacher, lawyer, pro cook-offs, farm and fishing seasons), twists that follow a good result like the spy's,
+and patrol cards for beat cops.
 
 Retire the "work harder / ask for a raise" loop for nearly every job.
 - **A career-cards engine,** generalized from the spy missions: each year a career deals work
@@ -902,6 +919,8 @@ Retire the "work harder / ask for a raise" loop for nearly every job.
 **Status: language dial, intimacy, nightlife, the substance ladder, the adult careers and grittier crime built** (see
 "Mature mode, part one" to "part four" under Built). The Intimacy, Substances, Adult careers and Violence sub-switches
 exist, with a Dark themes switch for part five. To do: the serial kidnapper, if it is wanted.
+
+Content and tuning (every ordinary career as a deck, favors, venues, the moral-option rebalance) is built; see "Content and tuning" under Built. Still to do from Phase 3: forensics and profiler tracks, more full systems (paramedic, teacher, lawyer, pro cook-offs, farm and fishing seasons), twists that follow a good result, and patrol cards for beat cops.
 
 - **Intimacy and relationship depth.** Hooking up becomes a scene with choices (how it went,
   protection, regret) instead of one line. Chemistry and compatibility, jealousy, make-ups,

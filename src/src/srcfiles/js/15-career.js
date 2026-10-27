@@ -112,6 +112,7 @@ onChoice('interview', (s, ctx, ai) => {
   if (M(s).wanted) odds -= 0.2;
   odds += vetHireEdge(s, j); // veterans’ preference (59-military.js)
   odds += webHireEdge(s); // a scandal follows you to interviews (62-web.js)
+  odds += favorRefEdge(s); // a reference somebody owed you (75-work-life.js)
   if (!chance(clamp(odds, 0.05, 0.95))) {
     add(s, { happy: -3 });
     return { text: `They went with another candidate for ${j.ladder[0][0]}.`, title: 'Not this time', emoji: '📭', tone: 'bad' };

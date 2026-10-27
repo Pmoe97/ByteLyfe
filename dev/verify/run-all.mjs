@@ -21,6 +21,7 @@
 //   - adult careers: dancer, companion, creator and club manager as decks; gating, adults only, boundaries, walking away, who knows, the law (71-adult-work.js)
 //   - violence and the serial arc: fights, self-defense, guilt, witnesses, gangs, the urge, the series, the way out (72-violence.js, 73-serial.js)
 //   - dark themes: betrayal and revenge, stalking, moral injury (74-dark.js)
+//   - work life and tuning: every career has a deck, shortcuts cost what they cost, favors, workplace venues, the odds table (75-77)
 //   - the life simulator (300 lives), split into shards across the cores, then merged
 // Each check is its own process; at most one per core runs at a time, longest first.
 // Output is held until a check finishes, so checks never interleave.
@@ -75,6 +76,7 @@ const tasks = [
   { label: 'adult-career checks', args: ['dev/verify/adult.mjs'] },
   { label: 'violence and serial checks', args: ['dev/verify/violence.mjs'] },
   { label: 'dark-theme checks', args: ['dev/verify/dark.mjs'] },
+  { label: 'work-life checks', args: ['dev/verify/lifework.mjs'] },
 ];
 function run(task) {
   return new Promise((resolve) => {

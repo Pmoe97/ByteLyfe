@@ -11,6 +11,7 @@
  * ===================================================================== */
 
 const W = (label, sk, sub, mod, cost, kind, eff) => [label, sk, sub || '', mod || 0, cost || 0, kind || '', eff || null];
+const FAV = (label, sk, sub) => W(label, sk, sub, 0, 0, 'favor'); // call in a favor (75-work-life.js)
 const WORDS = (...w) => w.map((x, i) => [i * 20 + (i === 0 ? 0 : 10), x]); // five steps up the meter
 
 /* ---- doctor and surgeon --------------------------------------------------------- */
@@ -32,16 +33,20 @@ const DOCTOR_CARDS = [
     ok: 'It was the hardest ten minutes of your week, and [first] thanked you at the end of it.', meh: 'You said it, and nobody could say whether it was well done.', bad: 'The family left angry, and said you were cold. They might be right.',
     fx: { ok: { m: 5, karma: 2 }, bad: { m: -6, happy: -4 } } },
   { id: 'attending', name: 'The attending disagrees', emoji: '🗣️', min: 0, max: 1, base: 0.5,
-    stages: [{ text: 'Your attending wants to discharge a patient you think is sicker than the chart says.', ways: [W('Back down', 'charisma', 'Safe for you', 0.1), W('Make your case with the data', 'smarts', 'Respectful, and firm'), W('Go over their head', 'charisma', 'Fast, and remembered', -0.1)] }],
+    stages: [{ text: 'Your attending wants to discharge a patient you think is sicker than the chart says.', ways: [W('Back down', 'charisma', 'Safe for you', 0.03, 0, '', { karma: -1, say: { ok: 'You backed down. The patient was fine, and nobody remembers you doubted.', meh: 'You backed down, and the patient was back in the ER within the week.', bad: 'You backed down, and the patient came back far sicker. You knew.', fx: { ok: { m: 1, perf: 0 }, meh: { m: -2, perf: -3 }, bad: { m: -9, happy: -6, perf: -8 } } } }), W('Make your case with the data', 'smarts', 'Respectful, and firm'), FAV('Ask a friendly attending to back you', 'charisma'), W('Go over their head', 'charisma', 'Fast, and remembered', -0.1)] }],
     ok: 'You were right, and they said so in front of the team.', meh: 'They heard you out and did half of what you asked.', bad: 'You were told to stay in your lane. You might also have been right.',
     fx: { ok: { m: 4, perf: 7 }, bad: { perf: -7 } } },
-  { id: 'pharma', name: 'A very generous lunch', emoji: '💊', min: 1, base: 0.7,
-    stages: [{ text: 'A pharmaceutical rep offers a paid "speaking engagement" that is mostly a lunch. They would like you to prefer their drug.', ways: [W('Decline politely', 'charisma', 'Clean'), W('Accept, and say nothing', 'streetwise', 'Easy money, and a favor owed', 0.05), W('Report the offer', 'smarts', 'Honest, and awkward')] }],
+  { id: 'pharma', name: 'A very generous lunch', emoji: '💊', min: 1, base: 0.65,
+    stages: [{ text: 'A pharmaceutical rep offers a paid "speaking engagement" that is mostly a lunch. They would like you to prefer their drug.', ways: [
+      W('Decline politely', 'charisma', 'Clean', 0, 0, '', { karma: 1, name: 1 }),
+      W('Accept, and say nothing', 'streetwise', 'Easy money, and a favor owed', -0.05, 0, '', { dirty: true, money: 4000, karma: -3, secret: 'bribery',
+        say: { ok: 'You took the "speaking fee" and a very nice lunch. Nobody has asked about it. Yet.', meh: 'You took it, and the rep now has your number. They will use it.', bad: 'Somebody noticed.', fx: { ok: { m: 0, perf: 0 }, meh: { m: -2 }, bad: { m: -8, scandal: 8 } } } }),
+      W('Report the offer', 'smarts', 'Honest, and awkward', 0, 0, '', { karma: 2, name: 2, m: 1 }),
+    ] }],
     ok: 'You turned it down, and your name stayed yours.', meh: 'Nobody noticed either way.', bad: 'Somebody noticed.',
-    fx: { ok: { m: 3, name: 1 }, bad: { m: -6, scandal: 6 } },
-    after: (s, out, c, st) => { if (out === 'meh') { add(s, { money: price(s, 4000), karma: -3 }); webNewSecret(s, 'crime', s.playerId, { crime: 'bribery', sev: 2, ev: 20 }); } } },
+    fx: { ok: { m: 3, name: 1 }, bad: { m: -6, scandal: 6 } } },
   { id: 'chart_error', name: 'A mistake in the chart', emoji: '📋', min: 1, base: 0.5, risk: 0.8,
-    stages: [{ text: 'You notice, a day late, that a dose was written wrong. Nothing has happened. Yet.', ways: [W('Report it at once', 'smarts', 'Honest, and awkward'), W('Fix it quietly', 'streetwise', 'Risky if it comes out', -0.05), W('Tell the patient yourself', 'charisma', 'Brave')] }],
+    stages: [{ text: 'You notice, a day late, that a dose was written wrong. Nothing has happened. Yet.', ways: [W('Report it at once', 'smarts', 'Honest, and awkward', 0, 0, '', { karma: 2, name: 1 }), W('Fix it quietly', 'streetwise', 'Risky if it comes out', -0.05, 0, '', { dirty: true, karma: -2, secret: 'falsifying', say: { ok: 'You fixed it before anyone noticed, and it sits in you like a stone.', meh: 'It was fine in the end. Your heart is still going, and so is the altered chart.', bad: 'The patient was harmed, and the altered record is now the second problem.', fx: { ok: { m: 0, perf: 0 }, meh: { m: -2 }, bad: { m: -14, scandal: 14 } } } }), W('Tell the patient yourself', 'charisma', 'Brave', 0, 0, '', { karma: 3 })] }],
     ok: 'You caught it, owned it, and the hospital made a checklist out of it.', meh: 'It was fine in the end. Your heart is still going.', bad: 'The patient was harmed, and the hospital’s lawyers know your name.',
     fx: { ok: { m: 4, name: 1 }, bad: { m: -10, scandal: 10 } } },
 ];
@@ -94,7 +99,7 @@ defWork('firefighter', {
       ok: 'They will never forget it, and neither will you. They are going to be good.', meh: 'It is handled. The rookie keeps looking at you.', bad: 'They quit a month later, and said you were the reason.',
       fx: { ok: { m: 4 }, bad: { m: -5 } } },
     { id: 'suspect_fire', name: 'A fire that was not an accident', emoji: '🕵️', min: 1, base: 0.5,
-      stages: [{ text: 'You notice what looks like an accelerant pattern at a warehouse. The owner is in the crowd, very calm.', ways: [W('Tell the arson investigator', 'smarts', 'Do the job'), W('Look for evidence yourself', 'streetwise', 'Closer, riskier', -0.05), W('Say nothing and let it go', 'charisma', 'Quiet')] }],
+      stages: [{ text: 'You notice what looks like an accelerant pattern at a warehouse. The owner is in the crowd, very calm.', ways: [W('Tell the arson investigator', 'smarts', 'Do the job', 0, 0, '', { karma: 1 }), W('Look for evidence yourself', 'streetwise', 'Closer, riskier', -0.05), W('Say nothing and let it go', 'charisma', 'Quiet', -0.05, 0, '', { dirty: true, karma: -2, say: { ok: 'Nothing came of it. You told yourself that was the right call.', meh: 'It might have been nothing. You decided it was.', bad: 'It came out later that you had seen the pattern, and said nothing.', fx: { ok: { m: 0, perf: 0 }, bad: { m: -9, scandal: 5 } } } })] }],
       ok: 'You flagged it, and the investigator ran with it. The owner is not calm any more.', meh: 'It might have been nothing. It might have been something.', bad: 'You said the wrong thing to the wrong person.',
       after: (s, out) => { if (out === 'ok') { webUneaseAdd(s, -1); add(s, { karma: 2 }); } } },
   ],
@@ -105,7 +110,7 @@ defWork('bartender', {
   meter: { name: 'Regulars', emoji: '🍸', start: 50, words: WORDS('Empty stools', 'A few faces', 'A decent crowd', 'A following', 'The place to be') }, desk: 'Your bar', fired: 'The owner said the place had gone quiet, and so would you.',
   cards: [
     { id: 'rowdy', name: 'A rowdy table', emoji: '🍻', w: 1.5, base: 0.55, risk: 0.8,
-      stages: [{ text: 'A group at table six is getting loud, and one of them has started shoving.', ways: [W('Cut them off with a smile', 'charisma', 'Friendly and firm', 0.03), W('Call the bouncer', 'streetwise', 'Safe, and a little cold'), W('Step in yourself', 'martial', 'Risky', -0.08)] }],
+      stages: [{ text: 'A group at table six is getting loud, and one of them has started shoving.', ways: [W('Cut them off with a smile', 'charisma', 'Friendly and firm', 0.03), W('Call the bouncer', 'streetwise', 'Safe, and a little cold'), W('Step in yourself', 'martial', 'Risky', -0.08), FAV('Have a regular back you up', 'charisma')] }],
       ok: 'The table paid up, tipped, and apologized. The room noticed.', meh: 'It ended without a fight, and with an empty table.', bad: 'Somebody threw something, and it was not a compliment.',
       fx: { ok: { m: 5, perf: 4 }, bad: { m: -6 } } },
     { id: 'confidant', name: 'A regular with something to say', emoji: '🥃', w: 1.4, base: 0.55, who: 'regular', learn: 'npc_debt',
@@ -113,7 +118,7 @@ defWork('bartender', {
       ok: '[who] talked until closing. You were the only one who heard it.', meh: '[first] mumbled something and left a big tip.', bad: '[first] snapped at you and did not come back for a month.',
       fx: { ok: { m: 5, karma: 1 }, bad: { m: -3 } } },
     { id: 'id_check', name: 'A very young face', emoji: '🆔', base: 0.65, risk: 0.5,
-      stages: [{ text: 'Someone with a very good fake ID orders a round for the table. Something is off about the birth date.', ways: [W('Refuse and keep the ID', 'smarts', 'By the book'), W('Let it slide', 'streetwise', 'Easy, and a risk', 0.08), W('Ask for a second ID', 'charisma', 'Polite, and thorough')] }],
+      stages: [{ text: 'Someone with a very good fake ID orders a round for the table. Something is off about the birth date.', ways: [W('Refuse and keep the ID', 'smarts', 'By the book', 0, 0, '', { karma: 1 }), W('Let it slide', 'streetwise', 'Easy, and a risk', 0, 0, '', { dirty: true, karma: -1, say: { ok: 'Nothing happened. Nothing usually does.', meh: 'You let it go, and watched that table all night.', bad: 'An inspector was in the room.', fx: { ok: { m: 0, perf: 0, name: 0 }, bad: { m: -8, scandal: 5 } } } }), W('Ask for a second ID', 'charisma', 'Polite, and thorough')] }],
       ok: 'You were right, and the table went quietly.', meh: 'You let it go. Nothing happened. You did not enjoy your night.', bad: 'An inspector was in the room.',
       fx: { ok: { m: 3, name: 1 }, bad: { m: -8, scandal: 5 } } },
     { id: 'slow_night', name: 'A slow night', emoji: '🌧️', w: 1.2, base: 0.6, pay: 200,
@@ -147,11 +152,11 @@ defWork('chef', {
       ok: 'You sent out every plate on time, and the room clapped, which almost never happens.', meh: 'You got through it with three comped desserts and a hoarse voice.', bad: 'It was a disaster. A review is being written somewhere.',
       fx: { ok: { m: 6 }, bad: { m: -8, happy: -3 } } },
     { id: 'inspection', name: 'The health inspector', emoji: '🧼', w: 1, base: 0.55,
-      stages: [{ text: 'A clipboard and a flashlight arrive in the middle of service, and the walk-in cooler is not as cold as it should be.', ways: [W('Fix it now and tell the truth', 'smarts', 'Honest'), W('Distract the inspector with a tour', 'charisma', 'Charming', -0.04), W('Quietly move the stock', 'streetwise', 'Risky', -0.08)] }],
+      stages: [{ text: 'A clipboard and a flashlight arrive in the middle of service, and the walk-in cooler is not as cold as it should be.', ways: [W('Fix it now and tell the truth', 'smarts', 'Honest', 0, 0, '', { karma: 1 }), W('Distract the inspector with a tour', 'charisma', 'Charming', -0.04, 0, '', { karma: -1 }), FAV('Ask a friend of the inspector to vouch for you', 'charisma'), W('Quietly move the stock', 'streetwise', 'Risky', -0.08, 0, '', { dirty: true, karma: -2, say: { ok: 'The inspector never looked at the cooler again. You will always know you moved it.', meh: 'You got a warning, and the feeling that someone had seen.', bad: 'They saw you move it. A closure, and a note in a file.', fx: { ok: { m: 0 }, bad: { m: -12, scandal: 8 } } } })] }],
       ok: 'A clean report, and a note about your clean walk-in.', meh: 'A warning, and a follow-up visit.', bad: 'A closure for forty-eight hours.',
       fx: { ok: { m: 4 }, bad: { m: -9, scandal: 4 } } },
     { id: 'supplier', name: 'A bad delivery', emoji: '🐟', base: 0.5, pay: 0,
-      stages: [{ text: 'The fish arrives warm, and the supplier is your owner’s cousin.', ways: [W('Reject it and say so', 'smarts', 'Principled'), W('Use it, and cook it hard', 'cooking', 'Gamble', -0.08), W('Call a rival supplier', 'business', 'Resourceful', 0.02, 200)] }],
+      stages: [{ text: 'The fish arrives warm, and the supplier is your owner’s cousin.', ways: [W('Reject it and say so', 'smarts', 'Principled', 0, 0, '', { karma: 1 }), W('Use it, and cook it hard', 'cooking', 'Gamble', -0.1, 0, '', { dirty: true, karma: -2, say: { ok: 'You cooked it hard and sent it out. Nobody got sick. You would not have eaten it.', meh: 'You got through the night and threw half of it away.', bad: 'Three tables got sick. It made the news.', fx: { ok: { m: 0 }, bad: { m: -12, scandal: 9 } } } }), W('Call a rival supplier', 'business', 'Resourceful', 0.02, 200), FAV('Ask a friend in the trade for a delivery tonight', 'charisma')] }],
       ok: 'You turned a crisis into a special, and nobody got sick.', meh: 'You lost a night of fish and some goodwill.', bad: 'Three tables got sick. It made the news.',
       fx: { bad: { m: -8, scandal: 6 } } },
     { id: 'menu', name: 'A new menu', emoji: '📝', w: 1.1, base: 0.5, pay: 600,
@@ -179,7 +184,7 @@ defWork('journalist', {
     { id: 'tip', name: 'A source calls', emoji: '📞', w: 1.5, base: 0.5, who: 'source', learn: 'npc_crime',
       stages: [
         { text: '[who] says there is something going on at a company, and would like to meet. Not at the office.', ways: [W('Meet them in a quiet café', 'charisma', 'Build trust', 0.04), W('Ask for documents first', 'smarts', 'Proof before talk'), W('Record the call', 'streetwise', 'Useful, and risky', -0.05)], ok: '[first] opens up.', bad: '[first] gets nervous and clams up.' },
-        { text: 'The story could be big, and you have until Friday.', ways: [W('Corroborate with a second source', 'smarts', 'Slow and careful'), W('Write it now', 'writing', 'Fast and exposed', -0.06), W('Go to the company for comment', 'charisma', 'Fair, and they will know')], ok: 'It stands up.', bad: 'It is thinner than you thought.' },
+        { text: 'The story could be big, and you have until Friday.', ways: [W('Corroborate with a second source', 'smarts', 'Slow and careful'), W('Write it now', 'writing', 'Fast and exposed', -0.06), W('Go to the company for comment', 'charisma', 'Fair, and they will know'), FAV('Ask a source who owes you to go on record', 'charisma')], ok: 'It stands up.', bad: 'It is thinner than you thought.' },
       ],
       ok: 'The story ran on the front page. [who] never said a word about who talked.', meh: 'The story ran, shorter than you wanted. It did some good.', bad: 'It fell apart on a fact check, and so did your Friday.',
       fx: { ok: { m: 8, fame: 2, name: 1 }, bad: { m: -10, scandal: 3 } } },
@@ -191,7 +196,7 @@ defWork('journalist', {
       stages: [{ text: 'A very polished official is saying nothing at length. You get one question.', ways: [W('Ask the hard one', 'charisma', 'Brave'), W('Ask the one they cannot dodge', 'smarts', 'Clever', 0.04), W('Save your question for afterward', 'streetwise', 'Patient')] }],
       ok: 'You got a flicker on their face, and a clip that everyone shared.', meh: 'Another non-answer. You got a quote.', bad: 'They answered someone else’s question and waved you off.',
       fx: { ok: { m: 5, fame: 1 } } },
-    { id: 'investigation', name: 'The long investigation', emoji: '🗂️', min: 1, w: 1.2, base: 0.42, pay: 2500, who: 'source', learn: 'npc_crime', risk: 0.6,
+    { id: 'investigation', name: 'The long investigation', emoji: '🗂️', min: 1, w: 1.2, base: 0.5, pay: 2500, who: 'source', learn: 'npc_crime', risk: 0.6,
       intro: 'It is the story you have waited years for.',
       stages: [
         { text: 'Public records, documents, and a stranger’s promise. Where do you start?', ways: [W('Follow the money', 'business', 'Records'), W('Find the people who left', 'charisma', 'Interviews', 0.03), W('Go undercover for a week', 'acting', 'Dangerous', -0.1)], ok: 'A thread to pull.', bad: 'A dead end, and a nervous phone call.' },
@@ -201,7 +206,7 @@ defWork('journalist', {
       ok: 'It was the story of the year, and the prize committee called.', meh: 'It ran, and made noise. It did not change anything.', bad: 'Libel claims, a retraction, and a very uncomfortable meeting upstairs.',
       fx: { ok: { m: 11, fame: 4, name: 2 }, bad: { m: -14, scandal: 8 } } },
     { id: 'libel', name: 'A lawyer’s letter', emoji: '⚖️', min: 1, base: 0.5,
-      stages: [{ text: 'A very expensive law firm says your last piece was defamatory, and wants a retraction.', ways: [W('Stand by it with your notes', 'smarts', 'Proud'), W('Offer a clarification', 'writing', 'Diplomatic', 0.03), W('Ask the paper’s lawyers', 'business', 'Safe')] }],
+      stages: [{ text: 'A very expensive law firm says your last piece was defamatory, and wants a retraction.', ways: [W('Stand by it with your notes', 'smarts', 'Proud'), W('Offer a clarification', 'writing', 'Diplomatic', 0.03), W('Ask the paper’s lawyers', 'business', 'Safe'), FAV('Ask an old friend at a law firm', 'charisma')] }],
       ok: 'Your notes were bulletproof. The letter stopped.', meh: 'A clarification ran on page eleven. Everyone moved on.', bad: 'The paper settled, and you were the reason.',
       fx: { bad: { m: -8, scandal: 4 } } },
     { id: 'leak', name: 'A leak on your desk', emoji: '📎', min: 2, w: 0.9, base: 0.5, risk: 0.5,
@@ -248,7 +253,7 @@ defWork('pilot', {
     { id: 'weather', name: 'The weather ahead', emoji: '⛈️', w: 1.5, base: 0.55, pay: 200, risk: 1.2, die: 'a plane crash',
       intro: 'A line of storms is sitting right on your route.',
       stages: [
-        { text: 'Dispatch says you can make it with a detour. Do you trust them?', ways: [W('Take the detour', 'smarts', 'By the book'), W('Ask for a different altitude', 'driving', 'Savvy', 0.02), W('Hold on the ground', 'charisma', 'Safe, and late', 0.05)], ok: 'The route is clear.', bad: 'The radar disagrees with dispatch.' },
+        { text: 'Dispatch says you can make it with a detour. Do you trust them?', ways: [W('Take the detour', 'smarts', 'By the book'), W('Ask for a different altitude', 'driving', 'Savvy', 0.02), W('Hold on the ground', 'charisma', 'Safe, and late', 0.05), FAV('Ask an old friend in dispatch to cut you a break', 'charisma')], ok: 'The route is clear.', bad: 'The radar disagrees with dispatch.' },
         { text: 'Turbulence, a lot of it. The seatbelt signs are on, and the cabin is nervous.', ways: [W('Reassure the cabin', 'charisma', 'Calm voice'), W('Climb above it', 'driving', 'Skill'), W('Divert to the nearest airport', 'smarts', 'Careful')], ok: 'You came out the other side.', bad: 'It got rough.' },
       ],
       ok: 'The landing was smooth. Three passengers asked your name.', meh: 'You landed late, but everyone is alive and slightly angry.', bad: 'It was a rough landing, and the incident report is long.',

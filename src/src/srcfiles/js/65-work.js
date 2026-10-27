@@ -19,6 +19,12 @@
  *   walk    a way whose sixth slot is 'walk' ends the card at once, at no cost to your meter, and always works
  *           (the adult careers use it: you can always say no). It is also what autopilot does with such a card:
  *           nothing happens on your behalf that you did not choose. The card's `walk` line says how it ended.
+ *   favor   a way whose sixth slot is 'favor' calls in something somebody owes you (75-work-life.js): +25 points of
+ *           odds, one favor spent, and the way is greyed out when nobody owes you one
+ *   say     a way's seventh slot may carry `say: { ok, meh, bad }`, replacing the card's ending when that way
+ *           was the last one chosen: a shortcut should not end like the honest road (a dirty way with no `say`
+ *           of its own ends in WK_DIRTY_SAY). `say.fx` ({ ok, meh, bad },
+ *           the same shape as a card's fx) replaces the card's meter and name effects the same way
  *   who     'patient' | 'client' | 'regular' | 'source' | 'survivor': a real person you meet,
  *           and meet again; text uses [who], [first] and [amt]
  *   learn   a web secret kind ('npc_debt', 'npc_habit', 'npc_crime'): the person confides it
@@ -41,6 +47,8 @@ REL_GROUPS.find((g) => g.id === 'work').kinds.push('patient', 'client', 'regular
 Object.assign(REL_DECAY, { patient: 3, client: 3, regular: 3, source: 3, survivor: 3 });
 Object.assign(WEB_TIE_KIND, { patient: 'work', client: 'work', regular: 'work', source: 'work', survivor: 'work' });
 // What each outcome does unless a card says otherwise.
+// What a shortcut ends in when it has no words of its own.
+const WK_DIRTY_SAY = { ok: 'It worked, and you know exactly what you did to make it work.', meh: 'It mostly worked, and you did not feel good about how.', bad: 'The shortcut came back on you.', fx: { ok: { m: 0, perf: 0 }, meh: { m: 0, perf: 0 }, bad: { m: -8, scandal: 3 } } };
 const WK_FX = { ok: { m: 5, perf: 5, happy: 1 }, meh: { m: 1, perf: 1 }, bad: { m: -6, perf: -6, happy: -2 } };
 
 function defWork(ids, def) {
@@ -58,7 +66,7 @@ function wkSkill(s, key) { return key === 'smarts' || key === 'looks' || key ===
 // The chance a way works: the skill it leans on, how your career is going, and how sharp you are.
 function wkOdds(s, k, way, st, penalty) {
   if (way[5] === 'walk') return 1;
-  const o = (k.base ?? 0.5) + (wkSkill(s, way[1]) - 40) / 160 + (P(s).stats.smarts - 50) / 500 + (st.m - 50) / 400 + (M(s).career.perf - 50) / 500 + (way[3] || 0) - (penalty || 0);
+  const o = (way[5] === 'favor' ? 0.25 : 0) + (k.base ?? 0.5) + (wkSkill(s, way[1]) - 40) / 160 + (P(s).stats.smarts - 50) / 500 + (st.m - 50) / 400 + (M(s).career.perf - 50) / 500 + (way[3] || 0) - (penalty || 0);
   return clamp(o, 0.08, 0.9);
 }
 function wkFmt(str, c) {
@@ -125,15 +133,15 @@ function wkDeal(s, c, def, st) {
 }
 
 /* ---- playing a card -------------------------------------------------------------- */
-function wkStagePopup(s, id, k, h, step, res, first) {
+function wkStagePopup(s, id, k, h, step, res, first, say) {
   const stg = k.stages[step], S = wkState(s, id);
   const choices = stg.ways.map((w, i) => {
-    const cost = w[4] ? price(s, w[4]) : 0;
-    return { label: wkFmt(w[0], h.c), value: i, sub: `${w[2] ? w[2] + ' · ' : ''}${Math.round(wkOdds(s, k, w, S) * 100)}%${cost ? ' · ' + fmtMoney(cost) : ''}`, disabled: cost > M(s).money };
+    const cost = w[4] ? price(s, w[4]) : 0, fav = w[5] === 'favor' ? favorTop(s) : null;
+    return { label: wkFmt(w[0], h.c), value: i, sub: `${w[5] === 'favor' ? (fav ? 'Ask ' + fav.first + ', who owes you one' : 'Nobody owes you one') + ' · ' : w[2] ? w[2] + ' · ' : ''}${Math.round(wkOdds(s, k, w, S) * 100)}%${cost ? ' · ' + fmtMoney(cost) : ''}`, disabled: cost > M(s).money || (w[5] === 'favor' && !fav) };
   });
   if (first) choices.push({ label: 'Not now', value: 'later', sub: 'It stays on your desk' });
   const text = (step === 0 && k.intro ? wkFmt(k.intro, h.c) + ' ' : '') + wkFmt(stg.text, h.c);
-  popup(s, { emoji: k.emoji, title: k.name + (k.stages.length > 1 ? ` (${step + 1}/${k.stages.length})` : ''), text, handler: 'wkStage', ctx: { job: id, cid: k.id, hid: h.hid, c: h.c, step, res }, choices, person: h.c.pid || null });
+  popup(s, { emoji: k.emoji, title: k.name + (k.stages.length > 1 ? ` (${step + 1}/${k.stages.length})` : ''), text, handler: 'wkStage', ctx: { job: id, cid: k.id, hid: h.hid, c: h.c, step, res, say: say || null }, choices, person: h.c.pid || null });
 }
 // Open a card from your desk.
 function wkStart(s, hid) {
@@ -149,6 +157,7 @@ onChoice('wkStage', (s, ctx, v) => {
   if (v === 'later') return { text: 'You pushed it to later.', quiet: true, nolog: true };
   const S = wkState(s, ctx.job), stg = k.stages[ctx.step], w = stg && stg.ways[v];
   if (!w) return;
+  if (w[5] === 'favor' && !favorSpend(s)) return { text: 'Nobody owes you one right now. The card is still on your desk.', quiet: true, nolog: true };
   const cost = w[4] ? price(s, w[4]) : 0;
   if (cost && !pay(s, cost)) return cantAfford(cost);
   if (ctx.step === 0) {
@@ -160,12 +169,12 @@ onChoice('wkStage', (s, ctx, v) => {
   if (w[5] === 'walk') return wkWalk(s, ctx.job, k, ctx.c);
   const ok = chance(wkOdds(s, k, w, S));
   if (!['smarts', 'looks', 'health'].includes(w[1])) addSkill(s, w[1], randFloat(0.5, 2));
-  const res = ctx.res.concat([ok ? 1 : 0]);
+  const res = ctx.res.concat([ok ? 1 : 0]), say = (w[6] && (w[6].say || (w[6].dirty ? WK_DIRTY_SAY : null))) || ctx.say || null;
   if (ctx.step + 1 < k.stages.length) {
-    wkStagePopup(s, ctx.job, k, { hid: ctx.hid, c: ctx.c }, ctx.step + 1, res, false);
+    wkStagePopup(s, ctx.job, k, { hid: ctx.hid, c: ctx.c }, ctx.step + 1, res, false, say);
     return { text: wkFmt(ok ? stg.ok || 'That went your way.' : stg.bad || 'That did not go to plan.', ctx.c), title: k.name, emoji: k.emoji, nolog: true, tone: ok ? 'good' : 'bad' };
   }
-  return wkConclude(s, ctx.job, k, ctx.c, res, false);
+  return wkConclude(s, ctx.job, k, ctx.c, res, false, say);
 });
 
 // What a way does just by being chosen (see W in 66-work-decks.js).
@@ -189,11 +198,11 @@ function wkWalk(s, id, k, c, auto) {
   return { text, title: k.name, emoji: k.emoji, tone: '' };
 }
 // All the stages are in: what it came to.
-function wkConclude(s, id, k, c, res, auto) {
+function wkConclude(s, id, k, c, res, auto, say) {
   const S = wkState(s, id), cr = M(s).career, n = res.length, wins = res.reduce((a, b) => a + b, 0);
   const out = wins === n ? 'ok' : wins === 0 ? 'bad' : wins * 2 >= n ? 'meh' : 'bad';
   S[out]++;
-  const fx = Object.assign({}, WK_FX[out], (k.fx && k.fx[out]) || {});
+  const fx = Object.assign({}, WK_FX[out], (say && say.fx && say.fx[out]) || (k.fx && k.fx[out]) || {});
   S.m = clamp100(S.m + (fx.m || 0));
   cr.perf = clamp100(cr.perf + (fx.perf || 0));
   add(s, { karma: fx.karma || 0, happy: fx.happy || 0, health: fx.health || 0, fame: fx.fame || 0 });
@@ -212,7 +221,7 @@ function wkConclude(s, id, k, c, res, auto) {
   if (out === 'ok') tally(s, 'workWins');
   webFact(s, 'work_done', { job: id, card: k.id, out });
   if (!auto && k.learn && out !== 'bad' && person && !s.dead) wkLearn(s, k, person);
-  const text = wkFmt(k[out], c) + (money ? ` You earned ${fmtMoney(money)}.` : '');
+  const text = wkFmt((say && say[out]) || k[out], c) + (money ? ` You earned ${fmtMoney(money)}.` : '');
   if (auto) { log(s, `📋 ${k.name}: ${text}`, out === 'bad' ? 'bad' : ''); return out; }
   return { text, title: k.name, emoji: k.emoji, tone: out === 'ok' ? 'good' : out === 'bad' ? 'bad' : '' };
 }
@@ -238,7 +247,7 @@ function wkAuto(s, id, h) {
   if (!k) return 'meh';
   if (k.stages.some((stg) => stg.ways.some((w) => w[5] === 'walk'))) return wkWalk(s, id, k, h.c, true); // nothing happens on your behalf that you did not choose
   // Autopilot never takes a shortcut: ways marked dirty are left to you.
-  const res = k.stages.map((stg) => { const ways = stg.ways.filter((w) => !(w[6] && w[6].dirty)), best = (ways.length ? ways : stg.ways).reduce((a, w) => (wkOdds(s, k, w, S) > wkOdds(s, k, a, S) ? w : a)); return chance(wkOdds(s, k, best, S, 0.08)) ? 1 : 0; });
+  const res = k.stages.map((stg) => { const ways = stg.ways.filter((w) => !(w[6] && w[6].dirty) && w[5] !== 'favor'), best = (ways.length ? ways : stg.ways).reduce((a, w) => (wkOdds(s, k, w, S) > wkOdds(s, k, a, S) ? w : a)); return chance(wkOdds(s, k, best, S, 0.08)) ? 1 : 0; });
   return wkConclude(s, id, k, h.c, res, true);
 }
 function wkLeft(s, c) { const st = M(s).work && M(s).work[c.id]; if (st) st.hand = []; }

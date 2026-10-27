@@ -70,7 +70,10 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `72` | Violence (`72-violence.js`): fights you can walk out of, self-defense and the inquiry, what to do after a killing, witnesses, haunting, gang and prison initiations | No DOM. All behind `mature` + `mature_violence`. `p_assault` and `pr_gang` (20-crime.js) and `mobJoin` (39-underworld.js) call in; listens to the web's `killed` fact; `ageUp` reaches `vioYear` through a wrapper. |
 | `73` | The serial arc (`73-serial.js`): the turn, how you operate, the urge, acts, close calls, copycats, the people at home, ways out, fan mail and the memoir | No DOM. Behind the same switches. Built on the case-file series (63-cases.js) and the web; `serYear` through a wrapper. |
 | `74` | Dark themes (`74-dark.js`): betrayal and revenge, stalking, moral injury | No DOM. Behind `mature` + `mature_themes`. The web records who told whom (`sec.told`); `ageUp` reaches `darkYear` through a wrapper; reads `flags.followed` from the adult careers, and the military and spy state. |
-| `75–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `75` | Work life (`75-work-life.js`): favors (who owes whom) and workplace venues (the break room, the lounge) | No DOM. Favors feed card ways (`FAV`, 65-work.js), interviews (`favorRefEdge`, 15-career.js) and `web_silence` (62-web.js); `ageUp` reaches `favorYear` through a wrapper; venues tie coworkers together in the web and hand you hearsay. |
+| `76` | Career decks, part two (`76-work-decks-2.js`): service, office, business, transport, public service and the trades | Pure data plus a few hooks. Defines `K`, `UNI` (cards any job can deal), `deckFor`. |
+| `77` | Career decks, part three (`77-work-decks-3.js`): health, tech, science, law, education, media and the entertainment careers | Pure data. Uses `deckFor` from 76. |
+| `78–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
 | `1000+` | UI (`1000-ui-kit.js` … `1030-ui-intimacy.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
@@ -611,6 +614,25 @@ four decisions with readable odds, and the way you play moves a meter that belon
   That is how a shortcut costs what it costs even when it works, and how an honest way can pay in karma and name.
   A deck can also carry `tags` (it deals nothing, and never to a minor, while a switch is off: `wkLive`), `payMul(s, st)`
   and `kv(s, st)` (extra rows on the Work sheet).
+
+**Work life and the rest of the ladder.** `75-work-life.js`, `76-work-decks-2.js`, `77-work-decks-3.js`.
+- **Every ordinary job has a deck** (about 70 in all; sports, the military, the spy, politics and police have their own systems).
+  `deckFor(id, { meter, emoji, words, uni, cards, t })` builds one: a meter, a handful of universal cards (`UNI`: a bad idea from
+  above, the crunch, trouble on the team, a coworker who needs a hand, rumors of cuts, your own mistake, a recruiter,
+  a chance to learn; written once with `{{team}}`, `{{boss}}` filled in per category) and three bespoke cards. `K(...)` writes
+  a one-decision card in one line.
+- **Shortcuts cost what they cost.** A way marked `dirty` never beats the best honest way on odds (checked by
+  `dev/verify/lifework.mjs`), costs karma or odds, ends in its own words (`say`, or `WK_DIRTY_SAY`) and never ends with a
+  good meter, and autopilot never picks one. Phase 3's moral options (the drug-rep lunch, the quiet chart fix, the slid
+  fake ID, the warm fish, the cooler moved) were rebalanced the same way.
+- **Favors:** `M(s).favors = { pid: n }` (n > 0 they owe you, n < 0 you owe them, capped at +5 and -3). `favor_do` earns
+  them, `favor_ask` spends one (free and certain from someone who owes you, a gamble and a debt from someone who does not),
+  `favorYear` calls in what you owe. A card way with kind `'favor'` (`FAV(label, skill)`) is +25 points of odds for one
+  favor, greyed out when nobody owes you one, and never taken on autopilot. `web_silence` can call in a favor to keep a
+  secret quiet. A reference you were promised helps interviews this year.
+- **Venues:** `WORK_VENUES` has two places per job category. `wv_hang` ("Hang out where people talk", twice a year):
+  join the conversation (you hear things, through the web's hearsay, and two coworkers get tied together), buy a round
+  (a favor), take a side (a gamble), or keep to yourself. `wv_party` is the yearly party.
 
 **Adult careers.** `71-adult-work.js`. Behind `mature` and `mature_adultwork` (`ADULT_TAGS`; `adultOn()`), both off by default.
 Four jobs (`club_dancer`, `companion`, `creator`, `club_owner`, `JOBS[id].adult`, category `night`) that sit on the job board

@@ -455,6 +455,7 @@ onChoice('webHear', (s, ctx, v) => {
     if (r && r.rel >= 40) addRel(s, p.id, 2);
     return 'You kept it to yourself. Some things are not yours to repeat.';
   }
+  if (v === 'owed') { if (!favorSpend(s, ctx.pid)) return 'They did not owe you anything after all.'; hush(5); return `${p.first} did not even ask what it was about. "I owe you," ${pr(p).he} said. Nobody will hear it from ${pr(p).him}.`; }
   if (v === 'ask') {
     if (chance(clamp((r ? r.rel : 30) / 100 + skill(s, 'charisma') / 400, 0.15, 0.85))) {
       if (r) addRel(s, p.id, 6);
@@ -510,6 +511,7 @@ defAction({
   run: (s, pid) => {
     const cost = price(s, 1500 * Math.max(...webTheyKnow(s, pid).map((x) => x.sev)));
     const choices = [{ label: 'Ask them as a favor', value: 'ask' }, { label: 'Pay for their silence', sub: fmtMoney(cost), value: 'pay', disabled: M(s).money < cost }];
+    if (typeof favorN === 'function' && favorN(s, pid) > 0) choices.unshift({ label: 'Call in what they owe you', value: 'owed', sub: 'They owe you one' });
     if (tagsOn(['mature'])) choices.push({ label: 'Lean on them', value: 'lean', tone: 'bad' });
     choices.push({ label: 'Never mind', value: null });
     popup(s, { emoji: '🤐', title: `Keep ${nm(s, pid)} quiet`, text: `${nm(s, pid)} knows ${listJoin(webTheyKnow(s, pid).map((x) => webLabel(s, x)))}. How do you handle it?`, handler: 'webSilence', ctx: { pid, cost }, person: pid, choices });
@@ -521,6 +523,7 @@ onChoice('webSilence', (s, ctx, v) => {
   bump(s, 'silence_' + ctx.pid);
   const r = relOf(s, ctx.pid);
   const hush = (yrs) => { for (const x of secs) (x.hush || (x.hush = {}))[ctx.pid] = s.year + yrs; };
+  if (v === 'owed') { if (!favorSpend(s, ctx.pid)) return 'They did not owe you anything after all.'; hush(5); return `${p.first} did not even ask what it was about. "I owe you," ${pr(p).he} said. Nobody will hear it from ${pr(p).him}.`; }
   if (v === 'ask') {
     if (chance(clamp((r ? r.rel : 30) / 100 + skill(s, 'charisma') / 400, 0.1, 0.9))) { hush(2); return `${p.first} promised to keep quiet. You believe them, mostly.`; }
     if (r) addRel(s, ctx.pid, -8);

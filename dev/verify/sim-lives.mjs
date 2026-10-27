@@ -471,9 +471,10 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
     }
     // And some work a job that plays its own year (65-work.js): hired at 24 with no questions asked,
     // then two things off the desk most years.
-    if (s.gen === 1 && i % 20 === 11 && !s.dead && !s.player.prison && age >= 24) {
+    if (s.gen === 1 && (i % 20 === 11 || i % 10 === 8) && !s.dead && !s.player.prison && age >= 24) {
       try {
-        const wid = ['doctor', 'firefighter', 'bartender', 'chef', 'journalist', 'pilot', 'astronaut', 'surgeon'][Math.floor(i / 20) % 8];
+        const plain = Object.keys(g('WORKDECK')).filter((id) => !g('JOBS')[id].adult && !g('JOBS')[id].special && id !== 'police'); // every ordinary career with a deck (65-77)
+        const wid = plain[Math.floor(i / 10) % plain.length];
         if (age === 24) { if (s.player.career) ctx.leaveJob(s, 'switched'); s.player.edu.current = null; ctx.hire(s, wid, 0); resolveAll(s, 'work-join'); }
         for (let k = 0; k < 2 && !s.dead; k++) {
           if (!s.player.career || !ACTIONS.wk_work.when(s)) break;
