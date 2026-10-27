@@ -188,6 +188,7 @@ function webLearn(s, sec, pid, from) {
   if (sec.knows.includes(pid) || !s.people[pid]) return;
   sec.knows.push(pid);
   sec.ev = clamp100(sec.ev + 8);
+  if (sec.case && sec.subj !== pid) invTip(s, sec, 6); // one more person who could tell the police (63-cases.js)
   if (pid === s.playerId) {
     if (sec.subj !== pid) webHearsay(s, sec, from);
     return;
@@ -225,7 +226,8 @@ function webExpose(s, sec, how) {
     let extra = '';
     if (sec.kind === 'affair' && rom && rom === sec.rom && sec.other && relKind(s, sec.other) === 'lover') caughtPopup(s, sec.other, rom);
     else if ((sec.kind === 'affair' || sec.kind === 'cheated') && rom && rom === sec.rom) extra = hookupFoundOut(s, rom);
-    if (sec.kind === 'crime' || sec.kind === 'killing') {
+    if ((sec.kind === 'crime' || sec.kind === 'killing') && !invTip(s, sec, 30)) {
+      // No case file to feed (an old save): fall back to the cold-case roll.
       const heat = M(s).flags.heat || (M(s).flags.heat = []);
       const crime = sec.kind === 'killing' ? 'murder' : sec.crime;
       heat.push({ crime, year: s.year }, { crime, year: s.year });
@@ -254,7 +256,7 @@ function webExpose(s, sec, how) {
 }
 
 /* ---- facts the systems announce ---------------------------------------- */
-onWebFact('crime_clean', (s, d) => {
+function webCrimeSecret(s, d) {
   const c = CRIMES[d.crime];
   if (!c || (!c.felony && chance(0.7))) return;
   const me = s.playerId;
@@ -264,7 +266,9 @@ onWebFact('crime_clean', (s, d) => {
   const sec = webNewSecret(s, 'crime', me, { sev, ev: 15 + sev * 8, crime: d.crime });
   const w = pickRel(s, ['friend', 'bestie', 'coworker', 'classmate']);
   if (c.felony && w && chance(0.15)) sec.knows.push(w);
-});
+}
+onWebFact('crime_clean', webCrimeSecret);
+onWebFact('crime_messy', webCrimeSecret);
 onWebFact('arrested', (s, d) => {
   const c = CRIMES[d.crime];
   // A conviction makes it a matter of record: nothing left to keep secret.
@@ -470,6 +474,7 @@ function webSqueeze(s, sec, p) {
   if (amt > 0 && chance(clamp(0.5 + skill(s, 'charisma') / 400 + skill(s, 'streetwise') / 400, 0.2, 0.85))) {
     p.money -= amt;
     M(s).money += amt;
+    webFact(s, 'extorted', { pid: p.id }); // they may go to the police (63-cases.js)
     if (relOf(s, p.id)) relOf(s, p.id).rel = Math.min(relOf(s, p.id).rel, 8);
     return { text: `${p.first} paid ${fmtMoney(amt)} and looked at you like a stranger.`, tone: 'bad' };
   }
@@ -544,6 +549,7 @@ defAction({
     bump(s, 'coverup');
     const sec = webMine(s).filter((x) => x.kind === 'crime' || x.kind === 'killing').sort((a, b) => b.sev - a.sev)[0];
     sec.ev = clamp100(sec.ev - 25 - (trait(s, 'cunning') ? 8 : 0));
+    invScrub(s, sec); // and the police file (63-cases.js)
     add(s, { karma: -2 });
     return `You spent ${fmtMoney(cost)} making sure ${webLabel(s, sec)} gets harder to prove. The trail is colder now.`;
   },

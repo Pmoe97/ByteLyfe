@@ -58,8 +58,10 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `59` | Military depth (`59-military.js`): wars per country, branches and specialties, deployments and defining moments, the draft, desertion and courts-martial, veterans' benefits, and their events | No DOM. `ageUp` reaches `militaryTick` through a wrapper (before `careerTick`); `specialTick` calls `militaryYear`, `specialApply` calls `startMilitaryCareer`, `leaveJob` calls `milLeft`, `financeTick` calls `vetIncome`, `medPrice` calls `vetCareMult`, `financeTerms` calls `vetLoanTerms`, `pensionFor` calls `militaryPension`, the interview and election odds call `vetHireEdge` and `vetElectionEdge`. |
 | `60` | Secret agent (`60-spy.js`): the intelligence career, cover identities, missions and twists, assets, moles, double agents, capture, getting burned, memoirs, and their events | No DOM. `ageUp` reaches `spyTick` through a wrapper (before `careerTick`); `specialTick` calls `spyYear`, `specialApply` calls `spyApply`, `leaveJob` calls `spyLeft`. Reads the military layer (`mil`, `activeWar`, `FOES`) for veterans' hiring edge and mission foes. |
 | `62` | The web (`62-web.js`): the secrets ledger, reputation, NPC-to-NPC ties, hearsay, the fact bus, neighborhood unease, and their events | No DOM. `ageUp` reaches `webTick` through a wrapper (after `youthTick`). `gcPeople` calls `webPrune`; `commitCrime`, `arrest`, the assault and murder actions, `affairBegins`, `caughtPopup`, `hookupFoundOut`, the hookup action and `promote` announce facts with `webFact`; interviews read `webHireEdge`, criminal trials read `webJuryEdge`, `cityMarketYear` reads `webUnease`, `continueAs` calls `webHeir`. |
-| `63–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1027-ui-web.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `63` | Investigations (`63-cases.js`): a case file for every crime, detectives who are people, evidence, series, interviews and warrants, going cold, skipping town, and the new crimes (arson, a romance scam, insider trading) | No DOM. `ageUp` reaches `invTick` through a wrapper (right after `webTick`). Listens on the fact bus (`crime_clean`, `crime_messy`, `killed`, `assault`, `extorted`); `62-web.js` calls `invTip` and `invScrub`. |
+| `64` | Police casework (`64-detective.js`): a detective's caseload, ways to work a case, solving and wrong arrests, losing your own file, and strangers' crimes that hit people you know | No DOM. `careerTick` runs it through `onCareerYear('police')` (15-career.js); `invTick` calls `invWorldYear`. |
+| `65–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1028-ui-cases.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -219,7 +221,7 @@ built from `CONTENT_TAGS`, with the taboo master + subtypes grouped in their own
 **A year (`ageUp`).** Currencies → body → pregnancy → school → career → businesses and the market →
 prison → money → assets → cities (rent, landlords, tenants) → fame → the people around you → the wider family → parenting →
 romance → taboo family romance → royalty → the underworld →
-show business → sports → courts → chaos → gambling → the house (your book and stable) → growing up (home, lessons) → the web (ties, gossip, leaks) → pets → milestones → story chapters → random events → new illness → death check. The order
+show business → sports → courts → chaos → gambling → the house (your book and stable) → growing up (home, lessons) → the web (ties, gossip, leaks) → investigations (case files, detectives) → pets → milestones → story chapters → random events → new illness → death check. The order
 is in `AGE_PHASES` (`25-ageup.js`).
 
 **Health.** Health drifts toward a target set by age and fitness (`healthTarget`), and
@@ -523,6 +525,46 @@ layer that lets systems affect each other instead of each keeping to itself. Bui
   `web_coverup` (Crime menu); events `web_canvass`, `web_vigil`, `web_shunned` and the Mature `web_hush_money`.
 - **Tests:** `dev/verify/web.mjs`, and the life simulator checks secrets, ties and reputation stay valid.
 
+**Investigations.** `63-cases.js` and `64-detective.js`, drawn by `1028-ui-cases.js` (`invCard` opens the Case
+files menu, category `cases`). Every crime leaves a case file; a detective works it; the year decides whether it
+goes cold, comes back or ends in an arrest. This replaces the old "caught" roll and cold-case lottery
+(`flags.heat` is still read for old saves).
+- **The file:** `s.inv = { seq, list, dets }` at the top of the save. A case holds `crime`, `fam` (its family, for
+  series), where and when, `who` (your person id, or `null` for a stranger), `victim`, `ev: { trace, wit, dig }`
+  (what there is to find: physical traces, witnesses, digital records), `prog` (0-100) and `status`
+  (`open`, `cold`, `solved`, `closed`). `INV_PROFILE` is what each crime leaves behind. `invOpen` makes one
+  (a messy getaway leaves twice as much), `invEvidence` changes it (and wakes a cold case on new evidence),
+  `invTip` and `invScrub` are what the web calls.
+- **The detective:** a real person (`p.det = { skill, obs, solved }`, relationship kind `detective`), one per
+  city, made by `invDetective` and dropped from your people when no case of yours is open. `obs` is how
+  personal it gets: a linked case adds 8, an arrest resets it.
+- **The year (`invCaseYear`):** `T` is how promising the case is from the evidence, the detective's skill and
+  obsession, a series and a murder's priority, less your cover (streetwise, cunning, laying low, being in
+  another city). Each year a break comes with chance `T / 150`: progress jumps 30-45 and one kind of evidence
+  grows. Evidence fades (traces 2, witnesses 3 a year). At 40 a detective interviews you (`invTalk`: answer,
+  lawyer, a friend's alibi that can crack, an envelope), at 70 there is a warrant (`invWarrant`), at 100 it is
+  an arrest through the ordinary `arrest` trial. Three years without a lead goes cold; a tip, new forensics or a
+  linked case reopens it; a case closes by time except murder.
+- **Series:** `invLink` joins cases of the same family within six years, shares one detective across cities, and
+  at three cases gives the press nickname and unease. This is the base the serial offenders build on.
+- **The web:** each case and its secret point at each other (`c.sec`, `sec.case`). Another knower is a witness
+  (`invTip`), an exposed secret is a tip, a friend's alibi puts them in the secret, and `web_coverup` thins the
+  evidence. Murder and assault open cases through the fact bus; a fight's victim may or may not report it
+  (family less often); squeezing someone (`extorted`) can be reported.
+- **Your options:** `inv_laylow`, `inv_flee` (a new city; the file follows with chance 0.35, 0.6 in a series),
+  and the interview and warrant choices.
+- **Police casework:** the `police` career is not special; `onCareerYear('police', ...)` (a hook in `careerTick`
+  that every career can use) gives a Detective (level 2 and up) a caseload of strangers' crimes
+  (`M(s).dt.load`, `2 + level` open cases). `det_work` picks a file and a way to work it (`DT_WAYS`: witnesses,
+  forensics, records, stakeout, informant, profile, or pull in your main suspect). Success adds evidence and
+  progress; at 100 `dtSolve` pays performance, fame and name. A premature arrest is usually wrong and costs.
+  Cases you leave alone are worked by colleagues and can go cold (which costs performance). `det_pull_file`
+  loses your own file, at the risk of being fired and charged.
+- **Strangers:** `invWorldYear` gives a 16% yearly chance that a stranger's crime hits someone in your circle
+  (they are shaken, the city gets uneasy, you may help), works those cases in the background and clears old files.
+- **Tests:** `dev/verify/inv.mjs`; the simulator has a detective persona and checks evidence, progress and
+  statuses stay in range.
+
 **Zoos.** `58-zoo.js`, drawn on the company sheet by `zooSection` (`1024-ui-zoo.js`). A zoo is a company with
 `ind: 'zoo'` and `co.zoo = { ticketPrice, welfare, visitorSat, exhibits, animals, breeding, ... }`, made on first
 touch by `zooOf`.
@@ -628,6 +670,7 @@ never fired and actions that never ran, which usually means a `when` that can't 
 | `dev/verify/gambling.mjs` | Gambling: every city has a bookie and Silver Mesa its casinos and resorts; venues persist and belong to crime families or hotel companies; wagering climbs to Whale and the jet is free; bookies lend and the app doesn't; race odds carry a take, every horse finishes once and never runs backwards, the payout waits for the finish and another action settles it; season bets pay when the season is played; debts escalate and grow; 400 beatings break bones far more often than they kill; family is untouched with Mature off; markers become lawsuits; the self-exclusion list shuts casinos but not bookies; counting cards bans you across the chain; the main event is only in Silver Mesa. |
 | `dev/verify/sim-business.mjs` | Business balance report (add an industry id as the third argument to run just that one): every industry run 20 years under a sensible owner (who also franchises and buys a small rival when flush) and a hands-off owner. Survival, profit, size, IPO readiness, franchising and acquisitions at years 1/5/10/20. |
 | `dev/verify/web.mjs` | The web: an affair is a secret and the partner learning it fires the caught popup; a circle weaves into symmetric, capped ties that never dangle; a rumor reaches you as a popup and every choice runs; squeezing, leaning and the hush-money call stay hidden with Mature off; a killing is a secret that chills the victim's friends and makes the city uneasy, and an uneasy city's prices grow slower; scandal costs interviews and juries and heirs inherit half; a bought silence makes a knower far less likely to talk; a throwing listener never breaks the game; teenagers hear no gossip; every web event and every choice runs. |
+| `dev/verify/inv.mjs` | Investigations: a crime opens a case with a detective who is a person and evidence in range, tied to its secret; a series links, shares a detective and earns a nickname; strong evidence ends in an arrest, a careful culprit's case goes cold and a tip reopens it, and a murder never closes; every choice in the interview and warrant popups runs and an alibi can crack; witnesses and exposure feed the case and destroying evidence thins it; laying low and skipping town work; arson, a romance scam and insider trading leave cases; a detective gets a caseload, every way of working a case runs, solving pays and wrong arrests cost, pulling your own file works or gets you fired; strangers' crimes hit people you know and old files clear; thirty years of ticks stay in range and the file saves whole. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |
 | `dev/verify/godmode.mjs` | God Mode's per-person rules: parent and child ages, a spouse never under 18, bodies removed and restored across 18, clean names, clamped stats, trait conflicts and the limit of four, age limits on jobs, money, education, gender, orientation and home, and which relationships can change kind. |
 | `dev/verify/run-all.mjs` | `npm run verify`: the syntax check (in-process), then every other check as its own process, in parallel (one per core, `VERIFY_JOBS=n` to cap it), with each check's output printed when it finishes. The 300-life simulator is split into shards (a count that shares no factor with 10, so the personas spread evenly) and merged into one summary. About a minute on 12 cores. |

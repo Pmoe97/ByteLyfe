@@ -43,14 +43,14 @@ function commitCrime(s, id) {
     if (id === 'embezzle') loot = Math.round(M(s).career.salary * randFloat(0.1, 1.2));
     else if (c.loot[1] > 0) loot = price(s, randInt(c.loot[0], c.loot[1]));
     add(s, { money: loot, karma: c.karma, happy: randInt(1, 4) });
-    if (chance(c.later)) { M(s).flags.heat = (M(s).flags.heat || []).concat([{ crime: id, year: s.year }]); }
-    tally(s, 'crimeLoot', loot);
+    tally(s, 'crimeLoot', loot); // what it leaves behind is a case file (63-cases.js)
     webFact(s, 'crime_clean', { crime: id });
     return { text: vary(pick(CRIME_WIN[id])) + (loot ? ` You got ${fmtMoney(loot)}.` : ''), emoji: c.emoji };
   }
   if (c.deadly && chance(c.deadly)) { die(s, 'a police shootout'); return 'It went horribly wrong.'; }
   add(s, { karma: Math.round(c.karma / 2) });
   if (chance(c.caught)) return arrest(s, id);
+  webFact(s, 'crime_messy', { crime: id }); // you got away, but it was untidy
   add(s, { happy: -2 });
   return vary('{It went sideways, but you got away.|You panicked and ran. Nobody followed.|You chickened out at the last second.}');
 }
@@ -526,8 +526,7 @@ onChoice('murder', (s, ctx, how) => {
   add(s, { karma: -40, happy: trait(s, 'kind') ? -15 : -5 });
   tally(s, 'murders');
   npcDies(s, p, how === 'accident' ? 'a tragic accident' : 'suspicious circumstances', { murdered: true });
-  M(s).flags.heat = (M(s).flags.heat || []).concat([{ crime: 'murder', year: s.year }]);
-  webFact(s, 'killed', { pid: ctx.pid, how });
+  webFact(s, 'killed', { pid: ctx.pid, how }); // opens the secret and the case (62-web.js, 63-cases.js)
   if (chance(how === 'hitman' ? 0.2 : 0.35)) return arrest(s, 'murder');
   return { text: `${p.first} is dead. Nobody suspects you. Yet.`, tone: 'bad' };
 });

@@ -28,7 +28,7 @@ SHEETS.actcat = (cat) => {
   const gambling = cat === 'gamble' ? gambleCard() : ''; // 1021-ui-gambling.js
   const house = cat === 'turf' ? houseCard() : ''; // 1022-ui-house.js
   const army = cat === 'mil' ? militaryCard() : ''; // 1025-ui-military.js
-  const agency = cat === 'spy' ? spyCard() : ''; // 1026-ui-spy.js
+  const agency = (cat === 'spy' ? spyCard() : '') + (cat === 'cases' ? invCard() : ''); // 1026-ui-spy.js, 1028-ui-cases.js
   const home = cat === 'parents' ? homeCard() : cat === 'learn' ? lessonsCard() : ''; // 1023-ui-youth.js
   return { title: c ? c.name : 'Activities', html: look + royal + mob + courts + chaos + gambling + house + army + agency + home + listOf(actionRows(cat), 'Nothing available right now.') };
 };

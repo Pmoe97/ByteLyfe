@@ -27,6 +27,7 @@ const g = (name) => ctx.run(name);
 ctx.seedRng(SEED + opts.shard[0] * 7919);
 const rand = ctx.rand, pick = ctx.pick, chance = ctx.chance, randInt = ctx.randInt;
 const ACTIONS = g('ACTIONS'), ACTION_ORDER = g('ACTION_ORDER'), HANDLERS = g('HANDLERS'), JOBS = g('JOBS'), JOB_IDS = g('JOB_IDS');
+const CRIMES_ALL = g('CRIMES');
 const EVENTS = g('EVENTS'), META = g('META'), TAG_IDS = Object.keys(g('CONTENT_TAGS'));
 // Each life flips every content tag on or off, so tagged content gets played and the
 // filters get checked: nothing tagged may show up while one of its tags is off.
@@ -121,6 +122,17 @@ function check(s, where) {
       if (!kinds[x.kind] || !(x.sev >= 1 && x.sev <= 5) || !(x.ev >= 0 && x.ev <= 100) || !x.knows.includes(x.subj) || !s.people[x.subj]) fail(`bad secret ${JSON.stringify(x)} @${where}`, s);
     }
   }
+  // Investigations (63-cases.js, 64-detective.js): evidence and progress stay in range, files have a real status, a case is about a real person.
+  if (s.inv) {
+    const n = Object.keys(s.inv.list).length;
+    if (n > 70) fail(`${n} case files @${where}`, s);
+    for (const c of Object.values(s.inv.list)) {
+      if (!(c.prog >= 0 && c.prog <= 100) || !['open', 'cold', 'solved', 'closed'].includes(c.status) || !['trace', 'wit', 'dig'].every((k) => c.ev[k] >= 0 && c.ev[k] <= 100)) fail(`bad case ${JSON.stringify(c)} @${where}`, s);
+      if (c.who !== null && !s.people[c.who]) fail(`a case about a missing person ${c.who} @${where}`, s);
+      if (!CRIMES_ALL[c.crime]) fail(`a case for an unknown crime ${c.crime} @${where}`, s);
+    }
+  }
+  if (m.dt && (m.dt.load.length > 12 || !(m.dt.solved >= 0) || !(m.dt.wrong >= 0))) fail(`bad detective record ${JSON.stringify(m.dt)} @${where}`, s);
   for (const id in s.people) {
     const q = s.people[id];
     if (q.ties && (q.ties.length > 6 || q.ties.some((t) => !s.people[t.id]))) fail(`bad ties on ${id} @${where}`, s);
@@ -395,6 +407,24 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
           if (acts.length) { const a = pick(acts); ctx.doAction(s, a.id, co.id); stats.actionsRun[a.id] = (stats.actionsRun[a.id] || 0) + 1; check(s, 'action:' + a.id); resolveAll(s, 'zoo:' + a.id); }
         }
       } catch (e) { fail('zoo persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
+    // And some work the other side of the law: a detective from 24 who works the desk most years,
+    // with a crime or two of their own at 30 and 34 so there is a file to lose.
+    if (s.gen === 1 && i % 20 === 13 && !s.dead && !s.player.prison && age >= 24) {
+      try {
+        if (age === 24) {
+          if (s.player.career) ctx.leaveJob(s, 'switched');
+          s.player.edu.current = null;
+          s.player.record = s.player.record.filter((r) => !(ctx.run('CRIMES')[r.crime] || {}).felony);
+          ctx.hire(s, 'police', 2); resolveAll(s, 'detective-join');
+        }
+        if (age === 30 || age === 34) { ctx.commitCrime(s, 'burglary'); resolveAll(s, 'detective-crime'); }
+        for (let k = 0; k < 2 && !s.dead; k++) {
+          const acts = ctx.actionList(s, 'cases').filter((a) => a.id !== 'inv_flee' || chance(0.1));
+          if (!acts.length) break;
+          const a = pick(acts); ctx.doAction(s, a.id); stats.actionsRun[a.id] = (stats.actionsRun[a.id] || 0) + 1; check(s, 'action:' + a.id); resolveAll(s, 'cases:' + a.id);
+        }
+      } catch (e) { fail('detective persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
     }
     const n = randInt(0, 5);
     for (let k = 0; k < n && !s.dead; k++) {

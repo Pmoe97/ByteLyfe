@@ -8,6 +8,13 @@
 
 function hasFelony(s) { return M(s).record.some((r) => CRIMES[r.crime] && CRIMES[r.crime].felony); }
 
+// A career can play its own year: onCareerYear('police', (s, c, j) => ...) runs every year you
+// hold that job, right after performance is worked out and before any raise or promotion.
+// This is where a job stops being a number that drifts and becomes something you do
+// (64-detective.js is the first; the career-cards engine builds on it).
+const CAREER_YEAR = {};
+function onCareerYear(jobId, fn) { CAREER_YEAR[jobId] = fn; }
+
 // Requirement check shared by jobs, part-time jobs and gigs. Returns unmet requirements as text.
 function missingReqs(s, req) {
   const out = [];
@@ -195,6 +202,8 @@ function careerTick(s) {
   if (trait(s, 'lazy')) base -= 8;
   if (p.stats.health < 30) base -= 10;
   c.perf = clamp100(c.perf + (base - c.perf) * 0.3 + randInt(-8, 8));
+  if (CAREER_YEAR[c.id]) CAREER_YEAR[c.id](s, c, j);
+  if (!M(s).career) return; // the job's own year may have ended it
 
   if (j.special) { specialTick(s, c, j); return; }
 

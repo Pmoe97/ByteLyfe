@@ -662,6 +662,27 @@ each other through a shared layer. A new Reputation & secrets sheet on your prof
 - **A fact bus** other systems can announce on and listen to, so the next expansions plug in instead of
   being wired by hand.
 
+**Case files and investigation (Phase 2 of the big push).** Crime now leaves a case behind, and a
+detective works it. A new Case files menu shows where you stand.
+- **A case for every crime.** Traces, witnesses and digital records are what a crime leaves; a messy
+  getaway leaves more. A named detective, a real person with their own skill, works it, and the year
+  decides whether they get a break, the case goes cold, or it comes back.
+- **The door.** At 40% the detective interviews you (answer, lawyer, a friend's alibi that may crack,
+  or an envelope that may land you in court), at 70% there is a warrant, at 100% an arrest and a trial.
+- **A series.** Cases that look like the same hand join up, share a detective across cities, make it
+  personal for them, and at three get a press nickname. Skip town, lay low, or destroy evidence.
+- **Linked to the web.** Everyone who knows your secret is another witness, a secret getting out is a
+  tip, and a fight's victim may or may not call the police. Squeezing someone for money can be reported.
+- **The other side.** From Detective up, the police career carries a caseload of strangers' crimes: canvass
+  witnesses, work the forensics, pull the records, stake out, lean on an informant, build a profile, or
+  pull in a suspect (a gamble). Solving cases earns promotions and a name; a wrong arrest costs. And you
+  can quietly lose your own file, if you can live with the risk.
+- **Strangers' crimes** now hit people you know: a friend is burgled or attacked, the city gets uneasy,
+  and you decide whether to show up.
+- **New crimes** on the same engine: arson (a fire can kill someone), a romance scam, and insider trading.
+- **A hook for every career.** `onCareerYear` lets any job play its own year, which the career-cards
+  engine builds on.
+
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
   array, porch, koi pond or sauna (shared) and a game room, aquarium, observatory, chef's kitchen or
@@ -720,6 +741,12 @@ Built first, because it is what makes lives feel like a social web instead of a 
   scandals that cost you jobs and friends, and a family name your heirs inherit.
 
 ### Phase 2: Case files and investigation
+
+**Status: built** (see "Case files and investigation" under Built): the shared engine, series, the
+detective's side, strangers' crimes, arson, a romance scam and insider trading. Still to do from this
+phase: forensics and profiler careers as tracks of their own (they arrive with the career-cards engine),
+Ponzi schemes and long cons that run for years, drug manufacturing empires, blackmail rings,
+vigilantism and witness intimidation, and more cases that touch the player's circle.
 
 One shared engine for every crime, replacing the single "caught" roll.
 - **A case per crime:** evidence (trace, witnesses, digital), a named detective, linked cases,
