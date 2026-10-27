@@ -65,6 +65,7 @@ const SECRET_KINDS = {
   npc_crime: { sev: 2, icon: '🚔' },
   npc_fired: { sev: 2, icon: '📦' },
   npc_habit: { sev: 2, icon: '🍺' },
+  adult_work: { sev: 3, icon: '🎭' }, // what you do for a living, from 71-adult-work.js
 };
 const NPC_CRIME_NOTES = ['a drunk-driving stop', 'a shoplifting charge', 'a bar fight', 'a bounced-check scandal'];
 const NPC_HABIT_NOTES = ['drinking', 'gambling', 'pill'];
@@ -101,6 +102,7 @@ function webLabel(s, sec) {
   if (sec.kind === 'crime') return `${CRIMES[sec.crime] ? CRIMES[sec.crime].verb : 'a crime'} nobody has pinned on you`;
   if (sec.kind === 'killing') return `what happened to ${b}`;
   if (sec.kind === 'sti') return `a diagnosis you have not told ${webName(s, sec.rom)} about`;
+  if (sec.kind === 'adult_work') return adultWorkLabel(s, sec);
   return webRumor(s, sec);
 }
 function webRumor(s, sec) {
@@ -206,6 +208,7 @@ function webCheckPublic(s, sec) {
 function webStake(s, sec, pid) {
   const rom = romanticId(s);
   if (!rom || rom !== pid || sec.out) return;
+  if (sec.kind === 'adult_work') { adultPartnerFound(s, sec, rom); return; }
   if (sec.kind === 'sti' && sec.rom === rom) {
     sec.out = true;
     sec.outYear = s.year;
@@ -243,6 +246,7 @@ function webExpose(s, sec, how) {
       heat.push({ crime, year: s.year }, { crime, year: s.year });
       if (sec.kind === 'killing' && sec.ev >= 60 && chance(0.5) && !inPrison(s) && !s.dead) { const r = arrest(s, 'murder'); if (r && r.text) log(s, r.text, 'bad'); }
     }
+    if (sec.kind === 'adult_work') extra = adultExposed(s, sec);
     announce(s, { emoji: '📣', title: 'It got out', text: `${cap(webLabel(s, sec))} is no longer a secret. ${how === 'tip' ? 'Someone called it in.' : 'People are talking.'}${extra}`, tone: 'bad' });
     return;
   }

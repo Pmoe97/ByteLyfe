@@ -61,12 +61,13 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `63` | Investigations (`63-cases.js`): a case file for every crime, detectives who are people, evidence, series, interviews and warrants, going cold, skipping town, and the new crimes (arson, a romance scam, insider trading) | No DOM. `ageUp` reaches `invTick` through a wrapper (right after `webTick`). Listens on the fact bus (`crime_clean`, `crime_messy`, `killed`, `assault`, `extorted`); `62-web.js` calls `invTip` and `invScrub`. |
 | `64` | Police casework (`64-detective.js`): a detective's caseload, ways to work a case, solving and wrong arrests, losing your own file, and strangers' crimes that hit people you know | No DOM. `careerTick` runs it through `onCareerYear('police')` (15-career.js); `invTick` calls `invWorldYear`. |
 | `65` | Career cards (`65-work.js`): the engine that deals a job's yearly hand of decisions, plays them, and settles them | No DOM. Registers every deck's year through `onCareerYear` (15-career.js); `leaveJob` calls `wkLeft`; writes to the web (`webLearn`-style confidences, reputation, `work_done` facts). |
-| `66` | Career decks (`66-work-decks.js`): doctor, surgeon, firefighter, bartender, chef, journalist, pilot, astronaut | Pure data plus a few card hooks. `wkRegister()` at the end hooks them up. |
+| `66` | Career decks (`66-work-decks.js`): doctor, surgeon, firefighter, bartender, chef, journalist, pilot, astronaut | Pure data plus a few card hooks. `wkRegister()` at the end hooks them up. Defines `W`, `WORDS`. |
 | `67` | The language dial (`67-language.js`): result flavor, and events that only exist at Salty or Unfiltered | No DOM. `vary` (00-util.js) understands `{~clean|salty|unfiltered}`; `runWithResult` calls `langFlavor`; `eventEligible` and `fireEvent` check `lang`. |
 | `68` | Intimacy (`68-intimacy.js`): nights with choices, spark, friends with benefits, protection and testing, and the events around them | No DOM. All behind `mature` + `mature_intimacy`. `ageUp` reaches `intimTick` through a wrapper (after `invTick`); the hookup action, `rx_fling_again` and `askOutOdds` call into it; the web gained a `sti` secret. |
 | `69` | The substance ladder (`69-substances.js`): weed, pills, party drugs, cocaine and opioids on top of the habits the game has, tolerance, cravings, withdrawal, relapse, overdose scares, recovery, dealers, and the events around them | No DOM. All behind `mature` + `mature_substances`. `ageUp` reaches `subsYear` through a wrapper (after `intimTick`); `habit()` (19-health.js) records `M(s).used[id]`; `bodyTick`'s overdose roll calls `subsOverdose`; the rehab handler calls `subsRehab`. |
 | `70` | Nightlife (`70-nightlife.js`): venues per city, a scene standing, and a night out as a chain of decisions | No DOM. The `nightlife` action (21-activities.js) calls `nightMenu` when Substances is on. Uses `wkPerson` (65-work.js), `subsDealer` and `subsUse` (69), `intimStart` (68). |
-| `71–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `71` | Adult careers (`71-adult-work.js`): a club dancer, companion, subscription creator and club manager as card decks, with boundaries, local law and who knows | No DOM. All behind `mature` + `mature_adultwork`. Decks on the career-cards engine (`defWork`); `hire` calls `adultHired`; the web gained an `adult_work` secret (`webStake` and `webExpose` call back in). |
+| `72–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
 | `1000+` | UI (`1000-ui-kit.js` … `1030-ui-intimacy.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
@@ -600,6 +601,31 @@ four decisions with readable odds, and the way you play moves a meter that belon
   thin proof a retraction), and an astronaut's mission is a four-stage card that only comes when you have not flown in
   two years.
 - **Tests:** `dev/verify/work.mjs` (every card, every way, many seeds) and the simulator's work persona.
+- **What a way can carry:** `W(label, skill, sub, mod, cost, kind, eff)`. `kind: 'walk'` (the `WALK` helper in 71) is a way that
+  always works and ends the card at no cost (`wkWalk`); autopilot takes it when a card has one, so nothing happens on your
+  behalf that you did not choose. `eff` is applied the moment the way is chosen, whatever the dice say (`wkEff`: `money`,
+  `karma`, `happy`, `health`, `fame`, `name`, `scandal`, `m`, `perf`, `secret`), and `dirty: true` keeps autopilot off it.
+  That is how a shortcut costs what it costs even when it works, and how an honest way can pay in karma and name.
+  A deck can also carry `tags` (it deals nothing, and never to a minor, while a switch is off: `wkLive`), `payMul(s, st)`
+  and `kv(s, st)` (extra rows on the Work sheet).
+
+**Adult careers.** `71-adult-work.js`. Behind `mature` and `mature_adultwork` (`ADULT_TAGS`; `adultOn()`), both off by default.
+Four jobs (`club_dancer`, `companion`, `creator`, `club_owner`, `JOBS[id].adult`, category `night`) that sit on the job board
+only while the switches are on (`boardIds` in 15-career.js, never in `JOB_IDS`, so no NPC gets one), with an audition in place
+of the interview (`JOBS[id].interview`). Age 18, and 21 for the club.
+- **House rules, checked by `dev/verify/adult.mjs`:** consent-forward, fade-to-black, no coercion path, no minors. Every card that
+  puts a person in front of you has a `WALK` way; the fake-ID card in the club deck turns everyone away, every way.
+- **Boundaries:** `M(s).work[id].flags.bound` (0 Careful, 1 Balanced, 2 Bold), set by the `adult_bounds` action. It weights cards
+  (`bw(careful, balanced, bold)`, and `when` hides the riskier offers at Careful) and scales pay (`payMul`).
+- **Who knows:** `hire` calls `adultHired`, which asks who should know (`adultOpen`): private makes a web secret of kind
+  `adult_work` (`note` is the job id), family tells your partner and the adults close to you (`adultReact`: told by you goes
+  better than found out), open leaves nothing to leak. `webStake` calls `adultPartnerFound` when your partner hears it from
+  somebody else, and `webExpose` calls `adultExposed`. `adultSlip` is how a card lets it get out; `adult_tell` ("Come clean")
+  lets you do it on your terms later. `flags.vis` is `private`, `family` or `open`.
+- **Local law:** `ADULT_LAW` (a stylized per-country map: `legal`, `gray`, `illegal`) picks which of the companion's three
+  law cards is dealt. A failed sting is `arrestMinor(s, 'solicitation')`, a citation that is on your record and never a felony.
+- **Stalking hook:** `flags.followed` (a year) is set when a regular or fan will not take no. The later stalking systems read it.
+- **Tests:** `dev/verify/adult.mjs`; the simulator's adult persona (`i % 20 === 15`) and its adult-career invariants.
 
 **The language dial.** `67-language.js`, with `langLevel` and `langPick` in `00-util.js` and a segmented control in
 Settings (`META.settings.language`: `clean`, `salty`, `unfiltered`; default clean). It is only about how people talk.

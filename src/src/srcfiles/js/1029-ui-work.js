@@ -15,6 +15,7 @@ function wkSection() {
   return `<div class="section-title">${esc(def.desk || 'Your desk')}</div><div class="card">
     <div class="muted">${emo(def.meter.emoji, 16)} ${esc(def.meter.name)} · ${esc(wkWord(def, st.m))} (${Math.round(st.m)}%)</div>${bar(st.m)}
     ${done ? kvRow('Your record here', `${st.ok} good · ${st.meh} so-so · ${st.bad} bad`) : ''}
+    ${def.kv && wkLive(G, def) ? def.kv(G, st).map(([k, v]) => kvRow(k, esc(v))).join('') : ''}
   </div>${rows.length ? `<div class="list" style="margin-top:8px">${rows.join('')}</div>` : '<div class="note">Nothing waiting on your desk. A new batch comes with the new year.</div>'}`;
 }
 CLICK.play = (el, ds) => uiRun(() => wkStart(G, ds.hid), { emoji: '📋', title: 'Your desk' });

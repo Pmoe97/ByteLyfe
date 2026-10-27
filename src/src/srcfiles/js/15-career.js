@@ -65,12 +65,14 @@ function jobTitle(s) {
 
 // This year's job board: which careers are hiring. Your city's size and industries
 // decide the odds (jobOpenOdds in 49-cities.js).
+// The adult careers (71-adult-work.js) are on the board only while their switches are on.
+const boardIds = () => (typeof adultJobIds === 'function' ? JOB_IDS.concat(adultJobIds()) : JOB_IDS);
 function jobBoard(s) {
   let l = s.listings.jobs;
   if (!l || l.year !== s.year) {
-    l = s.listings.jobs = { year: s.year, open: JOB_IDS.filter((id) => chance(jobOpenOdds(s, id))) };
+    l = s.listings.jobs = { year: s.year, open: boardIds().filter((id) => chance(jobOpenOdds(s, id))) };
   }
-  return JOB_IDS.map((id) => ({ id, open: l.open.includes(id) || !!JOBS[id].special, missing: missingReqs(s, JOBS[id].req) }));
+  return boardIds().map((id) => ({ id, open: l.open.includes(id) || !!JOBS[id].special || !!JOBS[id].adult, missing: missingReqs(s, JOBS[id].req) }));
 }
 
 function canWorkFullTime(s) { return free(s) && A(s) >= 16 && !inSchool(s); }
@@ -78,6 +80,7 @@ function canWorkFullTime(s) { return free(s) && A(s) >= 16 && !inSchool(s); }
 function applyJob(s, id) {
   const j = JOBS[id];
   if (!canWorkFullTime(s)) return { text: inSchool(s) ? "You can't take a full-time job while you're in school. Try part-time work." : "You can't apply right now.", nolog: true };
+  if (j.adult && !adultOn()) return { text: 'That is not on the board.', nolog: true };
   const miss = missingReqs(s, j.req);
   if (miss.length) return { text: `You don't qualify yet. You need: ${miss.join(', ')}.`, title: j.name, emoji: j.emoji, nolog: true };
   if (M(s).career && M(s).career.id === id) return { text: 'You already work here.', nolog: true };
@@ -86,16 +89,17 @@ function applyJob(s, id) {
   if (bump(s, 'apply') > 6) return { text: "You've sent out a lot of applications this year. Wait until next year.", nolog: true };
   if (j.special === 'politics') return startElection(s, 0);
   if (j.special) return specialApply(s, id);
-  const qi = randInt(0, INTERVIEW_QS.length - 1);
+  const qi = randInt(0, (j.interview || INTERVIEW_QS).length - 1);
   const order = shuffle([0, 1, 2]);
+  const Q = (j.interview || INTERVIEW_QS)[qi];
   popup(s, {
-    emoji: j.emoji, title: 'Interview: ' + j.ladder[0][0], text: `"${INTERVIEW_QS[qi].q}"`, handler: 'interview', ctx: { id, qi },
-    choices: order.map((i) => ({ label: INTERVIEW_QS[qi].a[i][0], value: i })),
+    emoji: j.emoji, title: (j.interview ? 'Audition: ' : 'Interview: ') + j.ladder[0][0], text: `"${Q.q}"`, handler: 'interview', ctx: { id, qi },
+    choices: order.map((i) => ({ label: Q.a[i][0], value: i })),
   });
 }
 onChoice('interview', (s, ctx, ai) => {
   const j = JOBS[ctx.id];
-  const mod = INTERVIEW_QS[ctx.qi].a[ai][1];
+  const mod = (j.interview || INTERVIEW_QS)[ctx.qi].a[ai][1];
   const p = P(s);
   const best = bestDegree(s);
   let odds = 0.5 + mod + (p.stats.smarts - 50) / 220 + (p.stats.looks - 50) / 320 + skill(s, 'charisma') / 350;
@@ -152,6 +156,7 @@ function hire(s, id, level) {
     setRel(s, b.id, 'boss', randInt(35, 60));
   }
   log(s, `${j.emoji} You started working as a ${j.ladder[level][0]}.`);
+  if (j.adult) adultHired(s, id, level); // who knows is the real drama (71-adult-work.js)
 }
 
 function leaveJob(s, reason) {

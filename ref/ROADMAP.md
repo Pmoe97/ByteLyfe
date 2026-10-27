@@ -733,8 +733,8 @@ switch under it. Everything stays off by default, so the game is exactly as befo
   someone else.
 - **A name.** Five nights in three years gets you a reputation, with a small cost with people looking for something
   steady, and it fades.
-- **Still to come in Phase 4:** adult careers as card decks (dancer, companion, creator, club owner), grittier crime,
-  serial offenders and the darker adult themes.
+- **Still to come in Phase 4:** grittier crime, serial offenders and the darker adult themes. (Adult careers are built; see
+  "part three" below.)
 
 **Mature mode, part two: nightlife and the substance ladder.** A new **Substances** switch under Mature (off by
 default, adults only). It is about what drugs and drinking do to a life, and never how to do anything.
@@ -755,6 +755,29 @@ default, adults only). It is about what drugs and drinking do to a life, and nev
 - **People.** Dealers with a number in your phone, who can rip you off or get you arrested for possession. Friends
   who pass things around. A random screening at work that fires people who use. An intervention at the kitchen table.
   A friend who stops breathing in the back room, and what you do. A Monday you cannot account for.
+
+**Mature mode, part three: adult careers.** A new **Adult careers** switch under Mature (off by default, 18+ only). Four
+jobs on the night scene, played as cards like the careers above. Everything is consensual, fade-to-black, and under your
+control, and there is no coercion or trafficking path anywhere in it.
+- **Club dancer, companion, subscription creator and club manager** (who can end up the club owner). A job board entry only
+  while the switches are on, an audition in place of the interview, 18 to start (21 for the club).
+- **Your boundaries.** Careful, Balanced or Bold, changeable any time. They decide which offers reach you (private
+  bookings and trips only come above Careful) and how much the work pays, and every offer is still yours to refuse.
+- **You can always walk away.** Any card that puts a person in front of you has a way out that always works and costs only
+  what the card would have paid, and autopilot walks rather than playing it for you.
+- **Who knows is the real drama.** You choose at the start: keep it private (it becomes a secret that can leak), tell your
+  partner and family (some take it well, some do not), or be open about it. A relative in the crowd, a parent who finds
+  your page, a former client who wants paying, a partner who hears from somebody else. You can come clean on your own terms.
+- **The cards.** Dancers get packed Fridays, regulars, private bookings under house rules, a patron who breaks the rules,
+  a stage-door regular who will not take no, a video posted without consent, the showcase and a touring offer. Companions
+  screen inquiries, deal with regulars who want more, a safety flag, the law (a licensed trade in some countries, a gray
+  area or against the law in others, with a citation for a failed sting), blackmail, a gala, a trip abroad and the way out.
+  Creators have a platform that changes its rules, reposts, a fan who will not stop, frozen payments, impostors, brand deals
+  and toxic comments. A manager backs a dancer who comes to them, turns away fake IDs, handles inspectors, security and
+  the performers' share, and expands.
+- **Shortcuts cost what they cost.** The engine gained per-way effects, so a shortcut (skimming the tax return, cutting the
+  performers' share, ignoring the capacity limit) pays its price in karma, trust and name even when it works, and the fair
+  way earns them. Autopilot never takes a shortcut.
 
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
@@ -851,8 +874,9 @@ Retire the "work harder / ask for a raise" loop for nearly every job.
 
 ### Phase 4: Mature mode
 
-**Status: language dial, intimacy, nightlife and the substance ladder built** (see "Mature mode, part one" and
-"part two" under Built). The Intimacy and Substances sub-switches exist; the Violence switch arrives with its content.
+**Status: language dial, intimacy, nightlife, the substance ladder and the adult careers built** (see "Mature mode, part
+one", "part two" and "part three" under Built). The Intimacy, Substances and Adult careers sub-switches exist; the
+Violence switch arrives with its content.
 
 - **Intimacy and relationship depth.** Hooking up becomes a scene with choices (how it went,
   protection, regret) instead of one line. Chemistry and compatibility, jealousy, make-ups,

@@ -18,6 +18,7 @@
 //   - career cards: the decks, dealing, playing every card, outcomes, autopilot, people (65-work.js, 66-work-decks.js)
 //   - language dial and intimacy: the dial, gating, adults only, nights, consequences, spark, friends with benefits (67-language.js, 68-intimacy.js)
 //   - substances and nightlife: the ladder, tolerance, cravings, recovery, overdoses, dealers, a night out (69-substances.js, 70-nightlife.js)
+//   - adult careers: dancer, companion, creator and club manager as decks; gating, adults only, boundaries, walking away, who knows, the law (71-adult-work.js)
 //   - the life simulator (300 lives), split into shards across the cores, then merged
 // Each check is its own process; at most one per core runs at a time, longest first.
 // Output is held until a check finishes, so checks never interleave.
@@ -69,6 +70,7 @@ const tasks = [
   { label: 'career-card checks', args: ['dev/verify/work.mjs'] },
   { label: 'language and intimacy checks', args: ['dev/verify/intim.mjs'] },
   { label: 'substance and nightlife checks', args: ['dev/verify/subs.mjs'] },
+  { label: 'adult-career checks', args: ['dev/verify/adult.mjs'] },
 ];
 function run(task) {
   return new Promise((resolve) => {

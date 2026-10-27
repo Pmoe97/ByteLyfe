@@ -3,10 +3,14 @@
  * (65-work.js): doctor, surgeon, firefighter, bartender, chef, journalist,
  * pilot and astronaut. Police casework is 64-detective.js; the spy is
  * 60-spy.js. Add a career by defining a deck here, nothing else.
- * W(label, skill, sub, mod, cost): one way to play a decision.
+ * W(label, skill, sub, mod, cost, kind, eff): one way to play a decision.
+ *   eff   what choosing this way does whatever the dice say (65-work.js's wkEff): money, karma, happy,
+ *         health, fame, name, scandal, m, perf, secret (a crime id that becomes a web secret), and
+ *         dirty: true for a way autopilot never picks. This is how a shortcut can cost you its price even
+ *         when it works, and how an honest way can pay in karma and name.
  * ===================================================================== */
 
-const W = (label, sk, sub, mod, cost) => [label, sk, sub || '', mod || 0, cost || 0];
+const W = (label, sk, sub, mod, cost, kind, eff) => [label, sk, sub || '', mod || 0, cost || 0, kind || '', eff || null];
 const WORDS = (...w) => w.map((x, i) => [i * 20 + (i === 0 ? 0 : 10), x]); // five steps up the meter
 
 /* ---- doctor and surgeon --------------------------------------------------------- */

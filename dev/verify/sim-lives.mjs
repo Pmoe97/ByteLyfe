@@ -154,6 +154,9 @@ function check(s, where) {
     if (!g('WORKDECK')[wid] || !(w.m >= 0 && w.m <= 100) || w.hand.length > 6) fail(`bad work state ${wid} ${JSON.stringify({ m: w.m, hand: w.hand.length })} @${where}`, s);
     for (const h of w.hand) if (!ctx.wkCard(wid, h.cid)) fail(`unknown card ${h.cid} on the ${wid} desk @${where}`, s);
   }
+  // Adult careers (71-adult-work.js): never held before 18, and never dealt with a switch off.
+  if (m.career && g('JOBS')[m.career.id].adult && s.year - s.people[s.playerId].birthYear < 18) fail(`a minor in an adult career (${m.career.id}) @${where}`, s);
+  if (m.career && g('JOBS')[m.career.id].adult && !g('adultOn')() && m.work && m.work[m.career.id] && m.work[m.career.id].hand.length) fail(`adult cards on the desk with a switch off @${where}`, s);
   if (m.dt && (m.dt.load.length > 12 || !(m.dt.solved >= 0) || !(m.dt.wrong >= 0))) fail(`bad detective record ${JSON.stringify(m.dt)} @${where}`, s);
   for (const id in s.people) {
     const q = s.people[id];
@@ -240,6 +243,8 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
   META.settings.language = ['clean', 'salty', 'unfiltered'][randInt(0, 2)]; // the language dial (67-language.js)
   // The chaos persona (i % 10 = 4) needs Chaos on.
   if (i % 10 === 4 && !META.settings.chaos) { META.settings.chaos = true; stats.tagLives.chaos = (stats.tagLives.chaos || 0) + 1; }
+  // The adult-careers persona (i % 20 = 15) needs both of its switches on.
+  if (i % 20 === 15) for (const t of ['mature', 'mature_adultwork']) if (!META.settings[t]) { META.settings[t] = true; stats.tagLives[t] = (stats.tagLives[t] || 0) + 1; }
   let s;
   // One life in ten is born royal, and one plays a challenge (hand-made, daily or random).
   try {
@@ -461,6 +466,26 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
         }
         if (s.player.career && s.player.career.id === 'journalist' && ACTIONS.wk_publish.when(s)) { ctx.doAction(s, 'wk_publish'); resolveAll(s, 'work:publish'); }
       } catch (e) { fail('work persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
+    // And one works the night scene (71-adult-work.js): a dancer, companion, creator or club manager from 22,
+    // with a different boundary setting and level of openness each life, and two cards off the desk most years.
+    if (s.gen === 1 && i % 20 === 15 && !s.dead && !s.player.prison && age >= 22) {
+      try {
+        const wid = ['club_dancer', 'companion', 'creator', 'club_owner'][Math.floor(i / 20) % 4];
+        if (age === 22) {
+          if (s.player.career) ctx.leaveJob(s, 'switched');
+          s.player.edu.current = null; ctx.hire(s, wid, 0);
+          const op = s.pending.find((q) => q.handler === 'adultOpen');
+          if (op) ctx.resolvePopup(s, op.id, Math.floor(i / 80) % 3);
+          if (['club_dancer', 'companion', 'creator'].includes(wid)) ctx.wkState(s, wid).flags.bound = Math.floor(i / 20) % 3;
+          resolveAll(s, 'adult-join');
+        }
+        for (let k = 0; k < 2 && !s.dead; k++) {
+          if (!s.player.career || !ACTIONS.wk_work.when(s)) break;
+          ctx.doAction(s, 'wk_work'); stats.actionsRun.wk_work = (stats.actionsRun.wk_work || 0) + 1; check(s, 'action:wk_work'); resolveAll(s, 'adult:' + wid);
+        }
+        if (s.player.career && ACTIONS.adult_tell.when(s) && chance(0.1)) { ctx.doAction(s, 'adult_tell'); resolveAll(s, 'adult:tell'); }
+      } catch (e) { fail('adult persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
     }
     const n = randInt(0, 5);
     for (let k = 0; k < n && !s.dead; k++) {

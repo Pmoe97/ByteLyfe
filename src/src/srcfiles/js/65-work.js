@@ -7,12 +7,18 @@
  * The spy's missions (60-spy.js) and the detective's desk (64-detective.js)
  * are the same idea built by hand.
  *
- * WORKDECK[jobId] = { meter: { name, emoji, start, words }, cards: [Card], gate?, fired?, deal? }
+ * WORKDECK[jobId] = { meter: { name, emoji, start, words }, cards: [Card], gate?, fired?, deal?,
+ *                      tags?, payMul?(s, st) }
+ *   tags     content tags (CONTENT_TAGS): the deck deals nothing while any is off, and never to anyone under 18
+ *            (the adult careers in 71-adult-work.js); payMul scales what a card pays
  *   Card = { id, name, emoji, min?, max?, w?, when?(s, c, st), base, pay?, risk?, who?, learn?,
  *            intro?, stages: [{ text, ways: [[label, skill, sub, mod?, cost?]], ok?, bad? }],
  *            ok, meh, bad, fx?: { ok|meh|bad: { m, perf, karma, happy, health, fame, name, scandal } },
  *            die?, after?(s, out, c, st) }
  *   skill   a skill id, or 'smarts' | 'looks' | 'health'
+ *   walk    a way whose sixth slot is 'walk' ends the card at once, at no cost to your meter, and always works
+ *           (the adult careers use it: you can always say no). It is also what autopilot does with such a card:
+ *           nothing happens on your behalf that you did not choose. The card's `walk` line says how it ended.
  *   who     'patient' | 'client' | 'regular' | 'source' | 'survivor': a real person you meet,
  *           and meet again; text uses [who], [first] and [amt]
  *   learn   a web secret kind ('npc_debt', 'npc_habit', 'npc_crime'): the person confides it
@@ -51,6 +57,7 @@ function wkWord(def, m) { let w = def.meter.words[0][1]; for (const [min, word] 
 function wkSkill(s, key) { return key === 'smarts' || key === 'looks' || key === 'health' ? P(s).stats[key] : skill(s, key); }
 // The chance a way works: the skill it leans on, how your career is going, and how sharp you are.
 function wkOdds(s, k, way, st, penalty) {
+  if (way[5] === 'walk') return 1;
   const o = (k.base ?? 0.5) + (wkSkill(s, way[1]) - 40) / 160 + (P(s).stats.smarts - 50) / 500 + (st.m - 50) / 400 + (M(s).career.perf - 50) / 500 + (way[3] || 0) - (penalty || 0);
   return clamp(o, 0.08, 0.9);
 }
@@ -73,7 +80,10 @@ function wkPerson(s, role) {
 function wkCtx(s, k) {
   const c = {};
   if (k.who) { const p = wkPerson(s, k.who); c.pid = p.id; c.who = fullName(p); c.first = p.first; }
-  if (k.pay) c.amt = price(s, Math.round(k.pay * (1 + M(s).career.level * 0.3)));
+  if (k.pay) {
+    const def = WORKDECK[M(s).career.id];
+    c.amt = price(s, Math.round(k.pay * (1 + M(s).career.level * 0.3) * (def && def.payMul ? def.payMul(s, wkState(s, M(s).career.id)) : 1)));
+  }
   return c;
 }
 
@@ -82,6 +92,7 @@ function wkYear(s, c) {
   const def = WORKDECK[c.id];
   if (!def) return;
   const st = wkState(s, c.id);
+  if (!wkLive(s, def)) { st.hand.length = 0; return; } // a switch was turned off: the job carries on, the deck does not
   // Whatever is still on the desk gets handled without you.
   const left = st.hand.splice(0);
   if (left.length) {
@@ -95,6 +106,8 @@ function wkYear(s, c) {
   if (st.m <= 8 && chance(0.4)) { fire(s, def.fired || 'Your record stopped speaking for itself, and so did your employer.'); return; }
   wkDeal(s, c, def, st);
 }
+// A deck behind content tags deals only while they are on, and only to adults.
+function wkLive(s, def) { return !def.tags || (tagsOn(def.tags) && A(s) >= 18); }
 function wkDeal(s, c, def, st) {
   const lvl = c.level;
   let pool = def.cards.filter((k) => (k.min || 0) <= lvl && (k.max === undefined || lvl <= k.max) && (!k.when || k.when(s, c, st)));
@@ -116,7 +129,7 @@ function wkStagePopup(s, id, k, h, step, res, first) {
   const stg = k.stages[step], S = wkState(s, id);
   const choices = stg.ways.map((w, i) => {
     const cost = w[4] ? price(s, w[4]) : 0;
-    return { label: w[0], value: i, sub: `${w[2] ? w[2] + ' · ' : ''}${Math.round(wkOdds(s, k, w, S) * 100)}%${cost ? ' · ' + fmtMoney(cost) : ''}`, disabled: cost > M(s).money };
+    return { label: wkFmt(w[0], h.c), value: i, sub: `${w[2] ? w[2] + ' · ' : ''}${Math.round(wkOdds(s, k, w, S) * 100)}%${cost ? ' · ' + fmtMoney(cost) : ''}`, disabled: cost > M(s).money };
   });
   if (first) choices.push({ label: 'Not now', value: 'later', sub: 'It stays on your desk' });
   const text = (step === 0 && k.intro ? wkFmt(k.intro, h.c) + ' ' : '') + wkFmt(stg.text, h.c);
@@ -143,6 +156,8 @@ onChoice('wkStage', (s, ctx, v) => {
     if (i < 0) return { text: 'That one was already handled.', quiet: true, nolog: true };
     S.hand.splice(i, 1);
   }
+  if (w[6]) wkEff(s, ctx.job, w[6]);
+  if (w[5] === 'walk') return wkWalk(s, ctx.job, k, ctx.c);
   const ok = chance(wkOdds(s, k, w, S));
   if (!['smarts', 'looks', 'health'].includes(w[1])) addSkill(s, w[1], randFloat(0.5, 2));
   const res = ctx.res.concat([ok ? 1 : 0]);
@@ -153,6 +168,26 @@ onChoice('wkStage', (s, ctx, v) => {
   return wkConclude(s, ctx.job, k, ctx.c, res, false);
 });
 
+// What a way does just by being chosen (see W in 66-work-decks.js).
+function wkEff(s, id, e) {
+  const S = wkState(s, id);
+  if (e.money) add(s, { money: Math.round(e.money * econ(s)) });
+  add(s, { karma: e.karma || 0, happy: e.happy || 0, health: e.health || 0, fame: e.fame || 0 });
+  if (e.m) S.m = clamp100(S.m + e.m);
+  if (e.perf && M(s).career) M(s).career.perf = clamp100(M(s).career.perf + e.perf);
+  if (e.name || e.scandal) webRepAdd(P(s), { name: e.name || 0, scandal: e.scandal || 0 });
+  if (e.secret) webNewSecret(s, 'crime', s.playerId, { crime: e.secret, sev: 2, ev: 20 });
+}
+// You said no, and that is the end of it: nothing is lost but what the card would have paid.
+function wkWalk(s, id, k, c, auto) {
+  const S = wkState(s, id);
+  S.walked = (S.walked || 0) + 1;
+  if (k.walkFx) { add(s, { happy: k.walkFx.happy || 0 }); S.m = clamp100(S.m + (k.walkFx.m || 0)); }
+  tally(s, 'workWalks');
+  const text = wkFmt(k.walk || 'You said no, and left it there. Nobody argued.', c);
+  if (auto) { log(s, `📋 ${k.name}: ${text}`); return 'walk'; }
+  return { text, title: k.name, emoji: k.emoji, tone: '' };
+}
 // All the stages are in: what it came to.
 function wkConclude(s, id, k, c, res, auto) {
   const S = wkState(s, id), cr = M(s).career, n = res.length, wins = res.reduce((a, b) => a + b, 0);
@@ -201,13 +236,15 @@ function wkLearn(s, k, person) {
 function wkAuto(s, id, h) {
   const k = wkCard(id, h.cid), S = wkState(s, id);
   if (!k) return 'meh';
-  const res = k.stages.map((stg) => { const best = stg.ways.reduce((a, w) => (wkOdds(s, k, w, S) > wkOdds(s, k, a, S) ? w : a)); return chance(wkOdds(s, k, best, S, 0.08)) ? 1 : 0; });
+  if (k.stages.some((stg) => stg.ways.some((w) => w[5] === 'walk'))) return wkWalk(s, id, k, h.c, true); // nothing happens on your behalf that you did not choose
+  // Autopilot never takes a shortcut: ways marked dirty are left to you.
+  const res = k.stages.map((stg) => { const ways = stg.ways.filter((w) => !(w[6] && w[6].dirty)), best = (ways.length ? ways : stg.ways).reduce((a, w) => (wkOdds(s, k, w, S) > wkOdds(s, k, a, S) ? w : a)); return chance(wkOdds(s, k, best, S, 0.08)) ? 1 : 0; });
   return wkConclude(s, id, k, h.c, res, true);
 }
 function wkLeft(s, c) { const st = M(s).work && M(s).work[c.id]; if (st) st.hand = []; }
 
 /* ---- actions --------------------------------------------------------------------- */
-const wkHand = (s) => { const c = M(s).career; return c && WORKDECK[c.id] && free(s) ? wkState(s, c.id).hand : []; };
+const wkHand = (s) => { const c = M(s).career; return c && WORKDECK[c.id] && wkLive(s, WORKDECK[c.id]) && free(s) ? wkState(s, c.id).hand : []; };
 defAction({
   id: 'wk_work', cat: 'job', label: 'Work your desk', emoji: '📋', desc: 'Pick something that needs doing, and decide how.',
   when: (s) => wkHand(s).length > 0,
