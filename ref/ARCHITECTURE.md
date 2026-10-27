@@ -56,8 +56,9 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `57` | Classes and lessons (`57-lessons.js`): 52 disciplines with level ladders, teachers, practice, fees, level tests, recitals and competitions, lesson events | No DOM. `youthTick` calls `lessonsYear`; the instrument event in `30-events-young.js` calls `enrollLesson`. |
 | `58` | Zoo & Wildlife Sanctuary (`58-zoo.js`): the zoo layer of the business engine: habitats, animals, breeding, breaches, admission | No DOM. `bizForecast` calls `zooMods` (through `industryMods`) and `companyYear` calls `zooYear`. |
 | `59` | Military depth (`59-military.js`): wars per country, branches and specialties, deployments and defining moments, the draft, desertion and courts-martial, veterans' benefits, and their events | No DOM. `ageUp` reaches `militaryTick` through a wrapper (before `careerTick`); `specialTick` calls `militaryYear`, `specialApply` calls `startMilitaryCareer`, `leaveJob` calls `milLeft`, `financeTick` calls `vetIncome`, `medPrice` calls `vetCareMult`, `financeTerms` calls `vetLoanTerms`, `pensionFor` calls `militaryPension`, the interview and election odds call `vetHireEdge` and `vetElectionEdge`. |
-| `60–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1025-ui-military.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `60` | Secret agent (`60-spy.js`): the intelligence career, cover identities, missions and twists, assets, moles, double agents, capture, getting burned, memoirs, and their events | No DOM. `ageUp` reaches `spyTick` through a wrapper (before `careerTick`); `specialTick` calls `spyYear`, `specialApply` calls `spyApply`, `leaveJob` calls `spyLeft`. Reads the military layer (`mil`, `activeWar`, `FOES`) for veterans' hiring edge and mission foes. |
+| `61–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1026-ui-spy.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -466,6 +467,26 @@ draft on in a hot war, and ends it in a result (`endWar`: logs it, pays war bond
   entries are added to `CRIMES` there).
 - **Relatives:** `p.mil = { since, vet }` marks a relative in uniform; `familyWar` enlists, wounds and kills them
   during a war.
+
+**Secret agent.** `60-spy.js`, drawn by `1026-ui-spy.js` (`spyCard` on the Intelligence menu, `spySection` on the Work sheet,
+sheets `dossier` and `assets`). The career is the `spy` entry in `JOBS` (`special: 'spy'`).
+- **Your file:** `M(s).spy` is made at recruitment and stays for life: agency, handle, training `track`, `cover`
+  `{ id, strength }`, `heat` (foreign attention), `standing` (with your own agency), `desk`, the mission log, `assets`,
+  `turned` (selling secrets), `controlled` (a double you run for the agency), `burned`, `alumni`, `disavowed`, `captive`.
+  `ensureSpy` makes one for God Mode careers. `inAgency`, `spyCtx` and `spyAlumnus` are the questions the rest asks.
+- **Recruitment:** `spyApply` (from `specialApply`) is the vetting; the `spy_recruiter` event hires a bright graduate
+  directly. `startSpyCareer` sets defaults first and then asks for a cover and a track, so a popup nobody answers still
+  leaves a valid file. The first working year is the academy (`spyAcademy`).
+- **Missions:** `offerMission` (from `spyYear`) picks one by rank and training; `SPY_MISSIONS[id].ways` are
+  `[label, skill, sub]` approaches and `missionOdds` scores each. `runMission` resolves to success, partial, blown,
+  captured or killed. Successes can raise a `SPY_TWISTS` popup. The mole hunt is its own popup (`offerMole`).
+- **Cover and heat:** cover erodes with use and settles in quiet years; `checkBurn` calls `burnSpy` when cover hits
+  zero or heat hits 100, which asks for a new identity, a desk, a resignation or a tell-all (`writeMemoir`).
+- **Assets:** `makeAsset` (capped at six live), `assetsYear` pays reports and loses sources; every way out of the
+  job goes through `leaveJob`, which calls `spyLeft` to cut them loose and make you an alumnus.
+- **Double agents:** a pitch (`spy_approach`) makes you a controlled double or a traitor; `traitorYear` pays and
+  rolls `exposeTraitor` (defect, deal or fight; `treason`, `espionage` and `leak` are added to `CRIMES` there).
+  A captured spy waits in prison for a swap (`spyTick`).
 
 **Zoos.** `58-zoo.js`, drawn on the company sheet by `zooSection` (`1024-ui-zoo.js`). A zoo is a company with
 `ind: 'zoo'` and `co.zoo = { ticketPrice, welfare, visitorSat, exhibits, animals, breeding, ... }`, made on first

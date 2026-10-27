@@ -607,6 +607,39 @@ prizes, and selective breeding programs for litters to keep, sell or gift.
   Twenty Years, The Badge, Deserter, Draft Dodger, Gold Star...), 2 goals and the War Hero, Veteran and
   Deserter legacy titles.
 
+**Secret agent.** A new Intelligence menu, and a country with an agency of its own (eighteen fictional
+ones, from the Overseas Intelligence Bureau to the Whitehall Section).
+- **Recruitment:** apply for vetting (a degree, a clean record and a sharp head; intelligence and cyber
+  veterans get an edge), or be approached over coffee after university. Pick a cover story (embassy attaché,
+  foreign correspondent, business consultant, import-export trader, visiting academic, aid worker) and a
+  training track (field, technical, analysis, handler), then a year at the academy. You get a handle.
+- **Missions:** nine kinds, from surveillance and recruiting an asset up to copying documents, breaking into a
+  network, infiltrating a smuggling ring, bringing out a defector, sabotage, back-channel talks and hunting
+  the mole. Each shows odds for three approaches, built from your skills, training, cover and how hot you
+  are. Results: clean, partial, blown, captured or killed. Missions at home and abroad pay a bonus, and
+  rank unlocks the harder ones.
+- **Twists:** six popups that follow a clean job: a car on your tail, a stranger at the hotel bar, a sealed
+  envelope naming a colleague, a border guard with your passport, an asset's sick child, and an order to burn
+  a source.
+- **Cover and heat:** cover erodes with use and settles in quiet years; heat is foreign attention. Maintain
+  your cover, lie low, take a desk job or ask for the field again. Run out of cover (or max out heat) and you
+  are **burned**: take a new identity at a lower rank, a desk at headquarters, resign quietly, or go public.
+- **Assets:** recruit up to six sources, meet them, bonus them, extract them or cut them loose. They file
+  reports, get arrested, vanish or double-cross you.
+- **Mole hunt:** three suspects with clues. Accuse the right person for a bonus, the wrong one and you ruin
+  an innocent career.
+- **Capture:** claim diplomatic immunity (diplomat cover), wait for a prisoner exchange, escape, or talk (which
+  can turn you). A convicted spy waits in prison for a swap.
+- **Double agents:** a rival service pitches you. Report it and run a double game for your agency, or take the
+  money and sell secrets. A polygraph, a bank-record audit or a photo can expose you: run for the border,
+  confess for a deal, or fight a treason trial. You can also sell a single secret, or defect.
+- **After the agency:** write a tell-all, a sanitized memoir or a spy novel (the lawyers read it), consult for
+  private security, join an advisory board. Burned spies get watched for years. You can tell your partner the
+  truth, and partners get suspicious when you do not.
+- **Extras:** 14 events, 14 achievements (First Assignment, Source Handler, Mole Hunter, Two Faces, Burned,
+  Exchanged, Diplomatic Immunity, Station Chief, The Director...), 2 goals and the Master Spy and Traitor
+  legacy titles.
+
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
   array, porch, koi pond or sauna (shared) and a game room, aquarium, observatory, chef's kitchen or
@@ -625,20 +658,18 @@ prizes, and selective breeding programs for litters to keep, sell or gift.
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
-    double agents, and getting burned.
-2. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+1. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-3. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+2. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-4. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+3. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-5. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+4. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
     purges, coups and declared wars. Builds on Royalty and Military depth, which now exist.
-6. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+5. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-7. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-8. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+6. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+7. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 

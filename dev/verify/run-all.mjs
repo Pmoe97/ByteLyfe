@@ -12,6 +12,7 @@
 //   - the house: the book, racehorses and breeding, the big races, casinos (54-house.js)
 //   - growing up: school life, clubs, college, home and lessons (55-57)
 //   - military: wars, deployments, the draft, desertion, veterans' benefits (59-military.js)
+//   - spy: recruitment, missions, assets, double agents, getting burned (60-spy.js)
 //   - the life simulator (300 lives), split into shards across the cores, then merged
 // Each check is its own process; at most one per core runs at a time, longest first.
 // Output is held until a check finishes, so checks never interleave.
@@ -57,6 +58,7 @@ const tasks = [
   { label: 'zoo checks', args: ['dev/verify/zoo.mjs'] },
   { label: 'youth checks', args: ['dev/verify/youth.mjs'] },
   { label: 'military checks', args: ['dev/verify/military.mjs'] },
+  { label: 'spy checks', args: ['dev/verify/spy.mjs'] },
 ];
 function run(task) {
   return new Promise((resolve) => {

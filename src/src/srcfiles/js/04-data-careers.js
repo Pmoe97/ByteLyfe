@@ -6,7 +6,7 @@
  *   req: { age, maxAge, edu: 'high'|'assoc'|'bachelor'|'master', majors: [...],
  *          degree: 'md'|'jd'|..., trade: 'electrician'|..., smarts, looks,
  *          sk: { skill: min }, license, clean (no felonies), drink (legal drinking age) }
- *   special: 'fame' | 'sports' | 'military' | 'politics' — promotion runs on skill
+ *   special: 'fame' | 'sports' | 'military' | 'spy' | 'politics' — promotion runs on skill
  *            and special actions instead of the plain performance meter.
  *   skill: the skill that grows on the job / drives special promotions.
  *   appointed: promotions come by appointment (42-courts.js), not the performance meter;
@@ -18,7 +18,7 @@ const JOB_CATS = {
   service: 'Service & Retail', office: 'Office & Admin', transport: 'Transport & Logistics', trades: 'Skilled Trades',
   public: 'Public Service', health: 'Healthcare', tech: 'Tech & Engineering', science: 'Science', business: 'Business & Finance',
   law: 'Law', education: 'Education', media: 'Media & Design', fame: 'Entertainment', sports: 'Pro Sports',
-  military: 'Military', politics: 'Politics',
+  military: 'Military', spy: 'Intelligence', politics: 'Politics',
 };
 
 const JOBS = {
@@ -126,6 +126,7 @@ const JOBS = {
   // ---- Military (special) ----
   military: { name: 'Military (Enlisted)', emoji: '🎖️', cat: 'military', special: 'military', skill: 'fitness', ladder: [['Private', 29000], ['Corporal', 35000], ['Sergeant', 43000], ['Staff Sergeant', 53000], ['Master Sergeant', 66000], ['Sergeant Major', 82000]], req: { age: 18, maxAge: 35, edu: 'high', sk: { fitness: 20 }, clean: true } },
   officer: { name: 'Military (Officer)', emoji: '⭐', cat: 'military', special: 'military', skill: 'charisma', ladder: [['Second Lieutenant', 46000], ['First Lieutenant', 56000], ['Captain', 70000], ['Major', 86000], ['Lieutenant Colonel', 106000], ['Colonel', 128000], ['General', 195000]], req: { age: 21, maxAge: 35, edu: 'bachelor', sk: { fitness: 30 }, clean: true } },
+  spy: { name: 'Intelligence Service', emoji: '🕵️', cat: 'spy', special: 'spy', skill: 'streetwise', ladder: [['Trainee', 38000], ['Field Officer', 52000], ['Case Officer', 68000], ['Senior Case Officer', 88000], ['Station Chief', 115000], ['Deputy Director', 150000], ['Director', 210000]], req: { age: 21, maxAge: 42, edu: 'bachelor', smarts: 55, clean: true } },
 
   // ---- Politics (special: elections) ----
   politician: { name: 'Politics', emoji: '🏛️', cat: 'politics', special: 'politics', skill: 'charisma', ladder: [['City Council Member', 48000], ['Mayor', 105000], ['Governor', 165000], ['Senator', 180000], ['Head of State', 400000]], req: { age: 25, edu: 'bachelor', sk: { charisma: 20 }, clean: true } },

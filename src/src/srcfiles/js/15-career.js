@@ -152,6 +152,7 @@ function leaveJob(s, reason) {
   M(s).jobHistory.push({ id: c.id, level: c.level, years: c.years, end: s.year, reason, employer: c.employer });
   M(s).career = null;
   milLeft(s, c, reason); // a uniform comes off with a discharge (59-military.js)
+  spyLeft(s, c, reason); // the agency closes your file (60-spy.js)
   clearKind(s, 'coworker');
   clearKind(s, 'boss');
 }
@@ -368,6 +369,7 @@ onChoice('gig', (s, ctx, id) => {
 /* ---- special tracks ----------------------------------------------- */
 function specialApply(s, id) {
   const j = JOBS[id];
+  if (j.special === 'spy') return spyApply(s, id); // vetting, cover and training (60-spy.js)
   const k = j.skill;
   let odds;
   if (j.special === 'military') odds = 0.9;
@@ -410,6 +412,8 @@ function specialTick(s, c, j) {
     }
   } else if (j.special === 'military') {
     militaryYear(s, c, j); // ranks, terms, deployments and wars (59-military.js)
+  } else if (j.special === 'spy') {
+    spyYear(s, c, j); // training, missions and the agency's verdict (60-spy.js)
   } else if (j.special === 'politics') {
     c.term = (c.term || 0) + 1;
     if (c.term >= 4) {
