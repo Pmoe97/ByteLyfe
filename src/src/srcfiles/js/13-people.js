@@ -154,6 +154,7 @@ function relPeople(s, kinds, opts) {
     const p = s.people[pid];
     if (!p) continue;
     if (kinds && !kinds.includes(rels[pid].kind)) continue;
+    if (!kinds && rels[pid].kind === 'captive') continue; // somebody you are holding is not somebody you can ask to dinner (78-secret-space.js)
     if (!(opts && opts.dead) && !p.alive) continue;
     out.push(p);
   }

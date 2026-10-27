@@ -73,7 +73,10 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `75` | Work life (`75-work-life.js`): favors (who owes whom) and workplace venues (the break room, the lounge) | No DOM. Favors feed card ways (`FAV`, 65-work.js), interviews (`favorRefEdge`, 15-career.js) and `web_silence` (62-web.js); `ageUp` reaches `favorYear` through a wrapper; venues tie coworkers together in the web and hand you hearsay. |
 | `76` | Career decks, part two (`76-work-decks-2.js`): service, office, business, transport, public service and the trades | Pure data plus a few hooks. Defines `K`, `UNI` (cards any job can deal), `deckFor`. |
 | `77` | Career decks, part three (`77-work-decks-3.js`): health, tech, science, law, education, media and the entertainment careers | Pure data. Uses `deckFor` from 76. |
-| `78–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `78` | Abduction and captivity (`78-secret-space.js`): the six secret rooms (renovation projects), taking someone, care, escape, knocks, searches, and a death in care | No DOM. Behind `mature` + `mature_violence`. Registers into `RENOVATION_PROJECTS` (05-data-assets.js); `completeRenovation` (17-assets.js) calls `ssBuilt`; a captive is a relationship of kind `captive` (hidden from `relPeople`, `reachable` false); a death goes through the web's `killed` fact and 72-violence.js's "what now". `ageUp` reaches `capYear` through a wrapper. |
+| `79` | The paper (`79-news.js`): articles about you and yours, detective hints by case progress, ordinary news | No DOM. `s.news`; `newsYear` through a wrapper; read on the Case files card (1028-ui-cases.js) in `1031-ui-news.js`. |
+| `80` | Ransom notes (`80-ransom.js`): the other side of the note, from silly to serious, real and hoax | No DOM. An event (`kn_ransom`) behind the same switches; writes to the paper. |
+| `81–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
 | `1000+` | UI (`1000-ui-kit.js` … `1030-ui-intimacy.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
@@ -615,6 +618,38 @@ four decisions with readable odds, and the way you play moves a meter that belon
   A deck can also carry `tags` (it deals nothing, and never to a minor, while a switch is off: `wkLive`), `payMul(s, st)`
   and `kv(s, st)` (extra rows on the Work sheet).
 
+**Abduction, the paper and the ransom note.** `78-secret-space.js`, `79-news.js`, `80-ransom.js`, `1031-ui-news.js`. Behind
+`mature` and `mature_violence` (the same switches as 72-73), adults only: the player, every profile on offer, every captive and every
+ransom target is 18 or over, and `dev/verify/kidnap.mjs` enforces it and scans the text for what must never be there.
+Nothing sexual, nothing graphic, nothing instructional. There is always a way out, and every step has "Not tonight".
+- **The rooms:** `SPACES` (Attic Hideaway, Garage Bay, Garden Shed, Finished Basement, Hidden Room, The Dungeon) register
+  themselves as unshared renovation projects with a `secret` flag and the violence tags, so they appear in the ordinary
+  contractor flow (17-assets.js) only with the switches on. Each has `integ` (how well it holds), `comfort`, `conceal`, `quiet`,
+  `risk` (the chance a contractor reports you), a cost and an effect on the house's value (the Dungeon costs a tenth). The
+  work's quality scales integrity. `ssBuilt` is the ending; `ssTip` is the contractor's call.
+- **Taking someone:** `kn_kidnap` (Crime menu, three random adult strangers and "Not tonight") and `kn_kidnap_person` (anyone you
+  know). Then where (if you have more than one room), then watch first / lure / ambush (odds from your skills, their
+  wits, the room's concealment and the heat on the house), then `capTake`. A failure is an attempted-kidnapping case (and
+  sometimes an arrest). Success opens a `kidnapping` case in the existing case-file engine (family `abduction`, so they
+  series-link and get a press nickname), a web secret, an article, and a relationship of kind `captive`.
+- **Holding:** `M(s).kn = { cap, heat, taken, freed, lost }` and one captive at a time, with supplies, health, spirit and the
+  room's current integrity. `cap_feed`, `cap_med`, `cap_comf` and `cap_rein` are the care actions (limits per year); `kn_release`
+  lets them go (or surrenders). `capYear` wears everything down: neglect and despair kill, a strong room holds and a weak one
+  does not (`capEscape`), a neighbor knocks (`capKnock`), a partner notices (`capHome`), a search comes (`capSearch`). Being in
+  prison means nobody comes. A death (`capDie`) is the web's `killed` fact with `how: 'captive'`: 72-violence.js asks what you do
+  now, with one more option, paying someone, which means someone else knows.
+- **The paper:** `s.news`, written by `newsPost` from templates (`NEWS_T`). `newsYear` follows every open case against you:
+  at progress 15, 40 and 70 an article gets steadily more sure of itself, and a line in your own life says a car is parked
+  across the street, then that a card was left in your door. Nicknames, a search that goes on, a conviction, a ransom note and
+  two ordinary stories a year. It is read from the Case files card.
+- **The note:** `kn_ransom` builds a note about someone you know (never a child, never a captive) from a kind of kidnapper
+  (`RANSOM_TYPES`: amateurs, a crew, a rival, an eccentric, a group chat, the person themselves, a misunderstanding), what it is pinned
+  with, what it asks and what it threatens, from silly to serious. Whether it is real is settled when it arrives. Every choice
+  (pay, haggle, call the police, look into it, do nothing, send a counter-offer) has an ending for a hoax (`RANSOM_REVEALS`, the
+  funnier half) and one for a real kidnapping (`RANSOM_REAL`); the bad ones are rare, and only from a serious kidnapper.
+- **Tests:** `dev/verify/kidnap.mjs`; the simulator's persona (`i % 40 === 39`) and invariants (a captive is an adult, alive and a
+  captive; the paper stays short).
+
 **Work life and the rest of the ladder.** `75-work-life.js`, `76-work-decks-2.js`, `77-work-decks-3.js`.
 - **Every ordinary job has a deck** (about 70 in all; sports, the military, the spy, politics and police have their own systems).
   `deckFor(id, { meter, emoji, words, uni, cards, t })` builds one: a meter, a handful of universal cards (`UNI`: a bad idea from
@@ -676,7 +711,7 @@ idea. `dev/verify/violence.mjs` scans the text for what must never be there.
   hand join into a series, one detective, and a press name (63-cases.js). Close calls, copycats (a case with `copy: true`
   that confuses the others), the partner who notices, `ser_stop`, `ser_help`, fan mail in prison, a memoir, and the titles
   Notorious and Never Caught. The Case files sheet shows "What you carry".
-- **Not built:** the serial kidnapper (the roadmap lists it; a captive who stays alive is a different and harder design).
+- **The kidnapper** is separate: `78-secret-space.js` (see "Abduction, the paper and the ransom note").
 - **Tests:** `dev/verify/violence.mjs`; the simulator's persona (`i % 20 === 19`) and invariants.
 
 **Dark themes.** `74-dark.js`. Behind `mature` and `mature_themes` (`DARK_TAGS`; `darkOn()`), both off by default, adults

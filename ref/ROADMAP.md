@@ -791,7 +791,7 @@ control, and there is no coercion or trafficking path anywhere in it.
   yourself in or keep going; then how you operate, an urge that builds and asks you a question, acts that open linked
   cases, a detective who takes it personally, a press name, close calls, copycats, a partner who notices, and the endings:
   captured, a memoir and fan mail from prison, getting away with it, or stopping for good. Help, holding on and "not
-  tonight" are always offered. The serial kidnapper is not built.
+  tonight" are always offered. The kidnapper arrived later (part six).
 
 **Mature mode, part five: dark themes.** A new **Dark themes** switch under Mature (off by default, 18+ only). Heavier stories,
 told seriously: nothing graphic, nothing sexual, and always a way out.
@@ -820,6 +820,23 @@ told seriously: nothing graphic, nothing sexual, and always a way out.
 - **Workplace venues.** The break room, the staff lounge, the truck at lunch, the green room. Hang out and you hear things,
   coworkers who share a venue talk to each other (so secrets travel), a round buys a favor, and there is a work party
   every few years.
+
+**Mature mode, part six: abduction, the paper and the ransom note.** Behind the Violence switch, adults only, nothing sexual
+or graphic, and always a way out.
+- **Secret spaces.** Six renovations for the home you live in: an Attic Hideaway, a Garage Bay, a Garden Shed, a Finished
+  Basement, a Hidden Room and The Dungeon. Each holds differently, hides differently, costs differently and changes the
+  house's value differently; contractors can report you, the Dungeon most of all.
+- **Taking someone.** A "Take someone" action in the Crime menu offers three adult strangers, or take someone you know; you
+  can watch first, lure or ambush, and you can always walk away. A failure leaves a witness.
+- **Care, or consequences.** One person at a time, with supplies, health and spirit that wear down every year. Care costs money and
+  leaves a trace. A weak room loses people; a strong one holds. Neglect and despair kill. Neighbors knock, partners notice,
+  searches come. You can let them go, or give yourself up, at any time. A death asks what you do now.
+- **The paper.** Articles about what you did (and what was done to people you know), more certain at each step of the
+  investigation, with detectives who "declined to elaborate" and a gray sedan across the street.
+- **Ransom notes about people you know.** A knife, or a rubber chicken, pinned to your door. A demand that runs from
+  "$250 million in bitcoin" to "a hundred dollars and a sandwich", and a threat that runs from "you will never see them again" to
+  "teach their parrot your passwords". Sometimes it is a crew, and sometimes the person themselves, found in a hotel bathtub with a tiny
+  crown. Doing nothing is, often, the right answer.
 
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
@@ -918,7 +935,7 @@ Retire the "work harder / ask for a raise" loop for nearly every job.
 
 **Status: language dial, intimacy, nightlife, the substance ladder, the adult careers and grittier crime built** (see
 "Mature mode, part one" to "part four" under Built). The Intimacy, Substances, Adult careers and Violence sub-switches
-exist, with a Dark themes switch for part five. To do: the serial kidnapper, if it is wanted.
+exist, with a Dark themes switch for part five. The serial kidnapper is built as the secret spaces, taking someone, care and the paper (part six).
 
 Content and tuning (every ordinary career as a deck, favors, venues, the moral-option rebalance) is built; see "Content and tuning" under Built. Still to do from Phase 3: forensics and profiler tracks, more full systems (paramedic, teacher, lawyer, pro cook-offs, farm and fishing seasons), twists that follow a good result, and patrol cards for beat cops.
 

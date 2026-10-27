@@ -166,10 +166,12 @@ onWebFact('killed', (s, d) => {
   vioHaunt(s, 30);
   const friend = pickRel(s, ['friend', 'bestie']);
   const sec = webLive(s, (x) => x.kind === 'killing' && x.subj === s.playerId && x.other === d.pid)[0];
+  const captive = d.how === 'captive', hireCost = price(s, 6000); // a person who died in your care (78-secret-space.js)
   popup(s, {
-    emoji: '🕯️', title: 'What now?', handler: 'vioAfter', ctx: { pid: d.pid, friend, sec: sec ? sec.id : null, how: d.how },
-    text: 'It is over, and the world is exactly as it was a minute ago, except for you. The next hour matters more than the last one did.',
+    emoji: '🕯️', title: 'What now?', handler: 'vioAfter', ctx: { pid: d.pid, friend, sec: sec ? sec.id : null, how: d.how, hireCost },
+    text: captive ? 'They are gone, and it was your doing, by neglect or by despair. Nobody knows yet. What happens in the next hour decides what happens to the rest of your life.' : 'It is over, and the world is exactly as it was a minute ago, except for you. The next hour matters more than the last one did.',
     choices: [
+      ...(captive ? [{ label: 'Pay someone who asks no questions', value: 'hire', tone: 'bad', sub: fmtMoney(hireCost), disabled: M(s).money < hireCost }] : []),
       { label: 'Get away clean', value: 'clean', sub: `${Math.round(vioCleanOdds(s) * 100)}%` },
       { label: 'Get rid of everything that ties you to it', value: 'scrub', sub: `${Math.round(vioCleanOdds(s, 0.12) * 100)}%`, tone: 'bad' },
       ...(friend ? [{ label: `Call ${nm(s, friend)}`, value: 'friend', sub: 'They will know' }] : []),
@@ -194,6 +196,13 @@ onChoice('vioAfter', (s, ctx, v) => {
     vioHaunt(s, -5);
     addRel(s, f.id, chance(0.5) ? 8 : -25);
     return { text: `${f.first} did not say anything for a long time. Then ${pr(f).he} sat down next to you. You are not alone with it now, and ${pr(f).he} ${pr(f).is} not either.`, tone: '' };
+  }
+  if (v === 'hire') {
+    if (!pay(s, ctx.hireCost)) return cantAfford(ctx.hireCost);
+    webNewSecret(s, 'crime', s.playerId, { crime: 'bribery', sev: 3, ev: 25 }); // somebody now knows, and has your number
+    if (chance(0.75)) { if (c) invEvidence(s, c, { trace: -22, dig: -10 }); return { text: 'Somebody came, and went, and did not say a word. By morning there was nothing left to find. You now owe a person you will never be rid of.', tone: 'bad' }; }
+    if (c) invEvidence(s, c, { trace: 14, wit: 10 });
+    return { text: 'Somebody came, and went, and was not careful. The rest was easy for the police.', tone: 'bad' };
   }
   const scrub = v === 'scrub';
   if (chance(vioCleanOdds(s, scrub ? 0.12 : 0))) {
