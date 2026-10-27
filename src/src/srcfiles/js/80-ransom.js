@@ -34,7 +34,7 @@ const RANSOM_THREATS = {
 const RANSOM_ASKS = {
   serious: (amt) => `${fmtMoney(amt)}, in cash, in a bag`,
   mid: (amt) => `${fmtMoney(amt)} in bitcoin`,
-  silly: ['$250 million in bitcoin', 'forty thousand gift cards (any store)', 'one (1) very large wheel of cheese', 'a lifetime supply of pickles', 'a hundred dollars and a sandwich', 'three goats', 'a sincere apology', 'a mid-sized yacht, "lightly used"', 'every sock you own, left foot only', 'a framed photograph of the mayor', 'a fully catered dinner for eleven', 'a very good parking space'],
+  silly: [(s) => `${fmtMoney(price(s, 250e6))} in bitcoin`, 'forty thousand gift cards (any store)', 'one (1) very large wheel of cheese', 'a lifetime supply of pickles', (s) => `${fmtMoney(price(s, 100))} and a sandwich`, 'three goats', 'a sincere apology', 'a mid-sized yacht, "lightly used"', 'every sock you own, left foot only', 'a framed photograph of the mayor', 'a fully catered dinner for eleven', 'a very good parking space'],
 };
 // How the hoaxes come apart. {{name}} is the person; "they" is anyone.
 const RANSOM_REVEALS = {
@@ -55,7 +55,7 @@ const RANSOM_REVEALS = {
     '{{name}} and four others "kidnapped" a cardboard cutout of {{name}} and mailed you the ransom. They have apologized in a document with a font.',
     'The whole thing was a surprise party that had gone horribly off the rails. The cake is fine. The cake is the only thing that is.',
     'It was an escape-room that went one room further than it should have. You are the first person to ever "win" it by calling the police.',
-    'It was a very elaborate bet, now settled. {{name}} owes a friend forty dollars and a favor.',
+    'It was a very elaborate bet, now settled. {{name}} owes a friend a round of drinks and a favor.',
   ],
   mixup: [
     '{{name}} was not kidnapped. They were at a pottery retreat with their phone off. The note was meant for somebody else with a similar name, and a considerably worse landlord.',
@@ -103,7 +103,8 @@ function ransomBuild(s) {
   const frac = randFloat(T.dem[0], T.dem[1]);
   const real = clamp(Math.round(nw * frac), price(s, 300), price(s, 8e6));
   const silly = !serious || T.tone < 0.3;
-  const ask = silly && chance(0.7) ? pick(RANSOM_ASKS.silly) : T.tone > 0.6 ? RANSOM_ASKS.serious(real) : RANSOM_ASKS.mid(real);
+  const sillyAsk = (() => { const a = pick(RANSOM_ASKS.silly); return typeof a === 'function' ? a(s) : a; })();
+  const ask = silly && chance(0.7) ? sillyAsk : T.tone > 0.6 ? RANSOM_ASKS.serious(real) : RANSOM_ASKS.mid(real);
   return { pid: p.id, type, truth, obj: pick(silly ? RANSOM_OBJECTS.silly : RANSOM_OBJECTS.serious), threat: pick(silly ? RANSOM_THREATS.silly : RANSOM_THREATS.serious), ask, amt: silly && ask !== RANSOM_ASKS.mid(real) ? price(s, randInt(15, 400)) : real, rel: kinTitle(s, p.id), full: fullName(p), name: p.first };
 }
 const ransomFill = (str, c) => String(str).replace(/\{\{(\w+)\}\}/g, (x, k) => (c[k] === undefined ? '' : c[k]));

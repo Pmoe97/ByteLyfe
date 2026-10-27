@@ -315,6 +315,8 @@ const hold = (s, space, o) => {
   }
   ok(types.size >= 6 && truths.size === 2 && objs.size >= 8, `variety: ${types.size} kinds of kidnapper, ${objs.size} kinds of object`);
   ok([...objs].some((o) => /bloody knife/.test(o)), 'the bloody knife is in there');
+  // Money in a note is in the local currency: no plain "$123" in a life that never lived in the US.
+  { let leaks = 0; for (let i = 0; i < 300; i++) { const s = adultLife(40, { country: 'ie' }); ctx.useCurrency(s); person(s, 'ex', 20); person(s, 'friend', 60); const c = ctx.ransomBuild(s); if (/\$\s?\d/.test(EVENTS.kn_ransom.text(s, c))) leaks++; for (const ci of [0, 1, 2, 3, 4, 5]) { const r = EVENTS.kn_ransom.choices[ci][1](adultLife(40, { country: 'ie' }), c); void r; } } ok(leaks === 0, `no dollar signs in a note outside the US (${leaks})`); }
   // rich players get the serious crews, poor ones do not
   { let rich = 0, poor = 0; for (let i = 0; i < 200; i++) { const a = mk(); a.player.money = 5e7; if (ctx.ransomBuild(a).type === 'syndicate') rich++; const b = mk(); b.player.money = 10; b.player.assets.length = 0; if (ctx.ransomBuild(b).type === 'syndicate') poor++; } ok(rich > 3 && poor === 0, `serious crews go after the rich (${rich} vs ${poor})`); }
   // every choice, every kind
