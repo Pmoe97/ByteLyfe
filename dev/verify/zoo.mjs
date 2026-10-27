@@ -63,6 +63,7 @@ ctx.doAction(s, 'zoo_acquire', co.id);
 const acqPop = s.pending.find((p) => p.handler === 'zooAcquirePick');
 assert.ok(acqPop, 'Acquire popup opened');
 acqPop.ctx.candidates[0] = { sp: 'penguin', name: 'Waddles', sex: 'm', age: 3, cost: 35000 };
+acqPop.choices[0].disabled = false; // the popup priced the random first candidate, not the penguin
 answerPopup(s, 'zooAcquirePick', 0);
 assert.equal(z.animals.length, 4, 'Animal acquired');
 const penguin = z.animals.find((a) => a.name === 'Waddles');
