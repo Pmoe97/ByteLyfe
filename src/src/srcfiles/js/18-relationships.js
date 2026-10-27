@@ -18,7 +18,7 @@ function isKind(s, pid, kinds) { const r = relOf(s, pid); return !!r && kinds.in
 // Can you interact with this person at all right now?
 function reachable(s, pid) {
   const p = tgt(s, pid);
-  if (!p || !p.alive || s.dead || !relOf(s, pid)) return false;
+  if (!p || !p.alive || s.dead || !relOf(s, pid) || relKind(s, pid) === 'captive') return false;
   if (inPrison(s)) return relKind(s, pid) === 'cellmate';
   return A(s) >= 3;
 }

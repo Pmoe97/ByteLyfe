@@ -17,6 +17,13 @@ function invCaseRow(c) {
 function invCard() {
   const mine = invMine(G), desk = isDetective(G) ? dtCases(G) : [];
   let html = '';
+  // The paper (79-news.js), and, if you are holding someone, what they need (78-secret-space.js).
+  const paper = G.news || [], you = paper.filter((a) => a.you);
+  if (paper.length && A(G) >= 10) html += `<div class="list">${itemRow({ a: 'sheet', ds: { k: 'news' }, ico: '📰', t: 'The paper', s: esc(you.length ? `${nOf(you.length, 'story', 'stories')} about you or yours · latest: ${you[you.length - 1].head}` : paper[paper.length - 1].head), chev: true })}</div>`;
+  if (vioOn() && A(G) >= 18 && knCap(G)) {
+    const c = knCap(G), p = G.people[c.pid], x = spaceOf(G, c);
+    html += `<div class="section-title">Who you are holding</div><div class="card">${kvRow('Where', esc(x ? x.sp.name : 'the house'))}${kvRow(p ? esc(p.first) : 'Them', `since ${c.since}`)}${kvRow('Supplies', `${Math.round(c.supplies)}%`)}${bar(c.supplies)}${kvRow('Health', `${Math.round(c.health)}%`)}${bar(c.health)}${kvRow('Spirit', `${Math.round(c.spirit)}%`)}${bar(c.spirit)}${kvRow('How well the space holds', `${Math.round(c.integ)}%`)}${bar(c.integ)}${kvRow('Attention on the house', `${Math.round(knOf(G).heat)}%`)}${bar(100 - knOf(G).heat)}</div><div class="note">Everything here wears down every year. Care is in the Crime menu. You can let them go at any time, and it is always better than the alternative.</div>`;
+  }
   if (mine.length) {
     const open = mine.filter((c) => c.status === 'open'), cold = mine.length - open.length;
     html += `<div class="section-title">Cases against you</div><div class="card">${kvRow('Open', nOf(open.length, 'case'))}${cold ? kvRow('Gone cold', nOf(cold, 'case')) : ''}</div>`;

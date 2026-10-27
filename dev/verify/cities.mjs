@@ -265,7 +265,8 @@ for (const cc in COUNTRIES) {
   act(s, 'asset_movein', home.id);
   act(s, 'asset_project', home.id);
   let offered = s.pending.find((p) => p.handler === 'renovPickProject').choices.map((c) => c.value).filter(Boolean);
-  ok(Object.keys(R).every((k) => offered.includes(k)), `a house is offered all ${Object.keys(R).length} projects (${offered.length})`);
+  const plain = Object.keys(R).filter((k) => !R[k].tags); // the secret rooms (78-secret-space.js) are behind content switches and off here
+  ok(plain.every((k) => offered.includes(k)) && offered.every((k) => plain.includes(k)), `a house is offered all ${plain.length} ordinary projects, and none of the switched ones (${offered.length})`);
   answer(s, 'gameroom');
   answer(s, 'luxury'); // flawless 70% of the time, never an overrun
   const built = home.renovations.find((r) => r.id === 'gameroom');

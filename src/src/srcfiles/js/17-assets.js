@@ -286,6 +286,7 @@ function openProjectCatalog(s, a, scope, wholeHome) {
   const isSharedScope = scope === null;
   const avail = RENOVATION_IDS.filter((id) => {
     const p = RENOVATION_PROJECTS[id];
+    if (p.tags && !tagsOn(p.tags)) return false; // the secret spaces (78-secret-space.js)
     if (!wholeHome && isSharedScope && !p.shared) return false;
     if (!wholeHome && !isSharedScope && p.shared) return false;
     return !hasRenovation(a, id, wholeHome || p.shared ? null : scope);
@@ -372,16 +373,16 @@ onChoice('renovHireContractor', (s, ctx, tid) => {
 
   // Possibility 3: Botched job
   if (tier.id === 'budget' && roll < 0.72) {
-    return completeRenovation(s, a, p, ctx.scope, 'botched', cost);
+    return completeRenovation(s, a, p, ctx.scope, 'botched', cost, tid);
   }
 
   // Possibility 4: Flawless / Masterpiece
   if (roll < (tier.id === 'luxury' ? 0.70 : tier.id === 'reputable' ? 0.30 : 0.08)) {
-    return completeRenovation(s, a, p, ctx.scope, 'flawless', cost);
+    return completeRenovation(s, a, p, ctx.scope, 'flawless', cost, tid);
   }
 
   // Possibility 5: Solid / Great on-time finish
-  return completeRenovation(s, a, p, ctx.scope, 'great', cost);
+  return completeRenovation(s, a, p, ctx.scope, 'great', cost, tid);
 });
 
 onChoice('renovOverrunDecision', (s, ctx, v) => {
@@ -389,7 +390,7 @@ onChoice('renovOverrunDecision', (s, ctx, v) => {
   if (!a || !p) return;
   if (v === 'pay') {
     if (!pay(s, ctx.overrun)) return cantAfford(ctx.overrun);
-    return completeRenovation(s, a, p, ctx.scope, 'great', ctx.baseCost + ctx.overrun);
+    return completeRenovation(s, a, p, ctx.scope, 'great', ctx.baseCost + ctx.overrun, ctx.tid);
   }
   a.cond = clamp(a.cond - 5, 10, 100);
   return { text: `You fired the contractor. The ${p.name.toLowerCase()} was left half-built and boarded up.`, tone: 'bad', emoji: '🚪' };
@@ -405,7 +406,8 @@ onChoice('renovSueContractor', (s, ctx, v) => {
   }
 });
 
-function completeRenovation(s, a, p, scope, quality, totalCost) {
+function completeRenovation(s, a, p, scope, quality, totalCost, tier) {
+  if (p.secret) return ssBuilt(s, a, p, scope, quality, tier); // a secret space has its own ending (78-secret-space.js)
   if (!a.renovations) a.renovations = [];
   a.renovations.push({ id: p.id, unit: scope, quality, year: s.year });
 

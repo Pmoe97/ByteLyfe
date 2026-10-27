@@ -35,7 +35,7 @@ const serCase = (s) => invMine(s, (c) => c.crime === 'murder' && c.status === 'o
 /* ---- the turn ---------------------------------------------------------------------------------------- */
 // The second life is the one that changes what you are.
 onWebFact('killed', (s, d) => {
-  if (!vioOn() || !d.pid || d.how === 'fight' || A(s) < 18) return;
+  if (!vioOn() || !d.pid || d.how === 'fight' || d.how === 'captive' || A(s) < 18) return;
   const r = serOf(s);
   if (r.on || r.stopped || vioOf(s).kills < 2 || !free(s)) return;
   popup(s, {

@@ -168,6 +168,14 @@ function check(s, where) {
     if (k && (!(k.level >= 0 && k.level <= 100) || !s.people[k.by])) fail(`bad stalking ${JSON.stringify(k)} @${where}`, s);
     if ((m.dark.moral > 0 || k) && s.year - s.people[s.playerId].birthYear < 18) fail(`dark themes before 18 @${where}`, s);
   }
+  // Abduction and the paper (78-secret-space.js, 79-news.js): a captive is an adult, alive, a captive, with meters in range.
+  if (m.kn && m.kn.cap) {
+    const c = m.kn.cap, q = s.people[c.pid];
+    if (!q || !q.alive || !m.rels[c.pid] || m.rels[c.pid].kind !== 'captive' || s.year - q.birthYear < 18 || ![c.supplies, c.health, c.spirit, c.integ].every((v) => v >= 0 && v <= 100)) fail(`bad captive ${JSON.stringify({ c, alive: q && q.alive })} @${where}`, s);
+    if (s.year - s.people[s.playerId].birthYear < 18) fail(`a captive held by a minor @${where}`, s);
+  }
+  if (m.kn && !(m.kn.heat >= 0 && m.kn.heat <= 100)) fail(`bad heat ${m.kn.heat} @${where}`, s);
+  if ((s.news || []).length > 80) fail(`${s.news.length} articles @${where}`, s);
   if (m.dt && (m.dt.load.length > 12 || !(m.dt.solved >= 0) || !(m.dt.wrong >= 0))) fail(`bad detective record ${JSON.stringify(m.dt)} @${where}`, s);
   for (const id in s.people) {
     const q = s.people[id];
@@ -524,6 +532,28 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
         s.player.fame = Math.max(s.player.fame, 45); ctx.darkMoral(s, 35);
         resolveAll(s, 'dark-setup');
       } catch (e) { fail('dark persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
+    // And every other one of those (i % 40 = 39) goes further (78-secret-space.js): at 27 a house with a room in it, someone
+    // taken, and from then on a couple of care actions most years, with random answers to every question.
+    if (s.gen === 1 && i % 40 === 39 && !s.dead && !s.player.prison && age >= 27) {
+      try {
+        if (age === 27) {
+          const room = ['ss_shed', 'ss_attic', 'ss_garage', 'ss_basement', 'ss_secret_room', 'ss_dungeon'][Math.floor(i / 40) % 6];
+          s.player.assets.push({ id: 'simh', kind: 'house', name: 'Sim House', type: 'house', value: 400000, cond: 80, units: 1, tenants: [], renovations: [{ id: room, unit: 0, quality: 'great', year: s.year }] });
+          s.player.housing = { type: 'own', assetId: 'simh', rent: 0, name: 'Sim House' };
+          s.player.money = Math.max(s.player.money, 2e6);
+          const v = ctx.makeAdultNear(s, { minAge: 25, maxAge: 50 });
+          ctx.capTake(s, v, 'simh:' + room);
+          resolveAll(s, 'kidnap-start');
+        }
+        for (let k = 0; k < 2 && !s.dead; k++) {
+          const ids = ['cap_feed', 'cap_med', 'cap_comf', 'cap_rein'].filter((id) => ACTIONS[id].when(s));
+          if (!ids.length) break;
+          const id = ids[Math.floor(Math.random() * ids.length)];
+          ctx.doAction(s, id); stats.actionsRun[id] = (stats.actionsRun[id] || 0) + 1; check(s, 'action:' + id); resolveAll(s, 'kidnap:' + id);
+        }
+        if (s.player.kn && s.player.kn.cap && chance(0.05)) { ctx.doAction(s, 'kn_release'); resolveAll(s, 'kidnap:release'); }
+      } catch (e) { fail('kidnap persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
     }
     const n = randInt(0, 5);
     for (let k = 0; k < n && !s.dead; k++) {

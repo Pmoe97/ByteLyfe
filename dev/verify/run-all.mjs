@@ -22,6 +22,7 @@
 //   - violence and the serial arc: fights, self-defense, guilt, witnesses, gangs, the urge, the series, the way out (72-violence.js, 73-serial.js)
 //   - dark themes: betrayal and revenge, stalking, moral injury (74-dark.js)
 //   - work life and tuning: every career has a deck, shortcuts cost what they cost, favors, workplace venues, the odds table (75-77)
+//   - abduction, captivity, the paper and the ransom note: spaces, taking, care, escape, death, news, hoaxes (78-80)
 //   - the life simulator (300 lives), split into shards across the cores, then merged
 // Each check is its own process; at most one per core runs at a time, longest first.
 // Output is held until a check finishes, so checks never interleave.
@@ -77,6 +78,7 @@ const tasks = [
   { label: 'violence and serial checks', args: ['dev/verify/violence.mjs'] },
   { label: 'dark-theme checks', args: ['dev/verify/dark.mjs'] },
   { label: 'work-life checks', args: ['dev/verify/lifework.mjs'] },
+  { label: 'kidnapping and ransom checks', args: ['dev/verify/kidnap.mjs'] },
 ];
 function run(task) {
   return new Promise((resolve) => {
