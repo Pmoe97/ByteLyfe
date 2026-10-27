@@ -653,10 +653,119 @@ ones, from the Overseas Intelligence Bureau to the Whitehall Section).
   and breed mothers with a male or a stud, with a litter every other year and a home that holds 12.
 - **Money:** pay any amount toward a loan, and help a relative with their mortgage or loans.
 
+## The big push: a connected, adult world
+
+The next arc is two things at once: a **connected world**, where the systems above stop being
+islands, and an **adult (R-rated) layer** built on top of it. The order matters. The web comes
+first, because everything adult and dark leans on it: secrets that leak, reputations that stick,
+people who talk to each other, places with regulars.
+
+**House rules for all of it.**
+- Everything adult lives behind opt-in content tags in Settings, off by default, so a player who
+  never opts in plays the game exactly as before. A master **Mature** switch gets sub-switches:
+  *Intimacy*, *Substances*, *Violence* and *Language*.
+- Strictly 18+ for anything intimate, and no teen paths, ever. Bodies stay adults-only.
+- Fade-to-black and consequence-driven, never graphic. Violence is implied and abstract (odds and
+  outcomes), never a how-to.
+- **No sexual violence of any kind**, anywhere, including in the serial-offender systems.
+- Adult work stays consent-forward with the player in control. No coercion or trafficking path.
+
+### Phase 1: The web (foundation)
+
+Built first, because it is what makes lives feel like a social web instead of a stack of menus.
+- **Secrets and reputation ledger.** Every secret has a subject, who knows it, how strong the
+  evidence is and how severe it is. Systems write secrets (affairs, crimes, killings, debts,
+  double lives, night jobs) and read them (hiring, romance, courts, politics, family). Secrets
+  leak along social ties, and one that gets out becomes a public scandal. Reputation (good name,
+  scandal) follows you, shapes hiring and juries, and passes partly to your heirs.
+- **An event bus.** Systems announce facts ("arrested", "affair", "killed", "fired") and other
+  systems react, in place of hard-wired point-to-point calls.
+- **NPC-to-NPC ties.** The people in your life know each other: coworkers, classmates, friends of
+  friends. Gossip travels along those ties, you hear it, and people have secrets of their own
+  (the coworker sleeping with your boss).
+- **Places.** City neighborhoods, workplaces and venues get a shared mood. A killing makes a
+  neighborhood uneasy, which drags down its rents and values.
+- **Favors and silence.** Buy someone's silence, call in a favor, be squeezed for money, squeeze
+  someone back (the squeezing is `mature`).
+- **Visible payoffs wired in from day one:** affairs and one-night stands that leak, crimes and
+  killings that turn into cold-case tips, a police canvass, neighborhood fear and vigils,
+  scandals that cost you jobs and friends, and a family name your heirs inherit.
+
+### Phase 2: Case files and investigation
+
+One shared engine for every crime, replacing the single "caught" roll.
+- **A case per crime:** evidence (trace, witnesses, digital), a named detective, linked cases,
+  cold cases that wake up, and heat that follows you between cities.
+- **The other side:** detective, profiler and forensics careers that work the same cases.
+- **Wider crime paths on the same engine:** white-collar (embezzlement, Ponzi schemes, insider
+  trading), drug manufacturing empires, long cons and romance scams, arson, blackmail rings,
+  vigilantism, witness intimidation.
+- **Community fallout:** victims are real people in the web. Grief ripples through their ties,
+  and neighborhoods change.
+
+### Phase 3: Interactive careers
+
+Retire the "work harder / ask for a raise" loop for nearly every job.
+- **A career-cards engine,** generalized from the spy missions: each year a career deals work
+  cards, each with approaches that show odds built from your skills, followed by twists and
+  outcomes. A career is data: its verbs, its cards, its meter, the people it produces (clients,
+  patients, regulars, informants) and the secrets and reputation it generates.
+- **Three tiers.** Full systems for the showpiece jobs (astronaut, doctor, detective,
+  firefighter, chef, journalist, bartender, pilot). Card-deck careers for most of the ladder. A
+  flavored generic loop only for the rest.
+- **Astronaut** (already planned) is the model for a full system: training, missions, spacewalks,
+  things going wrong in orbit.
+
+### Phase 4: Mature mode
+
+- **Intimacy and relationship depth.** Hooking up becomes a scene with choices (how it went,
+  protection, regret) instead of one line. Chemistry and compatibility, jealousy, make-ups,
+  friends with benefits, a reputation, and real fallout: STIs and testing, pregnancy scares,
+  awkward exes. Fade-to-black prose.
+- **Nightlife and vice.** Clubs, bars and after-parties as places with regulars. A substance
+  ladder (weed, pills, cocaine, opioids) with highs, dependency curves, withdrawal, relapse,
+  friends who use and overdose scares. Dealing as a lifestyle with a crew, not a single button.
+- **Adult careers as interactive careers** (strictly 18+, non-explicit, consent-forward):
+  - **Dancer / stripper:** clubs by city tier, regulars with attachment levels (fans, partners,
+    stalkers, blackmailers), you set your boundaries and that decides which offers appear, you can
+    always walk out, security staff, bad clients, burnout, cash income and taxes.
+  - **Companion / escort:** independent or agency-run, screening clients, safety, arrest risk
+    where it is illegal and a licensed trade where it is legal (it varies by country).
+  - **Content creator** on subscription platforms: fame, stigma, family fallout.
+  - **Club owner / manager / bartender** as the ways up and out.
+  - All of it runs through the secrets ledger: who knows (family, partner, your day-job boss) is
+    the real drama.
+- **Grittier crime and violence.** Assault and murder become scenarios (self-defense versus
+  premeditated, a witness to silence, a body to hide), with guilt, trauma and a haunted
+  conscience. Gang initiation, cartels and prison violence. Gore stays implied.
+- **Serial offenders** (the flagship of the Mature violence switch; no sexual violence):
+  - **Serial killer:** a modus operandi and selection pattern, an escalation meter and cooling-off
+    periods, a double life with your day job and family, a rival detective with a file on you,
+    a press nickname, copycats, close calls, and the endgame: capture and trial, prison
+    infamy (fan mail, pen pals, a memoir), or getting away with it.
+  - **Serial kidnapper:** ransom jobs and serial abduction, a hiding place from the properties
+    you own, a captive who stays alive and has needs, handoffs, and the same investigation arc.
+  - Both are built on the case-file engine and the secrets ledger.
+- **Language dial.** Clean, Salty and Unfiltered. Text variants swap in stronger language, and a
+  set of lines only exist at the top setting.
+- **Adult dark themes, handled seriously:** betrayal, toxic and abusive relationships (with ways
+  out), stalking, revenge, infidelity fallout, and moral-injury stories for veterans and spies.
+
+### Order of work
+
+1. Web layer (Phase 1), with its first payoffs.
+2. Case files and investigation (Phase 2).
+3. Career-cards engine and the first eight careers (Phase 3).
+4. Intimacy, nightlife and vice, and the language dial (Phase 4, part one).
+5. Adult careers and grittier crime (Phase 4, part two).
+6. Serial offenders and adult dark themes (Phase 4, part three).
+7. Then the rest of the Next up list below, each of which now plugs into the web.
+
 ## Next up
 
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
-requested features from the BitLife community.
+requested features from the BitLife community. Everything here should write to and read from the
+web (secrets, reputation, ties, places) as it is built.
 
 1. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
@@ -679,7 +788,8 @@ spin-off for the distant future, not an expansion.
 
 ## Not planned
 
-Human trafficking as a crime path.
+Human trafficking as a crime path, or any coerced sex-work path.
+Sexual violence of any kind, in any system (including the serial-offender paths).
 Messy family drama that isn't sexual (custody battles, feuds, disownment) is fair game.
 Consensual adult-only family romance exists as the opt-in `taboo` system above (18+ both,
 master + subtype switches, all default OFF) — anything involving minors stays out, always.
