@@ -733,8 +733,7 @@ switch under it. Everything stays off by default, so the game is exactly as befo
   someone else.
 - **A name.** Five nights in three years gets you a reputation, with a small cost with people looking for something
   steady, and it fades.
-- **Still to come in Phase 4:** adult careers as card decks (dancer, companion, creator, club owner), grittier crime,
-  serial offenders and the darker adult themes.
+- **Phase 4 is built** (see "Mature mode, part one" to "part five" below).
 
 **Mature mode, part two: nightlife and the substance ladder.** A new **Substances** switch under Mature (off by
 default, adults only). It is about what drugs and drinking do to a life, and never how to do anything.
@@ -755,6 +754,72 @@ default, adults only). It is about what drugs and drinking do to a life, and nev
 - **People.** Dealers with a number in your phone, who can rip you off or get you arrested for possession. Friends
   who pass things around. A random screening at work that fires people who use. An intervention at the kitchen table.
   A friend who stops breathing in the back room, and what you do. A Monday you cannot account for.
+
+**Mature mode, part three: adult careers.** A new **Adult careers** switch under Mature (off by default, 18+ only). Four
+jobs on the night scene, played as cards like the careers above. Everything is consensual, fade-to-black, and under your
+control, and there is no coercion or trafficking path anywhere in it.
+- **Club dancer, companion, subscription creator and club manager** (who can end up the club owner). A job board entry only
+  while the switches are on, an audition in place of the interview, 18 to start (21 for the club).
+- **Your boundaries.** Careful, Balanced or Bold, changeable any time. They decide which offers reach you (private
+  bookings and trips only come above Careful) and how much the work pays, and every offer is still yours to refuse.
+- **You can always walk away.** Any card that puts a person in front of you has a way out that always works and costs only
+  what the card would have paid, and autopilot walks rather than playing it for you.
+- **Who knows is the real drama.** You choose at the start: keep it private (it becomes a secret that can leak), tell your
+  partner and family (some take it well, some do not), or be open about it. A relative in the crowd, a parent who finds
+  your page, a former client who wants paying, a partner who hears from somebody else. You can come clean on your own terms.
+- **The cards.** Dancers get packed Fridays, regulars, private bookings under house rules, a patron who breaks the rules,
+  a stage-door regular who will not take no, a video posted without consent, the showcase and a touring offer. Companions
+  screen inquiries, deal with regulars who want more, a safety flag, the law (a licensed trade in some countries, a gray
+  area or against the law in others, with a citation for a failed sting), blackmail, a gala, a trip abroad and the way out.
+  Creators have a platform that changes its rules, reposts, a fan who will not stop, frozen payments, impostors, brand deals
+  and toxic comments. A manager backs a dancer who comes to them, turns away fake IDs, handles inspectors, security and
+  the performers' share, and expands.
+- **Shortcuts cost what they cost.** The engine gained per-way effects, so a shortcut (skimming the tax return, cutting the
+  performers' share, ignoring the capacity limit) pays its price in karma, trust and name even when it works, and the fair
+  way earns them. Autopilot never takes a shortcut.
+
+**Mature mode, part four: grittier crime and the serial offender.** A new **Violence** switch under Mature (off by default,
+18+ only). Violence is implied and abstract, nothing is sexual, nothing is a how-to, and everyone in it is an adult.
+- **A fight is a scene.** Back down, say it out loud, or throw the first punch, then how far. Going all out can go too far.
+  Walking away is free. Strangers can come at you too, and a death in self-defense still brings an inquiry and a weight.
+- **A killing is something you carry.** What you do next is a choice (get away, scrub the evidence, call a friend, turn
+  yourself in), a witness has to be dealt with (never by killing them), and the nights are bad. A "conscience" meter costs
+  happiness every year, fades slowly, and is eased by help, a friend, or telling someone.
+- **Proving yourself.** Joining the family or a prison gang asks for proof: take the beating, do what they ask, prove
+  yourself against someone, or back out. Two new events on the yard.
+- **The serial offender,** built on the case-file series and the web. After a second killing you can get help, turn
+  yourself in or keep going; then how you operate, an urge that builds and asks you a question, acts that open linked
+  cases, a detective who takes it personally, a press name, close calls, copycats, a partner who notices, and the endings:
+  captured, a memoir and fan mail from prison, getting away with it, or stopping for good. Help, holding on and "not
+  tonight" are always offered. The serial kidnapper is not built.
+
+**Mature mode, part five: dark themes.** A new **Dark themes** switch under Mature (off by default, 18+ only). Heavier stories,
+told seriously: nothing graphic, nothing sexual, and always a way out.
+- **Betrayal.** When one of your secrets gets out, you find out who told. Confront them, forgive them, cut them off, or
+  make them pay, and revenge is a choice with a price (let it go, expose what you heard, sabotage, or court), with
+  letting go the only one that never costs you. A coworker takes your credit; a partner hides a debt.
+- **Stalking.** A fan, an ex, or a regular who will not take no. It climbs every year you ignore it. You can document and
+  report it (and get an order), tell the people around you, hire security, confront, or ignore. There is a scare, an
+  order that can be broken, and an ending. The other side is the ex you cannot let go of, and what pushing it costs.
+- **Moral injury.** An order you obeyed, a false report you signed, a source you left behind. It is a weight that costs
+  sleep and people, eased by a counselor, a veterans' group, or the truth told to someone close.
+
+**Content and tuning.** The rest of the ladder, and the people around it.
+- **Seventy careers play their year.** Every ordinary job now deals a hand of decisions: service, office, business,
+  transport, public service, the trades, health, tech, science, law, education, media and the entertainment careers. Each
+  has its own meter, a few cards that are only about that job (a bank teller's very large deposit, a plumber's midnight
+  burst, a therapist's client in crisis, a comedian's joke that crosses a line), and a set every job shares (a bad
+  idea from above, the crunch, trouble on the team, a coworker who needs a hand, rumors of cuts, your own mistake).
+- **Shortcuts cost what they cost.** The drug-rep lunch, the quiet chart fix, the fake ID you let slide, the warm fish and
+  the cooler you moved used to beat the honest choice on the odds. They no longer do: a shortcut has worse odds, costs
+  karma, ends in its own words (and never lifts your standing), and autopilot never takes one. The honest way earns
+  karma and name.
+- **Favors.** Do someone a favor and they owe you one; ask for one and, unless they already owe you, you owe them.
+  Call one in on a card (+25 points of odds), ask for a reference, a loan or a word on your behalf, have someone vouch
+  for you, or keep a secret quiet. What you owe gets called in.
+- **Workplace venues.** The break room, the staff lounge, the truck at lunch, the green room. Hang out and you hear things,
+  coworkers who share a venue talk to each other (so secrets travel), a round buys a favor, and there is a work party
+  every few years.
 
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
@@ -833,10 +898,10 @@ One shared engine for every crime, replacing the single "caught" roll.
 
 ### Phase 3: Interactive careers
 
-**Status: engine and first eight careers built** (see "Career cards" under Built). To do: the other seventy
-or so careers as decks (they are data now, so this is writing, not engineering), forensics and profiler tracks,
-more full systems (paramedic, teacher, lawyer, pro cook-offs, farm and fishing seasons), twists that follow a good
-result like the spy's, patrol cards for beat cops, and the adult careers as decks in Phase 4.
+**Status: built.** The engine, the first eight careers, the rest of the ordinary ladder as decks, and the adult careers (see
+"Career cards" and "Content and tuning" under Built). To do: forensics and profiler tracks, more full systems
+(paramedic, teacher, lawyer, pro cook-offs, farm and fishing seasons), twists that follow a good result like the spy's,
+and patrol cards for beat cops.
 
 Retire the "work harder / ask for a raise" loop for nearly every job.
 - **A career-cards engine,** generalized from the spy missions: each year a career deals work
@@ -851,8 +916,11 @@ Retire the "work harder / ask for a raise" loop for nearly every job.
 
 ### Phase 4: Mature mode
 
-**Status: language dial, intimacy, nightlife and the substance ladder built** (see "Mature mode, part one" and
-"part two" under Built). The Intimacy and Substances sub-switches exist; the Violence switch arrives with its content.
+**Status: language dial, intimacy, nightlife, the substance ladder, the adult careers and grittier crime built** (see
+"Mature mode, part one" to "part four" under Built). The Intimacy, Substances, Adult careers and Violence sub-switches
+exist, with a Dark themes switch for part five. To do: the serial kidnapper, if it is wanted.
+
+Content and tuning (every ordinary career as a deck, favors, venues, the moral-option rebalance) is built; see "Content and tuning" under Built. Still to do from Phase 3: forensics and profiler tracks, more full systems (paramedic, teacher, lawyer, pro cook-offs, farm and fishing seasons), twists that follow a good result, and patrol cards for beat cops.
 
 - **Intimacy and relationship depth.** Hooking up becomes a scene with choices (how it went,
   protection, regret) instead of one line. Chemistry and compatibility, jealousy, make-ups,

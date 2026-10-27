@@ -103,6 +103,7 @@ onChoice('mobJoin', (s, ctx, id) => {
   const u = uw(s);
   Object.assign(u, { fam: f.id, rank: 0, respect: 5, made: false, rackets: [] });
   tally(s, 'mobJoined');
+  if (vioOn() && A(s) >= 18) vioInitiation(s, 'mob'); // they want proof (72-violence.js)
   return { text: `You're an associate of ${f.name} now. Do what you're told, keep your mouth shut, and you'll go far.`, emoji: '🕴️', tone: 'good' };
 });
 /* ---- family jobs, crew, rackets ------------------------------------------- */

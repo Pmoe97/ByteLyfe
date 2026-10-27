@@ -61,12 +61,19 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `63` | Investigations (`63-cases.js`): a case file for every crime, detectives who are people, evidence, series, interviews and warrants, going cold, skipping town, and the new crimes (arson, a romance scam, insider trading) | No DOM. `ageUp` reaches `invTick` through a wrapper (right after `webTick`). Listens on the fact bus (`crime_clean`, `crime_messy`, `killed`, `assault`, `extorted`); `62-web.js` calls `invTip` and `invScrub`. |
 | `64` | Police casework (`64-detective.js`): a detective's caseload, ways to work a case, solving and wrong arrests, losing your own file, and strangers' crimes that hit people you know | No DOM. `careerTick` runs it through `onCareerYear('police')` (15-career.js); `invTick` calls `invWorldYear`. |
 | `65` | Career cards (`65-work.js`): the engine that deals a job's yearly hand of decisions, plays them, and settles them | No DOM. Registers every deck's year through `onCareerYear` (15-career.js); `leaveJob` calls `wkLeft`; writes to the web (`webLearn`-style confidences, reputation, `work_done` facts). |
-| `66` | Career decks (`66-work-decks.js`): doctor, surgeon, firefighter, bartender, chef, journalist, pilot, astronaut | Pure data plus a few card hooks. `wkRegister()` at the end hooks them up. |
+| `66` | Career decks (`66-work-decks.js`): doctor, surgeon, firefighter, bartender, chef, journalist, pilot, astronaut | Pure data plus a few card hooks. `wkRegister()` at the end hooks them up. Defines `W`, `WORDS`. |
 | `67` | The language dial (`67-language.js`): result flavor, and events that only exist at Salty or Unfiltered | No DOM. `vary` (00-util.js) understands `{~clean|salty|unfiltered}`; `runWithResult` calls `langFlavor`; `eventEligible` and `fireEvent` check `lang`. |
 | `68` | Intimacy (`68-intimacy.js`): nights with choices, spark, friends with benefits, protection and testing, and the events around them | No DOM. All behind `mature` + `mature_intimacy`. `ageUp` reaches `intimTick` through a wrapper (after `invTick`); the hookup action, `rx_fling_again` and `askOutOdds` call into it; the web gained a `sti` secret. |
 | `69` | The substance ladder (`69-substances.js`): weed, pills, party drugs, cocaine and opioids on top of the habits the game has, tolerance, cravings, withdrawal, relapse, overdose scares, recovery, dealers, and the events around them | No DOM. All behind `mature` + `mature_substances`. `ageUp` reaches `subsYear` through a wrapper (after `intimTick`); `habit()` (19-health.js) records `M(s).used[id]`; `bodyTick`'s overdose roll calls `subsOverdose`; the rehab handler calls `subsRehab`. |
 | `70` | Nightlife (`70-nightlife.js`): venues per city, a scene standing, and a night out as a chain of decisions | No DOM. The `nightlife` action (21-activities.js) calls `nightMenu` when Substances is on. Uses `wkPerson` (65-work.js), `subsDealer` and `subsUse` (69), `intimStart` (68). |
-| `71–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `71` | Adult careers (`71-adult-work.js`): a club dancer, companion, subscription creator and club manager as card decks, with boundaries, local law and who knows | No DOM. All behind `mature` + `mature_adultwork`. Decks on the career-cards engine (`defWork`); `hire` calls `adultHired`; the web gained an `adult_work` secret (`webStake` and `webExpose` call back in). |
+| `72` | Violence (`72-violence.js`): fights you can walk out of, self-defense and the inquiry, what to do after a killing, witnesses, haunting, gang and prison initiations | No DOM. All behind `mature` + `mature_violence`. `p_assault` and `pr_gang` (20-crime.js) and `mobJoin` (39-underworld.js) call in; listens to the web's `killed` fact; `ageUp` reaches `vioYear` through a wrapper. |
+| `73` | The serial arc (`73-serial.js`): the turn, how you operate, the urge, acts, close calls, copycats, the people at home, ways out, fan mail and the memoir | No DOM. Behind the same switches. Built on the case-file series (63-cases.js) and the web; `serYear` through a wrapper. |
+| `74` | Dark themes (`74-dark.js`): betrayal and revenge, stalking, moral injury | No DOM. Behind `mature` + `mature_themes`. The web records who told whom (`sec.told`); `ageUp` reaches `darkYear` through a wrapper; reads `flags.followed` from the adult careers, and the military and spy state. |
+| `75` | Work life (`75-work-life.js`): favors (who owes whom) and workplace venues (the break room, the lounge) | No DOM. Favors feed card ways (`FAV`, 65-work.js), interviews (`favorRefEdge`, 15-career.js) and `web_silence` (62-web.js); `ageUp` reaches `favorYear` through a wrapper; venues tie coworkers together in the web and hand you hearsay. |
+| `76` | Career decks, part two (`76-work-decks-2.js`): service, office, business, transport, public service and the trades | Pure data plus a few hooks. Defines `K`, `UNI` (cards any job can deal), `deckFor`. |
+| `77` | Career decks, part three (`77-work-decks-3.js`): health, tech, science, law, education, media and the entertainment careers | Pure data. Uses `deckFor` from 76. |
+| `78–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
 | `1000+` | UI (`1000-ui-kit.js` … `1030-ui-intimacy.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
@@ -600,6 +607,94 @@ four decisions with readable odds, and the way you play moves a meter that belon
   thin proof a retraction), and an astronaut's mission is a four-stage card that only comes when you have not flown in
   two years.
 - **Tests:** `dev/verify/work.mjs` (every card, every way, many seeds) and the simulator's work persona.
+- **What a way can carry:** `W(label, skill, sub, mod, cost, kind, eff)`. `kind: 'walk'` (the `WALK` helper in 71) is a way that
+  always works and ends the card at no cost (`wkWalk`); autopilot takes it when a card has one, so nothing happens on your
+  behalf that you did not choose. `eff` is applied the moment the way is chosen, whatever the dice say (`wkEff`: `money`,
+  `karma`, `happy`, `health`, `fame`, `name`, `scandal`, `m`, `perf`, `secret`), and `dirty: true` keeps autopilot off it.
+  That is how a shortcut costs what it costs even when it works, and how an honest way can pay in karma and name.
+  A deck can also carry `tags` (it deals nothing, and never to a minor, while a switch is off: `wkLive`), `payMul(s, st)`
+  and `kv(s, st)` (extra rows on the Work sheet).
+
+**Work life and the rest of the ladder.** `75-work-life.js`, `76-work-decks-2.js`, `77-work-decks-3.js`.
+- **Every ordinary job has a deck** (about 70 in all; sports, the military, the spy, politics and police have their own systems).
+  `deckFor(id, { meter, emoji, words, uni, cards, t })` builds one: a meter, a handful of universal cards (`UNI`: a bad idea from
+  above, the crunch, trouble on the team, a coworker who needs a hand, rumors of cuts, your own mistake, a recruiter,
+  a chance to learn; written once with `{{team}}`, `{{boss}}` filled in per category) and three bespoke cards. `K(...)` writes
+  a one-decision card in one line.
+- **Shortcuts cost what they cost.** A way marked `dirty` never beats the best honest way on odds (checked by
+  `dev/verify/lifework.mjs`), costs karma or odds, ends in its own words (`say`, or `WK_DIRTY_SAY`) and never ends with a
+  good meter, and autopilot never picks one. Phase 3's moral options (the drug-rep lunch, the quiet chart fix, the slid
+  fake ID, the warm fish, the cooler moved) were rebalanced the same way.
+- **Favors:** `M(s).favors = { pid: n }` (n > 0 they owe you, n < 0 you owe them, capped at +5 and -3). `favor_do` earns
+  them, `favor_ask` spends one (free and certain from someone who owes you, a gamble and a debt from someone who does not),
+  `favorYear` calls in what you owe. A card way with kind `'favor'` (`FAV(label, skill)`) is +25 points of odds for one
+  favor, greyed out when nobody owes you one, and never taken on autopilot. `web_silence` can call in a favor to keep a
+  secret quiet. A reference you were promised helps interviews this year.
+- **Venues:** `WORK_VENUES` has two places per job category. `wv_hang` ("Hang out where people talk", twice a year):
+  join the conversation (you hear things, through the web's hearsay, and two coworkers get tied together), buy a round
+  (a favor), take a side (a gamble), or keep to yourself. `wv_party` is the yearly party.
+
+**Adult careers.** `71-adult-work.js`. Behind `mature` and `mature_adultwork` (`ADULT_TAGS`; `adultOn()`), both off by default.
+Four jobs (`club_dancer`, `companion`, `creator`, `club_owner`, `JOBS[id].adult`, category `night`) that sit on the job board
+only while the switches are on (`boardIds` in 15-career.js, never in `JOB_IDS`, so no NPC gets one), with an audition in place
+of the interview (`JOBS[id].interview`). Age 18, and 21 for the club.
+- **House rules, checked by `dev/verify/adult.mjs`:** consent-forward, fade-to-black, no coercion path, no minors. Every card that
+  puts a person in front of you has a `WALK` way; the fake-ID card in the club deck turns everyone away, every way.
+- **Boundaries:** `M(s).work[id].flags.bound` (0 Careful, 1 Balanced, 2 Bold), set by the `adult_bounds` action. It weights cards
+  (`bw(careful, balanced, bold)`, and `when` hides the riskier offers at Careful) and scales pay (`payMul`).
+- **Who knows:** `hire` calls `adultHired`, which asks who should know (`adultOpen`): private makes a web secret of kind
+  `adult_work` (`note` is the job id), family tells your partner and the adults close to you (`adultReact`: told by you goes
+  better than found out), open leaves nothing to leak. `webStake` calls `adultPartnerFound` when your partner hears it from
+  somebody else, and `webExpose` calls `adultExposed`. `adultSlip` is how a card lets it get out; `adult_tell` ("Come clean")
+  lets you do it on your terms later. `flags.vis` is `private`, `family` or `open`.
+- **Local law:** `ADULT_LAW` (a stylized per-country map: `legal`, `gray`, `illegal`) picks which of the companion's three
+  law cards is dealt. A failed sting is `arrestMinor(s, 'solicitation')`, a citation that is on your record and never a felony.
+- **Stalking hook:** `flags.followed` (a year) is set when a regular or fan will not take no. The later stalking systems read it.
+- **Tests:** `dev/verify/adult.mjs`; the simulator's adult persona (`i % 20 === 15`) and its adult-career invariants.
+
+**Violence and the serial arc.** `72-violence.js` and `73-serial.js`. Behind `mature` and `mature_violence` (`VIO_TAGS`;
+`vioOn()`), both off by default, adults only (18+, and every other person in a scene is an adult). Violence is abstract
+(odds and outcomes), there is never anything sexual in it, nothing is a how-to, and nothing is made to look like a good
+idea. `dev/verify/violence.mjs` scans the text for what must never be there.
+- **A fight you pick:** with the switches on, `p_assault` calls `vioFight`: back down, say it out loud, or throw the first
+  punch, then how far (quickly, fight it out, all out). All out can go too far (`vioFightDeath`). Walking away is free.
+- **A fight that picks you:** the `vio_attacked` event (hand it over, run, talk, fight back). A death in self-defense
+  (`vioDefenseKill`) is no secret and no case, but it weighs, and the inquiry (`vioInquiry`) decides whether it is charged
+  as manslaughter (a non-menu crime, `CRIMES.manslaughter`).
+- **After a killing:** `onWebFact('killed')` asks what you do next (`vioAfter`): get away clean, scrub the evidence (both
+  are odds on the case's `ev`), call a friend (who then knows, a web secret), or turn yourself in. A witness
+  (`vioWitness`, from `vioYear` on a case with `ev.wit >= 40`) can be paid, threatened, avoided, or you can confess. There
+  is no way to kill one.
+- **Conscience:** `M(s).vio.haunt` (0-100) costs happiness every year, fades, and is eased by help (`vio_help`, a friend,
+  telling someone). `vioNight` is the bad nights.
+- **Proving yourself:** `vioInitiation` from `mobJoin` and `pr_gang`: take the beating, do what they ask, prove yourself
+  against someone, or back out. Two prison events (protection, someone hurt on the yard).
+- **The serial arc (73):** after the second killing, `serTurn` (get help, turn yourself in, keep going), then `serMo` (how
+  you operate: careful, quick or close to home). `M(s).ser.urge` builds every year and asks at 70 (hold on, get help,
+  give in); an act (`serAct`) is who (a stranger passing through, a neighbor, someone who knows you, or not tonight), then
+  a roll, then `webFact('killed')` so the case, the secret and "what now" all come from the existing systems; crimes of one
+  hand join into a series, one detective, and a press name (63-cases.js). Close calls, copycats (a case with `copy: true`
+  that confuses the others), the partner who notices, `ser_stop`, `ser_help`, fan mail in prison, a memoir, and the titles
+  Notorious and Never Caught. The Case files sheet shows "What you carry".
+- **Not built:** the serial kidnapper (the roadmap lists it; a captive who stays alive is a different and harder design).
+- **Tests:** `dev/verify/violence.mjs`; the simulator's persona (`i % 20 === 19`) and invariants.
+
+**Dark themes.** `74-dark.js`. Behind `mature` and `mature_themes` (`DARK_TAGS`; `darkOn()`), both off by default, adults
+only, nothing graphic, nothing sexual, and always a way out. `M(s).dark = { moral, stalk, grudge, helped, betrayed, quiet }`.
+- **Betrayal:** `webLearn` (62-web.js) records `sec.told[learner] = teller`. When one of your secrets gets out through
+  gossip, `darkYear` finds the person you trusted who passed it on (`dkBetray`: confront, forgive, cut off, make them pay).
+  `dkRevenge` is a choice with a price: let it go (always earns karma), expose what you heard about them (`webExpose`),
+  sabotage (can come back on you), or court. Events: a coworker takes your credit, a partner hides a debt.
+- **Stalking:** a fan, an ex, or a regular who `flags.followed` (adult careers) starts `stalk` (a level 0-100 that climbs
+  every year you do nothing). `dkStalk` offers document and report (odds, an order), tell people, security, confront,
+  or ignore; at 70 the scare (`dkScare`); an order can be broken (arrest); it ends, then three quiet years. The other
+  side is `dk_obsession`: an ex you cannot let go of, and what pushing it costs (a citation for harassment).
+- **Moral injury:** `moral` (0-100) is the weight of an order obeyed, a false report signed, or a source left behind.
+  Events for soldiers at war (`dk_mil_order`, `dk_mil_civilians`) and spies (`dk_spy_asset`, which marks the asset
+  `dropped` or `dead`). It costs happiness every year, fades, and `dkMoral` offers a counselor, a veterans' group, a
+  friend, drink, or carrying on. `dk_counsel` is the action.
+- **Tests:** `dev/verify/dark.mjs`; the simulator's persona (`i % 20 === 5`) and invariants. The Case files sheet shows
+  "What you carry" for conscience, urge, moral weight and a stalker.
 
 **The language dial.** `67-language.js`, with `langLevel` and `langPick` in `00-util.js` and a segmented control in
 Settings (`META.settings.language`: `clean`, `salty`, `unfiltered`; default clean). It is only about how people talk.

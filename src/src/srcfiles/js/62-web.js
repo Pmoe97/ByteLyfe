@@ -65,6 +65,7 @@ const SECRET_KINDS = {
   npc_crime: { sev: 2, icon: '🚔' },
   npc_fired: { sev: 2, icon: '📦' },
   npc_habit: { sev: 2, icon: '🍺' },
+  adult_work: { sev: 3, icon: '🎭' }, // what you do for a living, from 71-adult-work.js
 };
 const NPC_CRIME_NOTES = ['a drunk-driving stop', 'a shoplifting charge', 'a bar fight', 'a bounced-check scandal'];
 const NPC_HABIT_NOTES = ['drinking', 'gambling', 'pill'];
@@ -101,6 +102,7 @@ function webLabel(s, sec) {
   if (sec.kind === 'crime') return `${CRIMES[sec.crime] ? CRIMES[sec.crime].verb : 'a crime'} nobody has pinned on you`;
   if (sec.kind === 'killing') return `what happened to ${b}`;
   if (sec.kind === 'sti') return `a diagnosis you have not told ${webName(s, sec.rom)} about`;
+  if (sec.kind === 'adult_work') return adultWorkLabel(s, sec);
   return webRumor(s, sec);
 }
 function webRumor(s, sec) {
@@ -189,6 +191,7 @@ function webUnease(s, cc, city) { return ((s.web && s.web.unease && s.web.unease
 function webLearn(s, sec, pid, from) {
   if (sec.knows.includes(pid) || !s.people[pid]) return;
   sec.knows.push(pid);
+  if (from && from !== pid) (sec.told || (sec.told = {}))[pid] = from; // who told whom: you find out who talked (74-dark.js)
   sec.ev = clamp100(sec.ev + 8);
   if (sec.case && sec.subj !== pid) invTip(s, sec, 6); // one more person who could tell the police (63-cases.js)
   if (pid === s.playerId) {
@@ -206,6 +209,7 @@ function webCheckPublic(s, sec) {
 function webStake(s, sec, pid) {
   const rom = romanticId(s);
   if (!rom || rom !== pid || sec.out) return;
+  if (sec.kind === 'adult_work') { adultPartnerFound(s, sec, rom); return; }
   if (sec.kind === 'sti' && sec.rom === rom) {
     sec.out = true;
     sec.outYear = s.year;
@@ -243,6 +247,7 @@ function webExpose(s, sec, how) {
       heat.push({ crime, year: s.year }, { crime, year: s.year });
       if (sec.kind === 'killing' && sec.ev >= 60 && chance(0.5) && !inPrison(s) && !s.dead) { const r = arrest(s, 'murder'); if (r && r.text) log(s, r.text, 'bad'); }
     }
+    if (sec.kind === 'adult_work') extra = adultExposed(s, sec);
     announce(s, { emoji: '📣', title: 'It got out', text: `${cap(webLabel(s, sec))} is no longer a secret. ${how === 'tip' ? 'Someone called it in.' : 'People are talking.'}${extra}`, tone: 'bad' });
     return;
   }
@@ -450,6 +455,7 @@ onChoice('webHear', (s, ctx, v) => {
     if (r && r.rel >= 40) addRel(s, p.id, 2);
     return 'You kept it to yourself. Some things are not yours to repeat.';
   }
+  if (v === 'owed') { if (!favorSpend(s, ctx.pid)) return 'They did not owe you anything after all.'; hush(5); return `${p.first} did not even ask what it was about. "I owe you," ${pr(p).he} said. Nobody will hear it from ${pr(p).him}.`; }
   if (v === 'ask') {
     if (chance(clamp((r ? r.rel : 30) / 100 + skill(s, 'charisma') / 400, 0.15, 0.85))) {
       if (r) addRel(s, p.id, 6);
@@ -505,6 +511,7 @@ defAction({
   run: (s, pid) => {
     const cost = price(s, 1500 * Math.max(...webTheyKnow(s, pid).map((x) => x.sev)));
     const choices = [{ label: 'Ask them as a favor', value: 'ask' }, { label: 'Pay for their silence', sub: fmtMoney(cost), value: 'pay', disabled: M(s).money < cost }];
+    if (typeof favorN === 'function' && favorN(s, pid) > 0) choices.unshift({ label: 'Call in what they owe you', value: 'owed', sub: 'They owe you one' });
     if (tagsOn(['mature'])) choices.push({ label: 'Lean on them', value: 'lean', tone: 'bad' });
     choices.push({ label: 'Never mind', value: null });
     popup(s, { emoji: '🤐', title: `Keep ${nm(s, pid)} quiet`, text: `${nm(s, pid)} knows ${listJoin(webTheyKnow(s, pid).map((x) => webLabel(s, x)))}. How do you handle it?`, handler: 'webSilence', ctx: { pid, cost }, person: pid, choices });
@@ -516,6 +523,7 @@ onChoice('webSilence', (s, ctx, v) => {
   bump(s, 'silence_' + ctx.pid);
   const r = relOf(s, ctx.pid);
   const hush = (yrs) => { for (const x of secs) (x.hush || (x.hush = {}))[ctx.pid] = s.year + yrs; };
+  if (v === 'owed') { if (!favorSpend(s, ctx.pid)) return 'They did not owe you anything after all.'; hush(5); return `${p.first} did not even ask what it was about. "I owe you," ${pr(p).he} said. Nobody will hear it from ${pr(p).him}.`; }
   if (v === 'ask') {
     if (chance(clamp((r ? r.rel : 30) / 100 + skill(s, 'charisma') / 400, 0.1, 0.9))) { hush(2); return `${p.first} promised to keep quiet. You believe them, mostly.`; }
     if (r) addRel(s, ctx.pid, -8);

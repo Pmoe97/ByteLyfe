@@ -58,7 +58,7 @@ function epitaphFor(s, titles) {
     centenarian: 'One hundred candles and still going strong, until they weren’t.', gone_soon: 'Gone far too soon.', heartbreaker: 'Left a trail of broken hearts.',
     globetrotter: 'Saw the whole world and loved it.', workaholic: 'Probably still answering emails somewhere.', athlete: 'Ran their race.',
     lonely: 'Walked their own path.', politician: 'Promised a lot. Delivered some.', fugitive: 'Never stopped running.',
-    monarch: 'They wore the crown, and the crown wore on them.', goat: 'The greatest of all time. Ask anyone. Ask them twice.', legend: 'The trophies are still on the shelf. The work is still playing somewhere.', don: 'An offer you couldn’t refuse, to the very end.', royal: 'Born to the palace. Never quite out of the papers.',
+    monarch: 'They wore the crown, and the crown wore on them.', goat: 'The greatest of all time. Ask anyone. Ask them twice.', legend: 'The trophies are still on the shelf. The work is still playing somewhere.', don: 'An offer you couldn’t refuse, to the very end.', royal: 'Born to the palace. Never quite out of the papers.', notorious: 'Remembered, and not kindly. The families remember better.', never_caught: 'The files stay open. So does the question.',
   };
   return lines[t] || pick(['Lived, laughed, aged up.', 'They did their best.', 'Here lies a perfectly ordinary legend.', 'They were here, and it mattered.']);
 }

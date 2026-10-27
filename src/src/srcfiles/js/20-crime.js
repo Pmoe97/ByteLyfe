@@ -254,6 +254,7 @@ defAction({
   id: 'pr_gang', cat: 'prison', label: 'Join a gang', emoji: '🐍',
   when: (s) => jailed(s) && !M(s).prison.gang && !M(s).prison.juvie,
   run: (s) => {
+    if (vioOn() && A(s) >= 18) { vioInitiation(s, 'prison'); return; } // they want proof (72-violence.js)
     const g = pick(GANGS);
     if (!chance(0.5 + skill(s, 'martial') / 200 + skill(s, 'streetwise') / 200)) { add(s, { health: -randInt(5, 12) }); return `${cap(g)} weren't impressed. You got roughed up for asking.`; }
     M(s).prison.gang = g;
@@ -471,6 +472,7 @@ defAction({
   id: 'p_assault', cat: 'person', target: 'person', label: 'Assault', emoji: '👊',
   when: (s, pid) => reachable(s, pid) && A(s) >= 8 && tAge(s, pid) >= 6,
   run: (s, pid) => {
+    if (vioOn() && A(s) >= 18) { vioFight(s, pid); return; } // a scene you can walk out of (72-violence.js)
     const p = tgt(s, pid);
     const me = skill(s, 'martial') + skill(s, 'fitness') / 2 + P(s).stats.health / 5 + (trait(s, 'hotheaded') ? 10 : 0) + randInt(0, 40);
     const them = Math.min(ageOf(s, p), 30) + p.stats.health / 4 + randInt(0, 40) - (ageOf(s, p) > 65 ? 25 : 0);

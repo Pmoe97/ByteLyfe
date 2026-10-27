@@ -25,6 +25,7 @@ const CRIMES = {
   attempted_murder: { name: 'Attempted murder', minAge: 14, sentence: [6, 20], conviction: 0.8, karma: -25, felony: true, verb: 'attempted murder' },
   escape: { name: 'Prison escape', minAge: 10, sentence: [2, 6], conviction: 0.95, karma: -5, felony: true, verb: 'escaping custody' },
   bribery: { name: 'Bribery', minAge: 18, sentence: [1, 8], conviction: 0.8, karma: -10, felony: true, verb: 'bribery' },
+  solicitation: { name: 'Solicitation', minAge: 18, sentence: [0, 0], conviction: 0.9, karma: -1, felony: false, verb: 'solicitation' }, // only a citation, from 71-adult-work.js; not a Crime-menu crime
   dui: { name: 'Drunk driving', minAge: 14, sentence: [0, 2], conviction: 0.85, karma: -6, felony: false, verb: 'driving under the influence' },
   // Organized crime (39-underworld.js).
   racketeering: { name: 'Racketeering', minAge: 16, sentence: [3, 15], conviction: 0.75, karma: -10, felony: true, verb: 'racketeering' },

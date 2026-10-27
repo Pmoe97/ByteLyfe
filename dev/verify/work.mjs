@@ -19,6 +19,8 @@ ctx.console.error = () => {};
 let failures = 0, checks = 0;
 const ok = (cond, msg) => { checks++; if (!cond) { failures++; console.log('  ✖ ' + msg); } };
 const WORKDECK = g('WORKDECK'), SKILLS = g('SKILLS'), JOBS = g('JOBS'), META = g('META'), ACTIONS = g('ACTIONS');
+// Decks behind content tags (the adult careers) are exercised, with their switches on, by adult.mjs.
+const DECKS = Object.keys(WORKDECK).filter((id) => !WORKDECK[id].tags);
 const clone = (s) => JSON.parse(JSON.stringify(s));
 const P = (s) => s.people[s.playerId];
 const pop = (s, handler) => s.pending.find((p) => p.handler === handler);
@@ -54,7 +56,7 @@ const job = (id, level) => { const s = adult(30); ctx.hire(s, id, level ?? 0); r
 /* 1. the decks -------------------------------------------------------------------- */
 {
   ok(Object.keys(WORKDECK).length >= 8, `at least eight careers have decks (${Object.keys(WORKDECK).length})`);
-  for (const id of Object.keys(WORKDECK)) {
+  for (const id of DECKS) {
     const d = WORKDECK[id];
     ok(!!JOBS[id], `${id} is a real job`);
     ok(d.meter && d.meter.name && d.meter.words.length >= 4 && d.meter.start >= 0 && d.meter.start <= 100, `${id} has a meter`);
@@ -76,7 +78,7 @@ const job = (id, level) => { const s = adult(30); ctx.hire(s, id, level ?? 0); r
 
 /* 2. the deal ------------------------------------------------------------------------ */
 {
-  for (const id of Object.keys(WORKDECK)) {
+  for (const id of DECKS) {
     const s = job(id, 1);
     s.pending = [];
     s.year++;
@@ -98,7 +100,7 @@ const job = (id, level) => { const s = adult(30); ctx.hire(s, id, level ?? 0); r
 /* 3. playing every card ------------------------------------------------------------------ */
 {
   let played = 0;
-  for (const id of Object.keys(WORKDECK)) {
+  for (const id of DECKS) {
     for (const k of WORKDECK[id].cards) {
       for (let seed = 0; seed < 6; seed++) {
         const s = job(id, Math.min(k.min || 0, JOBS[id].ladder.length - 1));
@@ -292,7 +294,7 @@ const job = (id, level) => { const s = adult(30); ctx.hire(s, id, level ?? 0); r
 
 /* 9. long runs ------------------------------------------------------------------------------------------ */
 {
-  for (const id of Object.keys(WORKDECK)) {
+  for (const id of DECKS) {
     const s = job(id, 0);
     s.player.money = 5e6;
     for (let y = 0; y < 30 && !s.dead; y++) {
