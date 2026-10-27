@@ -120,7 +120,8 @@ const felony = (s) => s.player.record.push({ crime: 'burglary', year: s.year - 3
   ok(p && s.player.money === 1e8 - lot.cost, 'and costs the hammer price');
   const startSpd = p.race.spd;
   for (let y = 0; y < 3; y++) { s.year++; clear(s); ctx.stableYear(s, { n: 0 }); }
-  ok(p.race.state === 'racing' || !p.alive, 'at two it goes into training');
+  // Trained at two. An injury can end a career early (a filly goes to the broodmares), so it may have moved on by three.
+  ok(['racing', 'broodmare', 'stud', 'retired'].includes(p.race.state) || !p.alive, 'at two it goes into training');
   ok(p.race.spd > startSpd && p.race.spd <= p.race.ps + 4, `it grows toward its potential (${startSpd} → ${p.race.spd}, ceiling ${p.race.ps})`);
   ok(p.race.starts > 0, 'and runs a season');
   // A great horse wins far more than a poor one.
