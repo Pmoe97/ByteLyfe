@@ -15,6 +15,7 @@
 //   - spy: recruitment, missions, assets, double agents, getting burned (60-spy.js)
 //   - web: secrets that leak, ties, hearsay, reputation, neighborhood unease (62-web.js)
 //   - investigations: case files, detectives, series, arrests, police casework (63-cases.js, 64-detective.js)
+//   - career cards: the decks, dealing, playing every card, outcomes, autopilot, people (65-work.js, 66-work-decks.js)
 //   - the life simulator (300 lives), split into shards across the cores, then merged
 // Each check is its own process; at most one per core runs at a time, longest first.
 // Output is held until a check finishes, so checks never interleave.
@@ -63,6 +64,7 @@ const tasks = [
   { label: 'spy checks', args: ['dev/verify/spy.mjs'] },
   { label: 'web checks', args: ['dev/verify/web.mjs'] },
   { label: 'investigation checks', args: ['dev/verify/inv.mjs'] },
+  { label: 'career-card checks', args: ['dev/verify/work.mjs'] },
 ];
 function run(task) {
   return new Promise((resolve) => {

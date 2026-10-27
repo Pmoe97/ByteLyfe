@@ -462,6 +462,9 @@ onChoice('webHear', (s, ctx, v) => {
     if (!pool.length) return 'You had no one left to tell.';
     const t = pick(pool);
     webLearn(s, sec, t.id, s.playerId);
+    // What a patient, a client or a regular told you in confidence is not yours to spread (65-work.js).
+    const trust = { patient: 8, client: 6, regular: 3 }[sec.via];
+    if (trust) { webRepAdd(P(s), { scandal: trust - 2, name: -trust }); log(s, '🤐 Telling what someone confided in you is a breach of trust, and word of it travels.', 'bad'); }
     if (r && chance(0.3)) { addRel(s, p.id, -25); return { text: `You told ${t.first}. It got back to ${p.first}, and they know who talked.`, tone: 'bad' }; }
     return `You told ${t.first}. The story has legs now.`;
   }

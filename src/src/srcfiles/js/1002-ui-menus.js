@@ -112,7 +112,7 @@ SHEETS.work = () => {
       ${kvRow('Years here', c.years)}
       ${kvRow('Next rung', c.level < j.ladder.length - 1 ? esc(j.ladder[c.level + 1][0]) : 'Top of the ladder')}
       <div class="muted" style="margin-top:6px">${j.special === 'politics' ? 'Approval rating' : c.id === 'judge' ? 'Reputation on the bench' : 'Performance'}</div>${bar(c.perf)}
-    </div>${listOf(actionRows('job'))}${showbizSection()}${sportsSection()}${militarySection()}${spySection()}${courtSection()}`;
+    </div>${listOf(actionRows('job'))}${showbizSection()}${sportsSection()}${militarySection()}${spySection()}${wkSection()}${courtSection()}`;
   }
   if (m.retired) html +=`<div class="section-title">Retirement</div><div class="card">${kvRow('Status', 'Retired')}${m.retired.pension ? kvRow('Pension', fmtMoney(m.retired.pension) + '/yr') : ''}</div>`;
   html += bizSection();

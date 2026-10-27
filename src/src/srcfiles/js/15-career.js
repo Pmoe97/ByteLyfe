@@ -161,6 +161,7 @@ function leaveJob(s, reason) {
   M(s).career = null;
   milLeft(s, c, reason); // a uniform comes off with a discharge (59-military.js)
   spyLeft(s, c, reason); // the agency closes your file (60-spy.js)
+  wkLeft(s, c); // whatever was on your desk is somebody else's now (65-work.js)
   clearKind(s, 'coworker');
   clearKind(s, 'boss');
 }

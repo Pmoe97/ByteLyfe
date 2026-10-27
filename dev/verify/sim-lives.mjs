@@ -132,6 +132,12 @@ function check(s, where) {
       if (!CRIMES_ALL[c.crime]) fail(`a case for an unknown crime ${c.crime} @${where}`, s);
     }
   }
+  // Career cards (65-work.js): every meter in range, no desk piled high, every card on a desk is a real card.
+  for (const wid in m.work || {}) {
+    const w = m.work[wid];
+    if (!g('WORKDECK')[wid] || !(w.m >= 0 && w.m <= 100) || w.hand.length > 6) fail(`bad work state ${wid} ${JSON.stringify({ m: w.m, hand: w.hand.length })} @${where}`, s);
+    for (const h of w.hand) if (!ctx.wkCard(wid, h.cid)) fail(`unknown card ${h.cid} on the ${wid} desk @${where}`, s);
+  }
   if (m.dt && (m.dt.load.length > 12 || !(m.dt.solved >= 0) || !(m.dt.wrong >= 0))) fail(`bad detective record ${JSON.stringify(m.dt)} @${where}`, s);
   for (const id in s.people) {
     const q = s.people[id];
@@ -425,6 +431,19 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
           const a = pick(acts); ctx.doAction(s, a.id); stats.actionsRun[a.id] = (stats.actionsRun[a.id] || 0) + 1; check(s, 'action:' + a.id); resolveAll(s, 'cases:' + a.id);
         }
       } catch (e) { fail('detective persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
+    // And some work a job that plays its own year (65-work.js): hired at 24 with no questions asked,
+    // then two things off the desk most years.
+    if (s.gen === 1 && i % 20 === 11 && !s.dead && !s.player.prison && age >= 24) {
+      try {
+        const wid = ['doctor', 'firefighter', 'bartender', 'chef', 'journalist', 'pilot', 'astronaut', 'surgeon'][Math.floor(i / 20) % 8];
+        if (age === 24) { if (s.player.career) ctx.leaveJob(s, 'switched'); s.player.edu.current = null; ctx.hire(s, wid, 0); resolveAll(s, 'work-join'); }
+        for (let k = 0; k < 2 && !s.dead; k++) {
+          if (!s.player.career || !ACTIONS.wk_work.when(s)) break;
+          ctx.doAction(s, 'wk_work'); stats.actionsRun.wk_work = (stats.actionsRun.wk_work || 0) + 1; check(s, 'action:wk_work'); resolveAll(s, 'work:' + wid);
+        }
+        if (s.player.career && s.player.career.id === 'journalist' && ACTIONS.wk_publish.when(s)) { ctx.doAction(s, 'wk_publish'); resolveAll(s, 'work:publish'); }
+      } catch (e) { fail('work persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
     }
     const n = randInt(0, 5);
     for (let k = 0; k < n && !s.dead; k++) {

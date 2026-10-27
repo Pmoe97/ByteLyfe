@@ -683,6 +683,33 @@ detective works it. A new Case files menu shows where you stand.
 - **A hook for every career.** `onCareerYear` lets any job play its own year, which the career-cards
   engine builds on.
 
+**Career cards (Phase 3 of the big push).** Eight careers stop being "work harder and ask for a raise". Each year
+a job deals a hand of things to decide, you see the odds for every way of handling them, and how you play moves a
+meter that belongs to that career. They show on the Work sheet as "Your desk".
+- **Doctor and surgeon:** an ER night, a case nobody can name, breaking bad news, an attending who disagrees, a very
+  generous lunch from a drug rep, a mistake in the chart, and for surgeons a high-risk operation in three decisions.
+  The meter is patient trust.
+- **Firefighter:** structure fires, rescues, medical calls, wildfires, a rookie's mistake and a fire that was not an
+  accident. The meter is squad trust, and the work can hurt you.
+- **Bartender:** rowdy tables, a regular who needs to talk (and tells you something), a very young face with a fake ID,
+  slow nights, big spenders, a stranger at closing and the city competition. The meter is your regulars.
+- **Chef:** the dinner rush, the health inspector, a bad delivery, a new menu, the critic, a staff meltdown and a famous
+  face. The meter is the kitchen's standing.
+- **Journalist:** a source calls, brutal deadlines, press conferences, the long investigation, a lawyer's letter and a
+  leak. You can **file the story** on any secret you have heard: strong proof makes it public, thin proof earns a
+  retraction.
+- **Pilot:** weather, warning lights, a collapsing passenger, crosswinds, flying too tired and a near miss. The meter is
+  your safety record.
+- **Astronaut:** a full path. Candidates train (centrifuge, pool, survival school, simulator failures) and need three
+  certifications before they can move up; flown astronauts get a four-stage mission (launch, docking, spacewalk,
+  re-entry) every two years or so, station anomalies, a press tour, crew conflicts and command decisions. Promotion
+  needs flights.
+- **Detective** (Phase 2) and the **spy** are the same idea built by hand.
+- **People and the web.** Cards put real people in your life (patients, clients, regulars, sources, survivors), who
+  come back. They confide secrets you then decide what to do with, and spreading a patient's secret costs you your name.
+- **Whatever you leave on the desk** is handled on autopilot at the new year, at worse odds, so you can play as
+  much or as little as you like.
+
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
   array, porch, koi pond or sauna (shared) and a game room, aquarium, observatory, chef's kitchen or
@@ -759,6 +786,11 @@ One shared engine for every crime, replacing the single "caught" roll.
   and neighborhoods change.
 
 ### Phase 3: Interactive careers
+
+**Status: engine and first eight careers built** (see "Career cards" under Built). To do: the other seventy
+or so careers as decks (they are data now, so this is writing, not engineering), forensics and profiler tracks,
+more full systems (paramedic, teacher, lawyer, pro cook-offs, farm and fishing seasons), twists that follow a good
+result like the spy's, patrol cards for beat cops, and the adult careers as decks in Phase 4.
 
 Retire the "work harder / ask for a raise" loop for nearly every job.
 - **A career-cards engine,** generalized from the spy missions: each year a career deals work
