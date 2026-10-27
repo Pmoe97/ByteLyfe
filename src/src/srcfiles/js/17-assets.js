@@ -116,7 +116,7 @@ onChoice('shopPick', (s, ctx, id) => {
   const it = listing(s, ctx.key).find((x) => x.id === id);
   if (!it) return;
   const choices = [{ label: '💵 Pay cash', value: 'cash', sub: fmtMoney(it.value), disabled: M(s).money < it.value }];
-  const fin = financeTerms(it);
+  const fin = financeTerms(it, s);
   if (fin && canBorrow(s)) {
     const down = Math.round(it.value * fin.down);
     choices.push({ label: `🏦 Finance it (${Math.round(fin.down * 100)}% down)`, value: 'loan', sub: `${fmtMoney(down)} down, ~${fmtMoney(amortize(it.value - down, fin.rate, fin.years))}/yr for ${fin.years} years`, disabled: M(s).money < down });
@@ -124,8 +124,8 @@ onChoice('shopPick', (s, ctx, id) => {
   choices.push({ label: 'Never mind', value: null });
   popup(s, { emoji: it.emoji, title: it.name, text: `Price: ${fmtMoney(it.value)}`, handler: 'buy', ctx: { key: ctx.key, id }, choices });
 });
-function financeTerms(it) {
-  if (it.kind === 'house') return { down: 0.2, rate: 0.065, years: 30, name: 'Mortgage' };
+function financeTerms(it, s) {
+  if (it.kind === 'house') return vetLoanTerms(s, { down: 0.2, rate: 0.065, years: 30, name: 'Mortgage' }, it); // veterans’ mortgage (59-military.js)
   if (it.kind === 'car') return { down: 0.1, rate: 0.075, years: 5, name: 'Car loan' };
   if (it.kind === 'boat' || it.kind === 'aircraft') return { down: 0.2, rate: 0.08, years: 10, name: it.kind === 'boat' ? 'Boat loan' : 'Aircraft loan' };
   return null;
@@ -138,7 +138,7 @@ onChoice('buy', (s, ctx, how) => {
   if (how === 'cash') {
     if (!pay(s, it.value)) return cantAfford(it.value);
   } else {
-    const fin = financeTerms(it);
+    const fin = financeTerms(it, s);
     const down = Math.round(it.value * fin.down);
     const yearly = amortize(it.value - down, fin.rate, fin.years);
     const income = (M(s).career ? M(s).career.salary : 0) + (M(s).ptJob ? M(s).ptJob.pay : 0) + (M(s).retired ? M(s).retired.pension : 0);
@@ -148,6 +148,7 @@ onChoice('buy', (s, ctx, how) => {
     const loan = addLoan(s, { kind: it.kind, name: fin.name + ': ' + it.name, amount: it.value - down, rate: fin.rate, years: fin.years });
     it.loanId = loan.id;
     loan.assetId = it.id;
+    if (fin.vet) mil(s).loanUsed = true;
   }
   s.listings[ctx.key].items = items.filter((x) => x !== it);
   it.paid = it.value;

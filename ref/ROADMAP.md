@@ -34,7 +34,7 @@ honors.
 promotions, firing, retirement and pensions. Also 14 part-time jobs and 15 side gigs. Special tracks:
 - **Fame:** acting, music, modeling, writing, comedy (big breaks, tours, royalties).
 - **Sports:** pro athlete and fighter (seasons, injuries, fights).
-- **Military:** enlisted and officer ranks, deployments, medals.
+- **Military:** enlisted and officer ranks, deployments, medals (see Military depth).
 - **Politics:** elections, campaign budgets, re-election, town halls, scandals, bribes.
 
 **Money.** Country tax rates, lifestyle tiers, rent and upkeep. Loans: personal, student,
@@ -578,6 +578,35 @@ prizes, and selective breeding programs for litters to keep, sell or gift.
   habitat is full.
 - **Extras:** 3 new achievements (Zookeeper, Noah's Ark, Conservation Champion).
 
+**Military depth.** A new Military & Veterans menu, and a country that can go to war.
+- **Wars:** each country slips into wars with fictional foes (a limited conflict up to total war) and out
+  of them again, with a name, a theater, casualties and a result (victory, defeat or ceasefire). They
+  outlast you, so a family line remembers its wars (History of wars). War bonds pay out when it ends,
+  more if it ends well; civilians can protest, volunteer and watch rationing and air-raid sirens.
+- **Service:** pick a branch (Army, Marines, Navy, Air Force) and a specialty (combat arms, medic,
+  engineer, intelligence, cyber, logistics, and aviator for officers). Basic training, four-year terms
+  with a re-enlistment bonus, stop-loss in a hot war, ranks, and cross-training. Apply for officer
+  candidate school from the enlisted ranks, try out for special forces, ask to leave early, or retire at
+  twenty years on a pension (half of final pay and rising).
+- **Deployments:** orders arrive in wartime far more than in peacetime. Serve, volunteer for the front
+  line or ask for the rear, each with its own odds of death, wounds (Purple Heart), medals for valor and
+  combat stress. Defining moments in the field (an ambush, a comrade down, an order you hate, holding
+  the line, friendly fire, a call for volunteers) and a squad whose members can be lost. Captured, you
+  can plan an escape, wait for the exchange or talk.
+- **The draft:** a long war brings conscription for adults up to 30. Report, claim a deferment (students,
+  parents, the sick), apply as a conscientious objector, flee abroad or pay for a doctor's note, which can
+  land you in court. Relatives enlist too, and some are killed in action.
+- **Desertion:** go AWOL and return, or desert and hide with family, in a big city or across the border.
+  Military police look for you every year; a court-martial follows with lawyer, plea and trauma defenses.
+  Turn yourself in, wait for an amnesty after the war, or serve a dishonorable discharge and a felony.
+- **Veterans:** your discharge (honorable, general, other than honorable, medical, retired, dishonorable)
+  decides what you keep. Cheaper care (free at a 50% rating), a no-down-payment veterans mortgage, four
+  years of schooling aid, tax-free disability pay after a claim (and an appeal), counseling for combat
+  stress, a veterans' group, discharge upgrades, a hiring and ballot-box edge, and a pension.
+- **Extras:** 16 events, 15 achievements (Boots on the Ground, Purple Heart, Hero of the Nation, Brass,
+  Twenty Years, The Badge, Deserter, Draft Dodger, Gold Star...), 2 goals and the War Hero, Veteran and
+  Deserter legacy titles.
+
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
   array, porch, koi pond or sauna (shared) and a game room, aquarium, observatory, chef's kitchen or
@@ -596,21 +625,20 @@ prizes, and selective breeding programs for litters to keep, sell or gift.
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
 requested features from the BitLife community.
 
-1. **Military depth.** Wars, desertion, veterans' benefits.
-2. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
+1. **Secret agent.** A spy agency career: recruitment, missions abroad, cover identities,
     double agents, and getting burned.
-3. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
+2. **Cults.** Start a movement, attract followers, run a commune, collect donations, and
     dodge defectors, journalists and raids.
-4. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
+3. **Hustles & hobbies.** Outdoor life (hiking, camping, fishing, hunting, national parks) and
     bigger street hustles (a food cart, reselling sneakers, selling knockoffs).
-5. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
+4. **Space missions.** Astronauts fly real missions: launches, spacewalks, space station
     stays and things going wrong in orbit.
-6. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
-    purges, coups and declared wars. Builds on Royalty and Military depth.
-7. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
+5. **Power.** Turn a presidency or a crown into a dictatorship: propaganda, secret police,
+    purges, coups and declared wars. Builds on Royalty and Military depth, which now exist.
+6. **Time Machine & themes.** Rewind to any earlier year, not just the last 10, using a
     snapshot every few years so saves stay small. A few extra color themes.
-8. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
-9. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
+7. **Accessibility pass.** Screen-reader labels throughout, color-blind-safe bars.
+8. **Optional AI flavor.** Perchance's `ai-text-plugin` could narrate year summaries or custom events, if wanted.
 
 ## Someday
 

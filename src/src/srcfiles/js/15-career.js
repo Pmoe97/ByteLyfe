@@ -74,6 +74,8 @@ function applyJob(s, id) {
   const miss = missingReqs(s, j.req);
   if (miss.length) return { text: `You don't qualify yet. You need: ${miss.join(', ')}.`, title: j.name, emoji: j.emoji, nolog: true };
   if (M(s).career && M(s).career.id === id) return { text: 'You already work here.', nolog: true };
+  if (inService(s) && j.special !== 'military') return { text: 'You are under contract with the armed forces. Finish your term first.', nolog: true };
+  if (j.special === 'military' && isDeserter(s)) return { text: 'You are a wanted deserter. Walking into a recruiter’s office would end badly.', nolog: true };
   if (bump(s, 'apply') > 6) return { text: "You've sent out a lot of applications this year. Wait until next year.", nolog: true };
   if (j.special === 'politics') return startElection(s, 0);
   if (j.special) return specialApply(s, id);
@@ -97,6 +99,7 @@ onChoice('interview', (s, ctx, ai) => {
   else if (best && best.tier === 'selective') odds += 0.05;
   if (hasFelony(s)) odds -= 0.3;
   if (M(s).wanted) odds -= 0.2;
+  odds += vetHireEdge(s, j); // veterans’ preference (59-military.js)
   if (!chance(clamp(odds, 0.05, 0.95))) {
     add(s, { happy: -3 });
     return { text: `They went with another candidate for ${j.ladder[0][0]}.`, title: 'Not this time', emoji: '📭', tone: 'bad' };
@@ -148,6 +151,7 @@ function leaveJob(s, reason) {
   if (!c) return;
   M(s).jobHistory.push({ id: c.id, level: c.level, years: c.years, end: s.year, reason, employer: c.employer });
   M(s).career = null;
+  milLeft(s, c, reason); // a uniform comes off with a discharge (59-military.js)
   clearKind(s, 'coworker');
   clearKind(s, 'boss');
 }
@@ -211,6 +215,7 @@ onChoice('retireAsk', (s, ctx, yes) => (yes ? retire(s) : 'You told your boss yo
 
 function pensionFor(s, c) {
   if (!c) return 0;
+  if (JOBS[c.id].special === 'military') return militaryPension(s, c);
   return Math.round(c.salary * Math.min(0.6, (c.years + 2) * 0.015));
 }
 function retire(s) {
@@ -377,6 +382,7 @@ function specialApply(s, id) {
   if (M(s).career) leaveJob(s, 'switched');
   hire(s, id, 0);
   startSportsCareer(s, id); // picks a sport and team, or a weight class (41-sports.js)
+  if (j.special === 'military') startMilitaryCareer(s, id); // branch and specialty (59-military.js)
   const verb = { fame: 'You landed your first gig', sports: 'You made the team', military: 'You enlisted', coach: 'You got the job' }[j.special];
   return { text: `${verb}! You're now a ${j.ladder[0][0]}.`, title: j.name, emoji: j.emoji, tone: 'good' };
 }
@@ -403,13 +409,7 @@ function specialTick(s, c, j) {
       announce(s, { emoji: '🏁', title: 'End of an era', text: `Your body told you it was time. You retired from pro sports as a ${title}.` });
     }
   } else if (j.special === 'military') {
-    if (c.level < j.ladder.length - 1 && c.levelYears >= 2 && c.perf >= 55 && chance(0.45)) promote(s, 'You earned a new rank.');
-    if (chance(0.25)) {
-      popup(s, {
-        emoji: '🎖️', title: 'Deployment', text: 'Your unit is being deployed overseas.', handler: 'deploy',
-        choices: [{ label: 'Serve with honor', value: 'serve' }, { label: 'Request a desk assignment', value: 'desk' }],
-      });
-    }
+    militaryYear(s, c, j); // ranks, terms, deployments and wars (59-military.js)
   } else if (j.special === 'politics') {
     c.term = (c.term || 0) + 1;
     if (c.term >= 4) {
@@ -428,6 +428,7 @@ function specialTick(s, c, j) {
   }
 }
 
+// Old saves may still hold this popup; new deployments use milDeploy (59-military.js).
 onChoice('deploy', (s, ctx, v) => {
   const c = M(s).career;
   if (!c) return;
@@ -485,7 +486,7 @@ onChoice('election', (s, ctx, bi) => {
   const cost = [0, 5000, 50000, 500000, 5000000].map((b) => price(s, b * Math.pow(3, toLevel)))[bi];
   if (!pay(s, cost)) return cantAfford(cost);
   const c = M(s).career;
-  let odds = 0.25 + skill(s, 'charisma') / 250 + (M(s).karma - 50) / 300 + M(s).fame / 400 + bi * 0.08 - toLevel * 0.06;
+  let odds = 0.25 + skill(s, 'charisma') / 250 + (M(s).karma - 50) / 300 + M(s).fame / 400 + bi * 0.08 - toLevel * 0.06 + vetElectionEdge(s);
   if (c && c.id === 'politician') odds += (c.perf - 50) / 150;
   if (trait(s, 'charming')) odds += 0.06;
   addSkill(s, 'charisma', 2);

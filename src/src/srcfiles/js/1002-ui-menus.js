@@ -27,8 +27,9 @@ SHEETS.actcat = (cat) => {
   const chaos = cat === 'super' ? chaosCard() : ''; // 1019-ui-chaos.js
   const gambling = cat === 'gamble' ? gambleCard() : ''; // 1021-ui-gambling.js
   const house = cat === 'turf' ? houseCard() : ''; // 1022-ui-house.js
+  const army = cat === 'mil' ? militaryCard() : ''; // 1025-ui-military.js
   const home = cat === 'parents' ? homeCard() : cat === 'learn' ? lessonsCard() : ''; // 1023-ui-youth.js
-  return { title: c ? c.name : 'Activities', html: look + royal + mob + courts + chaos + gambling + house + home + listOf(actionRows(cat), 'Nothing available right now.') };
+  return { title: c ? c.name : 'Activities', html: look + royal + mob + courts + chaos + gambling + house + army + home + listOf(actionRows(cat), 'Nothing available right now.') };
 };
 // The Underworld opens with your standing: family, rank, heat and everything you run (39-underworld.js).
 function underworldCard() {
@@ -110,7 +111,7 @@ SHEETS.work = () => {
       ${kvRow('Years here', c.years)}
       ${kvRow('Next rung', c.level < j.ladder.length - 1 ? esc(j.ladder[c.level + 1][0]) : 'Top of the ladder')}
       <div class="muted" style="margin-top:6px">${j.special === 'politics' ? 'Approval rating' : c.id === 'judge' ? 'Reputation on the bench' : 'Performance'}</div>${bar(c.perf)}
-    </div>${listOf(actionRows('job'))}${showbizSection()}${sportsSection()}${courtSection()}`;
+    </div>${listOf(actionRows('job'))}${showbizSection()}${sportsSection()}${militarySection()}${courtSection()}`;
   }
   if (m.retired) html +=`<div class="section-title">Retirement</div><div class="card">${kvRow('Status', 'Retired')}${m.retired.pension ? kvRow('Pension', fmtMoney(m.retired.pension) + '/yr') : ''}</div>`;
   html += bizSection();

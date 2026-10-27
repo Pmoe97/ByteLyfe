@@ -49,6 +49,7 @@ function financeTick(s) {
   for (const [label, amt] of m.bizIncome || []) inc.push([label + ' (after tax)', Math.round(amt * (1 - tax))]);
   m.bizIncome = [];
   if (m.retired && m.retired.pension) inc.push(['Pension', m.retired.pension]);
+  for (const row of vetIncome(s)) inc.push(row); // disability pay and schooling aid (59-military.js)
   if (age >= 65) inc.push(['State pension', price(s, 14000)]);
   if (m.socials && m.socials.followers >= 50000) {
     const deal = price(s, Math.round(Math.pow(m.socials.followers, 0.92) * 0.12));

@@ -96,6 +96,14 @@ function check(s, where) {
     if (h && (!(h.spd >= 30 && h.spd <= 99 && h.sta >= 30 && h.sta <= 99) || !['yearling', 'racing', 'broodmare', 'stud', 'retired'].includes(h.state) || h.wins > h.starts)) fail(`bad racehorse ${JSON.stringify(h)} @${where}`, s);
   }
   if (m.book && !(m.book.punters >= 3)) fail(`book with ${m.book.punters} punters @${where}`, s);
+  // Military (59-military.js): a service record keeps sane numbers; only veterans have a discharge; serving means a career.
+  if (m.mil) {
+    const mi = m.mil;
+    if (!(mi.ptsd >= 0 && mi.ptsd <= 100) || !(mi.served >= 0) || !(mi.rating >= 0 && mi.rating <= 100) || !(mi.edLeft >= 0)) fail(`bad service record ${JSON.stringify({ ptsd: mi.ptsd, served: mi.served, rating: mi.rating, edLeft: mi.edLeft })} @${where}`, s);
+    if (!g('BRANCHES')[mi.branch] || !g('SPECIALTIES')[mi.spec]) fail(`unknown branch or specialty ${mi.branch}/${mi.spec} @${where}`, s);
+    if (mi.vet && m.career && g('isMilJob')(m.career.id)) fail(`a veteran with a military career @${where}`, s);
+    if (mi.deserter && !mi.deserter.caught && m.career && g('isMilJob')(m.career.id)) fail(`a deserter still serving @${where}`, s);
+  }
   // Zoos (58-zoo.js): care and condition stay in range, and no habitat holds more than it can.
   for (const co of ctx.companies(s)) {
     const z = co.zoo;
@@ -159,6 +167,8 @@ function available(s) {
 const kin = { lives: 0, people: 0, maxPeople: 0 };
 const chal = { started: 0, done: 0, failed: 0 };
 const youth = { lessons: 0, medals: 0, blackBelts: 0, captains: 0, titles: 0, valedictorians: 0, elite: 0, fullRides: 0, detentions: 0, suspensions: 0, expulsions: 0, grounded: 0, bullied: 0 };
+const military = { lives: 0, acts: 0, maxTours: 0 };
+const milSeen = new Set();
 const house = { books: 0, bookNet: 0, horses: 0, wins: 0, bigWins: 0, foals: 0, sold: 0, whales: 0, licenses: 0 };
 const cities = { moves: 0, places: 0, tenants: 0, maxTenants: 0, signed: 0, evicted: 0, wasEvicted: 0, beaten: 0, rent: 0 };
 const courts = { filed: 0, won: 0, lost: 0, settled: 0, sued: 0, beaten: 0, small: 0, rulings: 0, justices: 0, clientWins: 0 };
@@ -310,6 +320,27 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
         }
       } catch (e) { fail('house persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
     }
+    // And some join up: enlist at 19 (a war is on in the draft years), then a military or veterans' action most years.
+    if (s.gen === 1 && i % 20 === 12 && !s.dead && !s.player.prison && age >= 19) {
+      try {
+        if (age === 19) {
+          if (s.player.career) ctx.leaveJob(s, 'switched');
+          s.player.edu.current = null;
+          if (!s.player.edu.degrees.some((d) => d.type === 'high')) s.player.edu.degrees.push({ type: 'high' });
+          s.player.skills.fitness = Math.max(40, s.player.skills.fitness || 0);
+          const cc = s.people[s.playerId].country, slot = ctx.warSlot(s, cc);
+          if (!slot.war && i % 40 === 12) { slot.war = ctx.makeWar(s, cc); slot.war.intensity = 3; slot.war.draft = true; }
+          for (let t = 0; t < 12 && !(s.player.career && s.player.career.id === 'military'); t++) { s.player.counters = {}; ctx.applyJob(s, 'military'); resolveAll(s, 'enlist'); }
+        }
+        for (let k = 0; k < 2 && !s.dead; k++) {
+          const acts = ctx.actionList(s, 'mil').filter((a) => !['mil_awol'].includes(a.id) || chance(0.1));
+          if (!acts.length) break;
+          const a = pick(acts); ctx.doAction(s, a.id); stats.actionsRun[a.id] = (stats.actionsRun[a.id] || 0) + 1; check(s, 'action:' + a.id); resolveAll(s, 'mil:' + a.id);
+          if (s.player.mil) { military.acts++; }
+        }
+        if (s.player.mil) { if (!milSeen.has(s.id)) { milSeen.add(s.id); military.lives++; } military.maxTours = Math.max(military.maxTours, s.player.mil.tours.length); }
+      } catch (e) { fail('military persona threw: ' + e.stack.split(String.fromCharCode(10)).slice(0, 3).join(' | '), s); }
+    }
     // And some run a zoo: open one at 28, then a zoo action most years.
     if (s.gen === 1 && i % 20 === 18 && !s.dead && !s.player.prison && age >= 28) {
       try {
@@ -379,7 +410,7 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
 }
 
 // One run's raw numbers. Shards write these; --merge adds them up.
-let agg = { lives: stats.lives, seed: SEED, maxSecs: (Date.now() - t0) / 1000, shards: 1, failures, fails, stats, biz, kin, courts, cities, chal, house, youth, seen: [...g('STORY_SEEN')] };
+let agg = { lives: stats.lives, seed: SEED, maxSecs: (Date.now() - t0) / 1000, shards: 1, failures, fails, stats, biz, kin, courts, cities, chal, house, youth, military, seen: [...g('STORY_SEEN')] };
 if (opts.json) { fs.writeFileSync(opts.json, JSON.stringify(agg)); process.exit(0); }
 if (opts.merge) agg = opts.merge.map((f) => JSON.parse(fs.readFileSync(f, 'utf8'))).reduce(mergeAgg);
 // Numbers add up (keys starting with "max" take the larger), lists join, objects merge.
@@ -398,7 +429,7 @@ function mergeAgg(a, b) {
 }
 report(agg);
 
-function report({ stats, biz, kin, courts, cities, chal, house, youth, failures, fails, seed, maxSecs, shards, seen }) {
+function report({ stats, biz, kin, courts, cities, chal, house, youth, military, failures, fails, seed, maxSecs, shards, seen }) {
 const avg = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0);
 const median = (a) => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[Math.floor(b.length / 2)] : 0; };
 const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k}:${v}`).join(', ');
@@ -423,6 +454,7 @@ console.log(`Courts (last gen per life): ${courts.filed} lawsuits filed · ${cou
 console.log(`Cities (last gen per life): ${cities.moves} city moves · ${(cities.places / Math.max(1, kin.lives)).toFixed(1)} cities lived in on average · ${cities.signed} leases signed by tenants · ${cities.tenants} tenants at the end (max ${cities.maxTenants}) · ${cities.evicted} tenants evicted · player evicted ${cities.wasEvicted} times, ${cities.beaten} evictions beaten · ${Math.round(cities.rent).toLocaleString()} rent collected`);
 console.log(`Challenges: ${chal.started} started · ${chal.done} completed · ${chal.failed} failed`);
 console.log(`Growing up (last gen per life): ${youth.lessons} lessons started, ${youth.medals} medals, ${youth.blackBelts} black belts · ${youth.captains} captains, ${youth.titles} club titles · ${youth.valedictorians} valedictorians, ${youth.elite} elite admissions, ${youth.fullRides} full rides · ${youth.detentions} detentions, ${youth.suspensions} suspensions, ${youth.expulsions} expulsions · grounded ${youth.grounded} times · ${youth.bullied} bullied`);
+console.log(`Military: ${military.lives} lives served, ${military.acts} military actions, most tours in one life ${military.maxTours}`);
 console.log(`The house (last gen per life): ${house.books} books started, ${Math.round(house.bookNet).toLocaleString()} kept · ${house.horses} racehorses, ${house.wins} race wins, ${house.bigWins} big-race wins, ${house.foals} foals, ${house.sold} sold · casinos ${biz.byInd.casino || 0} company-years, ${house.whales} whale-beating years, ${house.licenses} licenses lost`);
 console.log(`Content tags on: ${TAG_IDS.map((t) => `${t} in ${stats.tagLives[t] || 0} lives`).join(', ')}`);
 console.log(`Events never fired (${neverFired.length}/${evIds.length}): ${neverFired.join(', ') || 'none'}`);

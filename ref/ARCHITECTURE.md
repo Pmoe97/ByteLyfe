@@ -55,8 +55,9 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `56` | Growing up at home (`56-growing-up.js`): Playtime, allowance and chores, asking your parents, house rules, grounding, curfew, sneaking out, home events | No DOM. `ageUp` reaches `youthTick` (home, then lessons) through a wrapper, after `houseTick`. Grounding wraps the `when` of the outings in `GROUNDED_BLOCKS` at load. |
 | `57` | Classes and lessons (`57-lessons.js`): 52 disciplines with level ladders, teachers, practice, fees, level tests, recitals and competitions, lesson events | No DOM. `youthTick` calls `lessonsYear`; the instrument event in `30-events-young.js` calls `enrollLesson`. |
 | `58` | Zoo & Wildlife Sanctuary (`58-zoo.js`): the zoo layer of the business engine: habitats, animals, breeding, breaches, admission | No DOM. `bizForecast` calls `zooMods` (through `industryMods`) and `companyYear` calls `zooYear`. |
-| `59–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1024-ui-zoo.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `59` | Military depth (`59-military.js`): wars per country, branches and specialties, deployments and defining moments, the draft, desertion and courts-martial, veterans' benefits, and their events | No DOM. `ageUp` reaches `militaryTick` through a wrapper (before `careerTick`); `specialTick` calls `militaryYear`, `specialApply` calls `startMilitaryCareer`, `leaveJob` calls `milLeft`, `financeTick` calls `vetIncome`, `medPrice` calls `vetCareMult`, `financeTerms` calls `vetLoanTerms`, `pensionFor` calls `militaryPension`, the interview and election odds call `vetHireEdge` and `vetElectionEdge`. |
+| `60–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1025-ui-military.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -444,6 +445,27 @@ lives in `M(s).gamb`: `at[venueId]` (wagered, `tier` from `TIERS`, `banned`, cou
   fines, the skim, arson), may audit the count room (`commission`, `revokeLicense`) and may offer a skim.
   `casinoVenue` keeps the flagship as a venue with owner `{ co }`; `visitVenue` sends you to
   `ownVenueVisit` instead of a table, and `houseTick` hands the venue on once the casino isn't yours.
+
+**Military.** `59-military.js`. Wars live at the top of the save in `s.wars = { cc: { 'us': { war, quiet } }, log }`,
+one war at a time per country and shared by the whole family line. `warYear` (from `militaryTick`) starts a war
+with odds that rise the longer the country has been at peace, moves its `momentum` each year, switches the
+draft on in a hot war, and ends it in a result (`endWar`: logs it, pays war bonds, turns serving relatives into veterans).
+`activeWar(s)` is read-only; only `warYear` creates slots.
+- **Your record:** `M(s).mil` is made when you first serve and stays for life: branch, specialty, term, years served,
+  tours, wounds, medals, `ptsd` (combat stress, with a `ptsd` disease at 45+), `vet`, `discharge`, `deserter`,
+  `rating`/`claim` (disability), `edLeft` (years of schooling aid), `loanUsed`. `ensureMil` makes a default record
+  for careers added by God Mode. `inService`, `isVeteran` and `isDeserter` are the questions everything else asks.
+- **The service year:** `militaryYear` (from `specialTick`) runs basic training, ranks, misconduct, term ends
+  (`termEnd`, stop-loss), medical boards and deployment orders. `runTour` rolls death, wounds, capture, stress,
+  medals and combat pay from branch, specialty and posture; `MOMENTS` are the popups that follow.
+- **Leaving:** every way out of the uniform goes through `leaveJob`, which calls `milLeft`; `separate(s, type)`
+  names the discharge first. `FULL_VET` (honorable, retired, medical) keep every benefit; `vetHas(s, what)` is the
+  one test for care, home loan, schooling and disability.
+- **The draft and desertion:** `draftYear` offers a notice once per war; `desert` and `deserterYear` hunt
+  deserters, `milCourt` ends in a dishonorable discharge via `sentence` (the `desertion` and `draft_evasion`
+  entries are added to `CRIMES` there).
+- **Relatives:** `p.mil = { since, vet }` marks a relative in uniform; `familyWar` enlists, wounds and kills them
+  during a war.
 
 **Zoos.** `58-zoo.js`, drawn on the company sheet by `zooSection` (`1024-ui-zoo.js`). A zoo is a company with
 `ind: 'zoo'` and `co.zoo = { ticketPrice, welfare, visitorSat, exhibits, animals, breeding, ... }`, made on first

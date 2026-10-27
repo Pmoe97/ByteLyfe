@@ -28,7 +28,7 @@ function habit(s, id, amt) {
 }
 function addicted(s, id) { return (M(s).addictions[id] || 0) >= 50; }
 function medPrice(s, t) {
-  const base = price(s, t.cost);
+  const base = Math.round(price(s, t.cost) * vetCareMult(s)); // veterans’ care (59-military.js)
   return country(s).freeHealth && !t.noDiscount ? Math.round(base * 0.1) : base;
 }
 // What you pay for care. Until 18, your parents (or guardians) pay, the way they pay for lessons.
