@@ -64,7 +64,9 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `66` | Career decks (`66-work-decks.js`): doctor, surgeon, firefighter, bartender, chef, journalist, pilot, astronaut | Pure data plus a few card hooks. `wkRegister()` at the end hooks them up. |
 | `67` | The language dial (`67-language.js`): result flavor, and events that only exist at Salty or Unfiltered | No DOM. `vary` (00-util.js) understands `{~clean|salty|unfiltered}`; `runWithResult` calls `langFlavor`; `eventEligible` and `fireEvent` check `lang`. |
 | `68` | Intimacy (`68-intimacy.js`): nights with choices, spark, friends with benefits, protection and testing, and the events around them | No DOM. All behind `mature` + `mature_intimacy`. `ageUp` reaches `intimTick` through a wrapper (after `invTick`); the hookup action, `rx_fling_again` and `askOutOdds` call into it; the web gained a `sti` secret. |
-| `69–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `69` | The substance ladder (`69-substances.js`): weed, pills, party drugs, cocaine and opioids on top of the habits the game has, tolerance, cravings, withdrawal, relapse, overdose scares, recovery, dealers, and the events around them | No DOM. All behind `mature` + `mature_substances`. `ageUp` reaches `subsYear` through a wrapper (after `intimTick`); `habit()` (19-health.js) records `M(s).used[id]`; `bodyTick`'s overdose roll calls `subsOverdose`; the rehab handler calls `subsRehab`. |
+| `70` | Nightlife (`70-nightlife.js`): venues per city, a scene standing, and a night out as a chain of decisions | No DOM. The `nightlife` action (21-activities.js) calls `nightMenu` when Substances is on. Uses `wkPerson` (65-work.js), `subsDealer` and `subsUse` (69), `intimStart` (68). |
+| `71–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
 | `1000+` | UI (`1000-ui-kit.js` … `1030-ui-intimacy.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
@@ -636,6 +638,39 @@ action's `when` and in every event's `ages`), consensual, with a way out at ever
   a quiet morning of regret, and the diagnosis conversation.
 - **Tests:** `dev/verify/intim.mjs`; the simulator flips the dial per life and fails on a night before 18.
 
+**Substances and nightlife.** `69-substances.js` and `70-nightlife.js`. Behind `mature` and `mature_substances`
+(`SUB_TAGS`; `subsOn()`), both off by default, adults only. It is about consequences: nothing says how anything is made
+or taken, and none of it is made to look like a good idea.
+- **The ladder:** `SUBSTANCES` lists the rungs (alcohol 0, weed 1, pills and party drugs 2, cocaine 3, opioids 4) with
+  `hook` (habit added per use), `tol` (tolerance added), `od` (chance a use goes wrong) and `risk` (chance buying it gets you
+  arrested). The new habits are real `ADDICTIONS` (`weed`, `cocaine`, `opioids`), so rehab, the finance sheet's habit
+  cost and the health tick already handle them. `subMaxTier` is what gets offered: the next rung only opens after use
+  of the one below.
+- **Using:** `subsUse(s, id, { free, mixed })` pays, rolls the high (dulled by tolerance), adds the habit, builds tolerance
+  (`M(s).subs[id].tol`), and returns `{ high, od, relapse }`; a use after a bad habit has been put down is a relapse.
+  `habit()` in `19-health.js` writes `M(s).used[id] = year` for every positive use, old code included, so withdrawal
+  counts alcohol and party drugs the base game already hands out.
+- **The year (`subsYear`):** an unused substance fades tolerance and counts a year clean; a hooked person who did not
+  use goes through withdrawal (health and happiness) and may get a craving popup (`subCraving`: hold on, call someone,
+  or give in; a sponsor makes holding on far likelier).
+- **Overdose:** `subsOverdose(s, id)` replaces the old instant death while the switch is on. With a friend nearby you
+  usually survive (80% less a little per rung), alone about 45%; a survivor gets `subWake`: rehab, swear off it, or shrug.
+- **Recovery:** `sub_meeting` (health menu) lowers the worst habit; after three a sponsor (relationship kind `sponsor`)
+  gives you their number. Rehab (existing) now also resets tolerance (`subsRehab`). A year clean after a serious habit
+  is an event and an achievement.
+- **People:** dealers (kind `dealer`) turn up at nights out; `sub_buy` buys, and can get you ripped off or arrested
+  (`possession` is a crime). Friends who offer, a work screening that fires users, an intervention at the kitchen
+  table, a friend who overdoses in the back room (you can save them, or not), a dealer's call, a Monday you cannot
+  account for.
+- **A night out:** `nightMenu` offers three venues per city (`s.nightlife['cc:city']`: a bar, a club, and an after-hours
+  place that only opens once your scene standing `M(s).night.scene` is 25). A night is a chain of popups sharing a small
+  context (`nightStep`): how hard you go, then a shuffled plan of offers (a round, or a hard offer from the ladder) and
+  incidents (a fight, a drunk friend, a lost phone, the bouncer), then how you get home (taxi, a friend's couch, walk,
+  drive, or go home with someone when Intimacy is on). Driving impaired risks a crash, an arrest (`dui`) and death.
+  The morning costs happiness and health in proportion to the night.
+- **Tests:** `dev/verify/subs.mjs`, and the simulator checks tolerance, first use (never before 18), scene standing and
+  `used` years.
+
 **Zoos.** `58-zoo.js`, drawn on the company sheet by `zooSection` (`1024-ui-zoo.js`). A zoo is a company with
 `ind: 'zoo'` and `co.zoo = { ticketPrice, welfare, visitorSat, exhibits, animals, breeding, ... }`, made on first
 touch by `zooOf`.
@@ -744,6 +779,7 @@ never fired and actions that never ran, which usually means a `when` that can't 
 | `dev/verify/inv.mjs` | Investigations: a crime opens a case with a detective who is a person and evidence in range, tied to its secret; a series links, shares a detective and earns a nickname; strong evidence ends in an arrest, a careful culprit's case goes cold and a tip reopens it, and a murder never closes; every choice in the interview and warrant popups runs and an alibi can crack; witnesses and exposure feed the case and destroying evidence thins it; laying low and skipping town work; arson, a romance scam and insider trading leave cases; a detective gets a caseload, every way of working a case runs, solving pays and wrong arrests cost, pulling your own file works or gets you fired; strangers' crimes hit people you know and old files clear; thirty years of ticks stay in range and the file saves whole. |
 | `dev/verify/work.mjs` | Career cards: every deck is on a real job and every card is complete, with real skills and clean text; a year's turn deals a hand and offers the first card; every card, every way, many seeds runs without errors and keeps the meter in range; all wins, a split and all losses come out good, so-so and bad; autopilot handles what you leave and is always a little worse than playing it yourself; a card's person becomes someone you know, the cast is capped, and a regular's confidence is a web secret; a strong meter lifts performance, a ruined one gets you fired, an astronaut cannot skip training; journalists publish (or retract), a doctor who spreads a patient's secret pays, quitting clears the desk; thirty years in every career stay in range and save whole. |
 | `dev/verify/intim.mjs` | The dial and intimacy: `{~a|b|c}` picks by the setting and falls back; flavor appears only when the dial is up and strong words only at Unfiltered; language-gated events and choices appear at their own level and answering after the dial moved does nothing; with Mature or Intimacy off the old hookup is unchanged and no new action or event exists; nothing runs for anyone under 18 on either side; every path through a scene runs, "not tonight" and "I changed my mind" leave nothing, and a cheating night is a secret; skipping protection is far riskier than protecting or testing, contraception helps, infections are silent until found; spark rises with care and falls with neglect; friends with benefits can be asked for, spent, ended or dated, and only when free; the diagnosis conversation and a hidden diagnosis; every event and choice at every setting; a long life with everything on. |
+| `dev/verify/subs.mjs` | Substances and nightlife: with Mature or Substances off the old night out and the old overdose are unchanged; nothing runs for anyone under 18; offers climb a rung at a time; tolerance dulls the high and sharpens the hook and mixing makes it riskier; a relapse is counted; a hooked person who stops goes through withdrawal and cravings, every craving choice runs, and a sponsor makes holding on far likelier; meetings, a sponsor, rehab and a year clean; a friend nearby changes an overdose a lot, the second chance has a way out, and it can end badly; dealers, a buy that can go wrong; after-hours is invite only, every path through a night out runs, the drive home is dangerous; every event and choice, a screening that catches use, a friend who can be saved; long lives with everything on. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |
 | `dev/verify/godmode.mjs` | God Mode's per-person rules: parent and child ages, a spouse never under 18, bodies removed and restored across 18, clean names, clamped stats, trait conflicts and the limit of four, age limits on jobs, money, education, gender, orientation and home, and which relationships can change kind. |
 | `dev/verify/run-all.mjs` | `npm run verify`: the syntax check (in-process), then every other check as its own process, in parallel (one per core, `VERIFY_JOBS=n` to cap it), with each check's output printed when it finishes. The 300-life simulator is split into shards (a count that shares no factor with 10, so the personas spread evenly) and merged into one summary. About a minute on 12 cores. |

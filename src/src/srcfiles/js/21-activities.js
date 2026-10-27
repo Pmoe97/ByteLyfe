@@ -121,6 +121,7 @@ defAction({
   when: (s) => free(s) && A(s) >= 18,
   sub: (s) => fmtMoney(price(s, 80)),
   run: (s) => {
+    if (subsOn()) { nightMenu(s); return; } // a night with choices (70-nightlife.js)
     const cost = price(s, 80);
     if (!pay(s, cost)) return cantAfford(cost);
     const n = bump(s, 'nightlife');

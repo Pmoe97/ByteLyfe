@@ -23,6 +23,7 @@ function habit(s, id, amt) {
   let a = amt;
   if (trait(s, 'addictive') && amt > 0) a *= 1.6;
   m.addictions[id] = clamp((m.addictions[id] || 0) + a, 0, 100);
+  if (amt > 0) (m.used || (m.used = {}))[id] = s.year; // the year you last used (69-substances.js reads it)
   if (m.addictions[id] <= 0) delete m.addictions[id];
   return m.addictions[id] || 0;
 }
@@ -78,7 +79,10 @@ function bodyTick(s) {
     const sev = m.addictions[id], X = ADDICTIONS[id];
     hd += (X.health * sev) / 100;
     add(s, { happy: Math.round((X.happy * sev) / 100) });
-    if (X.overdose && sev >= 60 && chance((X.overdose * sev) / 100)) { die(s, 'an overdose'); return; }
+    if (X.overdose && sev >= 60 && chance((X.overdose * sev) / 100)) {
+      if (subsOn()) { if (subsOverdose(s, id)) return; } // a close call, with someone to find you, or not (69-substances.js)
+      else { die(s, 'an overdose'); return; }
+    }
     habit(s, id, sev >= 50 ? -randInt(0, 3) : -randInt(2, 7));
   }
   if (inPrison(s)) hd -= randInt(0, 2);
@@ -285,6 +289,7 @@ onChoice('rehab', (s, ctx, k) => {
   if (!pay(s, cost)) return cantAfford(cost);
   if (chance(0.7 - (trait(s, 'addictive') ? 0.2 : 0))) {
     delete M(s).addictions[k];
+    subsRehab(s, k); // tolerance resets, and a relapse now counts (69-substances.js)
     add(s, { health: randInt(3, 8), happy: 6 });
     tally(s, 'rehabs');
     return { text: `You completed rehab and kicked your ${ADDICTIONS[k].name.toLowerCase()} habit.`, tone: 'good' };

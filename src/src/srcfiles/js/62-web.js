@@ -359,7 +359,7 @@ function webCircleDrama(s) {
     const o = { ev: 20 };
     if (kind === 'npc_affair') { o.other = pick(lovers).id; o.knows = [o.other]; }
     if (kind === 'npc_crime') o.note = pick(NPC_CRIME_NOTES);
-    if (kind === 'npc_habit') o.note = pick(NPC_HABIT_NOTES);
+    if (kind === 'npc_habit') o.note = pick(NPC_HABIT_NOTES.concat(subsOn() ? ['cocaine', 'opioid'] : []));
     const sec = webNewSecret(s, kind, subj.id, o);
     const ties = [...webTies(s, subj).keys()].filter((id) => id !== s.playerId);
     if (ties.length && chance(0.3)) sec.knows.push(pick(ties));

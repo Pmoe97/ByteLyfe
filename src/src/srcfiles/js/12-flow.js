@@ -95,6 +95,7 @@ function runWithResult(s, fn, src) {
 const CONTENT_TAGS = {
   chaos: { name: 'Chaos', emoji: '🌀', desc: 'Absurd and supernatural happenings: freak accidents, superpowers, stranger things.' },
   mature: { name: 'Mature', emoji: '💀', desc: 'Harder crime, blackmail and messier affairs than the standard game. The switches under it add more.' },
+  mature_substances: { name: 'Substances', emoji: '🍸', desc: 'Nightlife with real stakes: weed, pills, cocaine and opioids, tolerance, cravings, relapse, overdose scares and recovery. All consequences, no how-to. 18+ only. Needs Mature too.' },
   mature_intimacy: { name: 'Intimacy', emoji: '🔥', desc: 'Love lives with real texture: nights out and what comes after, protection and tests, friends with benefits, spark in long relationships. 18+ only, consensual, and always fade-to-black. Needs Mature too.' },
   taboo: { name: 'Taboo romance (master)', emoji: '🔞', desc: 'Consensual adult-only romance with family members (18+ both, never teens). Everything stays exactly as now while this is off. Turn on subtypes below for who is eligible.' },
   taboo_parent: { name: 'Taboo: parents', emoji: '👩', desc: 'Adult romance with a parent (18+ both, consensual). Requires the master switch too.' },

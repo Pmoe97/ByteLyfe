@@ -140,6 +140,14 @@ function check(s, where) {
     for (const k of ['chem', 'spark', 'feel']) if (r[k] != null && !(r[k] >= 0 && r[k] <= 100)) fail(`relationship ${k}=${r[k]} @${where}`, s);
     if (r.kind === 'fwb' && s.people[pid] && s.year - s.people[pid].birthYear < 18) fail(`a friend with benefits under 18 @${where}`, s);
   }
+  // Substances and nightlife (69-substances.js, 70-nightlife.js): tolerance in range, nothing before 18, a scene standing in range.
+  for (const id in m.subs || {}) {
+    const st = m.subs[id];
+    if (!g('SUBSTANCES')[id] || !(st.tol >= 0 && st.tol <= 100) || st.uses < 0 || st.relapses < 0) fail(`bad substance state ${id} ${JSON.stringify(st)} @${where}`, s);
+    if (st.first != null && st.first < 18) fail(`${id} used at ${st.first} @${where}`, s);
+  }
+  if (m.night && !(m.night.scene >= 0 && m.night.scene <= 100)) fail(`scene standing ${m.night.scene} @${where}`, s);
+  for (const id in m.used || {}) if (m.used[id] > s.year) fail(`${id} used in the future @${where}`, s);
   // Career cards (65-work.js): every meter in range, no desk piled high, every card on a desk is a real card.
   for (const wid in m.work || {}) {
     const w = m.work[wid];

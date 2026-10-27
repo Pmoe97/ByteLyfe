@@ -733,8 +733,28 @@ switch under it. Everything stays off by default, so the game is exactly as befo
   someone else.
 - **A name.** Five nights in three years gets you a reputation, with a small cost with people looking for something
   steady, and it fades.
-- **Still to come in Phase 4:** nightlife and a substance ladder, adult careers as card decks (dancer, companion,
-  creator, club owner), grittier crime, serial offenders and the darker adult themes.
+- **Still to come in Phase 4:** adult careers as card decks (dancer, companion, creator, club owner), grittier crime,
+  serial offenders and the darker adult themes.
+
+**Mature mode, part two: nightlife and the substance ladder.** A new **Substances** switch under Mature (off by
+default, adults only). It is about what drugs and drinking do to a life, and never how to do anything.
+- **A night out is a night.** "Go out on the town" becomes a chain of decisions: choose a bar, a club or an
+  after-hours spot (invite only until you are known on the scene), choose how hard you go, meet people (they become
+  regulars), get offered a round or something harder, deal with what happens (a fight, a friend who cannot stand, a
+  lost phone, the bouncer), and decide how to get home: a taxi, a friend's couch, a walk, driving (dangerous), or
+  home with someone if Intimacy is on. The morning costs you in proportion.
+- **A ladder.** Cannabis, pills, party drugs, cocaine and opioids, each with its own hook. The next rung is only
+  offered after use of the one below. Tolerance means it takes more for less; mixing and a high tolerance make a bad
+  night more likely.
+- **The long arc.** Cravings that you can hold on through, call someone about, or give in to. Withdrawal when a hooked
+  person stops. Relapse after a bad habit, counted and remembered. An overdose is no longer instant death: someone
+  nearby usually saves you, and you wake up in a hospital with a choice (rehab, swear it off, shrug it off), but alone
+  it often ends badly.
+- **Recovery.** Meetings (a sponsor gives you their number after a few), rehab (which now resets tolerance), and a year
+  clean that means something.
+- **People.** Dealers with a number in your phone, who can rip you off or get you arrested for possession. Friends
+  who pass things around. A random screening at work that fires people who use. An intervention at the kitchen table.
+  A friend who stops breathing in the back room, and what you do. A Monday you cannot account for.
 
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
@@ -831,8 +851,8 @@ Retire the "work harder / ask for a raise" loop for nearly every job.
 
 ### Phase 4: Mature mode
 
-**Status: language dial and intimacy built** (see "Mature mode, part one" under Built). Only the Intimacy
-sub-switch exists so far; Substances and Violence switches arrive with their content.
+**Status: language dial, intimacy, nightlife and the substance ladder built** (see "Mature mode, part one" and
+"part two" under Built). The Intimacy and Substances sub-switches exist; the Violence switch arrives with its content.
 
 - **Intimacy and relationship depth.** Hooking up becomes a scene with choices (how it went,
   protection, regret) instead of one line. Chemistry and compatibility, jealousy, make-ups,
