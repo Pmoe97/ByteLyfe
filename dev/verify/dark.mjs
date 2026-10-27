@@ -179,6 +179,18 @@ const EVS = ['dk_credit_taken', 'dk_partner_money', 'dk_obsession', 'dk_mil_orde
   setOn(false, false);
 }
 
+// A stalker who is forgotten while you are away (prison) does not leave a dangling record.
+{
+  setOn(true, true);
+  const s = adultLife(30); const by = person(s, 'ex', 10);
+  s.player.dark = { moral: 0, stalk: { by: by.id, kind: 'ex', since: s.year, level: 30, order: false, told: false, scared: false }, grudge: {}, helped: 0, betrayed: 0, quiet: 0 };
+  s.player.prison = { yearsLeft: 4, total: 4, served: 0, crime: 'burglary', behavior: 50, juvie: false, name: 'X', gang: null };
+  delete s.people[by.id];
+  ctx.darkYear(s);
+  ok(!s.player.dark.stalk, 'a stalker who has been forgotten is not left on the record, even from prison');
+  setOn(false, false);
+}
+
 /* 7. letting go -------------------------------------------------------------------------------------------- */
 {
   setOn(true, true);

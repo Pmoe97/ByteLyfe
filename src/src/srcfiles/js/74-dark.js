@@ -42,8 +42,11 @@ Object.assign(REL_DECAY, { stalker: 0 });
 const BETRAY_WHY = ['for a favor they were owed', 'because they thought you had it coming', 'because they had been drinking', 'because somebody pressed them hard', 'because it made them feel important'];
 // The web's leak (62-web.js) records who told whom; when one of your secrets gets out, you find out who.
 function darkYear(s) {
-  if (!darkOn() || A(s) < 18 || s.dead || !free(s)) return;
+  if (!darkOn() || A(s) < 18 || s.dead) return;
   const d = darkOf(s);
+  // Whoever it was may have been forgotten while you were away (prison, a move): the stalking ends with them.
+  if (d.stalk && (!s.people[d.stalk.by] || !s.people[d.stalk.by].alive)) { d.stalk = null; d.quiet = s.year; }
+  if (!free(s)) return;
   // Who told?
   for (const sec of Object.values(webOf(s).secrets)) {
     if (sec.subj !== s.playerId || !sec.out || sec.outYear !== s.year || !sec.told || sec.dk) continue;
