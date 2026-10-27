@@ -72,16 +72,17 @@ SHEETS.person = (pid) => {
     ${p.alive ? `<div class="rel-bar"><div class="muted">Relationship · ${Math.round(r.rel)}%</div>${bar(r.rel)}</div>
     <div class="mini-stats">${statCell('health', p.stats.health)}${statCell('smarts', p.stats.smarts)}${statCell('looks', p.stats.looks)}${statCell('happy', p.stats.happy)}</div>` : ''}
     ${traits ? `<div class="chips" style="justify-content:center;margin-top:10px">${traits}</div>` : ''}
-    ${kidFacts(p)}${romanceFacts(p)}${chaosFacts(p)}${militaryFacts(p)}
+    ${kidFacts(p)}${romanceFacts(p)}${chaosFacts(p)}${militaryFacts(p)}${webFacts(p)}
   </div>`;
   const body = bodyCard(p, false);
   const sb = godRow(p); // God Mode editing (1018-ui-godmode.js)
   // Parenting (46-parenting.js) and romance (47-romance.js) get their own sections.
   const acts = actionRows('person', pid, (a) => !a.group);
+  const web = actionRows('person', pid, (a) => a.group === 'web'); // secrets and gossip (62-web.js)
   const parenting = actionRows('person', pid, (a) => a.group === 'parent');
   const romance = actionRows('person', pid, (a) => a.group === 'romance');
   const tree = `<div class="list" style="margin-top:12px">${itemRow({ a: 'sheet', ds: { k: 'tree', arg: pid }, ico: '🌳', t: `${esc(p.first)}'s family tree`, chev: true })}</div>`;
-  return { title: fullName(p), html: card + tree + (body ? `<div class="section-title">Appearance</div>${body}` : '') + sb + (parenting ? `<div class="section-title">Parenting</div>${listOf(parenting)}` : '') + (romance ? `<div class="section-title">Romance</div>${listOf(romance)}` : '') + (acts ? `<div class="section-title">Interact</div>${listOf(acts)}` : (p.alive ? '<div class="note">You can’t interact right now.</div>' : '')) };
+  return { title: fullName(p), html: card + tree + (body ? `<div class="section-title">Appearance</div>${body}` : '') + sb + (parenting ? `<div class="section-title">Parenting</div>${listOf(parenting)}` : '') + (romance ? `<div class="section-title">Romance</div>${listOf(romance)}` : '') + (web ? `<div class="section-title">Secrets &amp; gossip</div>${listOf(web)}` : '') + (acts ? `<div class="section-title">Interact</div>${listOf(acts)}` : (p.alive ? '<div class="note">You can’t interact right now.</div>' : '')) };
 };
 INPUT.sbRel = (el, ds) => { Sandbox.setRel(G, ds.id, Number(el.value)); const v = $('#sbRelV'); if (v) v.textContent = el.value; scheduleSave(); };
 
@@ -129,6 +130,7 @@ SHEETS.profile = () => {
   html += `<div class="section-title">Goals</div>${goalsList()}`;
   html += `<div class="section-title">Health</div><div class="card">${known.length ? known.map((x) => kvRow(emo(DISEASES[x.id].emoji, 18) + ' ' + esc(DISEASES[x.id].name), 'since ' + x.since)).join('') : '<div class="muted">No known conditions.</div>'}${habits.map((k) => kvRow(emo(ADDICTIONS[k].emoji, 18) + ' ' + esc(ADDICTIONS[k].name) + ' habit', m.addictions[k] >= 50 ? '<span class="bad">Addicted</span>' : 'Developing')).join('')}</div>`;
   html += `<div class="section-title">Education</div><div class="card">${m.edu.degrees.length ? m.edu.degrees.map((x) => kvRow(esc(degreeLabel(x)), x.year)).join('') : '<div class="muted">No diplomas yet.</div>'}</div>`;
+  html += webCard(); // 1027-ui-web.js
   html += `<div class="section-title">Record</div><div class="card">${kvRow("Driver's license", m.license ? 'Yes' : '—')}${m.socials ? kvRow('Social media', `${esc(m.socials.handle)} · ${fmtNum(m.socials.followers)} followers${m.socials.verified ? ' · verified' : ''}`) : ''}${m.record.length ? m.record.map((r) => kvRow(esc(cap(CRIMES[r.crime].verb)), r.years ? `${r.years >= 99 ? 'life' : nOf(r.years, 'yr')} · ${r.year}` : `fined · ${r.year}`)).join('') : kvRow('Criminal record', 'Clean')}${m.wanted ? kvRow('Status', '<span class="bad">Fugitive</span>') : ''}</div>`;
   return { title: 'Your profile', html };
 };

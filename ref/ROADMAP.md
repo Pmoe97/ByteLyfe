@@ -640,6 +640,28 @@ ones, from the Overseas Intelligence Bureau to the Whitehall Section).
   Exchanged, Diplomatic Immunity, Station Chief, The Director...), 2 goals and the Master Spy and Traitor
   legacy titles.
 
+**The web (Phase 1 of the big push).** The first piece of the connected world: systems now affect
+each other through a shared layer. A new Reputation & secrets sheet on your profile shows it.
+- **Secrets that leak.** An affair, a one-night stand behind a partner's back, a crime nobody has
+  pinned on you and a killing are kept in a ledger with who knows and how much proof there is.
+  Every year each person who knows may tell someone, along their own ties, and a secret that
+  reaches your partner fires the old "caught" moment. Five people knowing, or strong proof, makes it
+  public; a crime or killing can also be called in. A conviction makes it a matter of record.
+- **People who know each other.** Your coworkers, classmates and friends are tied to one another,
+  your partner knows your friends, and gossip travels those ties, to you as well.
+- **Gossip about others.** Each year the people you know get secrets of their own (an affair, hidden
+  debt, a quiet firing, a drinking problem). When one reaches you, you choose: keep it quiet, ask,
+  help, pass it on, or (Mature) squeeze them.
+- **Keeping quiet.** Ask a knower as a favor, pay for their silence, or (Mature) lean on them; destroy
+  evidence in the Crime menu. A knower can call and demand hush money (Mature), a police canvass
+  comes to your door, and a scandal gets you shunned.
+- **A name that follows you.** Good name and scandal now shape interview odds and criminal trials,
+  fade with time, and half passes to your heirs.
+- **Neighborhoods remember.** A killing or a fight makes the city uneasy: its prices grow slower,
+  and the block holds a vigil.
+- **A fact bus** other systems can announce on and listen to, so the next expansions plug in instead of
+  being wired by hand.
+
 **Home projects and pets.** More to do with a home and an animal.
 - **Renovations:** hire a budget crew, a licensed contractor or a master architect for a pool, solar
   array, porch, koi pond or sauna (shared) and a game room, aquarium, observatory, chef's kitchen or
@@ -671,6 +693,12 @@ people who talk to each other, places with regulars.
 - Adult work stays consent-forward with the player in control. No coercion or trafficking path.
 
 ### Phase 1: The web (foundation)
+
+**Status: first slice built** (see "The web" under Built: secrets and leaks, ties, hearsay, reputation,
+the fact bus, neighborhood unease, and the first payoffs). Still to do in this phase: workplaces and
+venues as shared places with regulars, a favors-and-obligations ledger, more systems announcing and
+listening (spies and double lives, business scandals, the military, the underworld, courts and the
+press), and positive reputation sources like charity and good deeds.
 
 Built first, because it is what makes lives feel like a social web instead of a stack of menus.
 - **Secrets and reputation ledger.** Every secret has a subject, who knows it, how strong the

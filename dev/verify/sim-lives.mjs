@@ -113,6 +113,19 @@ function check(s, where) {
     if (sp.alumni && m.career && g('isSpyJob')(m.career.id)) fail(`an alumnus still working for the agency @${where}`, s);
     if (sp.burned && !(sp.burned.year > 0)) fail(`a burn without a year @${where}`, s);
   }
+  // The web (62-web.js): secrets keep sane numbers and real people, ties point at real people, reputation stays in range.
+  if (s.web) {
+    const kinds = g('SECRET_KINDS');
+    for (const id in s.web.secrets) {
+      const x = s.web.secrets[id];
+      if (!kinds[x.kind] || !(x.sev >= 1 && x.sev <= 5) || !(x.ev >= 0 && x.ev <= 100) || !x.knows.includes(x.subj) || !s.people[x.subj]) fail(`bad secret ${JSON.stringify(x)} @${where}`, s);
+    }
+  }
+  for (const id in s.people) {
+    const q = s.people[id];
+    if (q.ties && (q.ties.length > 6 || q.ties.some((t) => !s.people[t.id]))) fail(`bad ties on ${id} @${where}`, s);
+    if (q.rep && !(q.rep.name >= 0 && q.rep.name <= 100 && q.rep.scandal >= 0 && q.rep.scandal <= 100)) fail(`bad reputation on ${id} @${where}`, s);
+  }
   // Zoos (58-zoo.js): care and condition stay in range, and no habitat holds more than it can.
   for (const co of ctx.companies(s)) {
     const z = co.zoo;

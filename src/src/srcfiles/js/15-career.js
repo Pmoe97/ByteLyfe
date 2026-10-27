@@ -100,6 +100,7 @@ onChoice('interview', (s, ctx, ai) => {
   if (hasFelony(s)) odds -= 0.3;
   if (M(s).wanted) odds -= 0.2;
   odds += vetHireEdge(s, j); // veterans’ preference (59-military.js)
+  odds += webHireEdge(s); // a scandal follows you to interviews (62-web.js)
   if (!chance(clamp(odds, 0.05, 0.95))) {
     add(s, { happy: -3 });
     return { text: `They went with another candidate for ${j.ladder[0][0]}.`, title: 'Not this time', emoji: '📭', tone: 'bad' };
@@ -165,6 +166,7 @@ function promote(s, why) {
   c.salary = Math.max(salaryFor(s, c.id, c.level), Math.round(c.salary * 1.08));
   c.perf = Math.min(c.perf, 70);
   tally(s, 'promotions');
+  webFact(s, 'promoted', { job: c.id });
   add(s, { happy: 8 });
   if (j.special === 'fame') add(s, { fame: randInt(6, 14) });
   announce(s, { emoji: '📈', title: 'Promotion!', tone: 'good', text: `${why || 'You were promoted.'} You're now a ${j.ladder[c.level][0]}, earning ${fmtMoney(c.salary)} a year.` });

@@ -330,4 +330,5 @@ function gcPeople(s) {
     p.children = p.children.filter((x) => s.people[x]);
     if (p.partner && !s.people[p.partner]) { p.partner = null; p.married = false; }
   }
+  webPrune(s); // secrets and ties that pointed at the people just removed (62-web.js)
 }

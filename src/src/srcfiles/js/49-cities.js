@@ -151,7 +151,7 @@ function cityMarketYear(s, cc, city) {
   const st = cityState(s, cc, city), info = cityInfo(cc, city);
   if (st.yr === s.year) return st;
   st.yr = s.year;
-  st.g = clamp(0.22 * (1 - st.idx) + CITY_SIZES[info.size].drift + gauss(0, 0.035), -0.12, 0.14);
+  st.g = clamp(0.22 * (1 - st.idx) + CITY_SIZES[info.size].drift + gauss(0, 0.035) - webUnease(s, cc, city), -0.12, 0.14); // an uneasy city sags (62-web.js)
   st.idx = clamp(Math.round(st.idx * (1 + st.g) * 1000) / 1000, 0.7, 1.45);
   return st;
 }

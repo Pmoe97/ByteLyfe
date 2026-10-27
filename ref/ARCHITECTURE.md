@@ -57,8 +57,9 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `58` | Zoo & Wildlife Sanctuary (`58-zoo.js`): the zoo layer of the business engine: habitats, animals, breeding, breaches, admission | No DOM. `bizForecast` calls `zooMods` (through `industryMods`) and `companyYear` calls `zooYear`. |
 | `59` | Military depth (`59-military.js`): wars per country, branches and specialties, deployments and defining moments, the draft, desertion and courts-martial, veterans' benefits, and their events | No DOM. `ageUp` reaches `militaryTick` through a wrapper (before `careerTick`); `specialTick` calls `militaryYear`, `specialApply` calls `startMilitaryCareer`, `leaveJob` calls `milLeft`, `financeTick` calls `vetIncome`, `medPrice` calls `vetCareMult`, `financeTerms` calls `vetLoanTerms`, `pensionFor` calls `militaryPension`, the interview and election odds call `vetHireEdge` and `vetElectionEdge`. |
 | `60` | Secret agent (`60-spy.js`): the intelligence career, cover identities, missions and twists, assets, moles, double agents, capture, getting burned, memoirs, and their events | No DOM. `ageUp` reaches `spyTick` through a wrapper (before `careerTick`); `specialTick` calls `spyYear`, `specialApply` calls `spyApply`, `leaveJob` calls `spyLeft`. Reads the military layer (`mil`, `activeWar`, `FOES`) for veterans' hiring edge and mission foes. |
-| `61–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1026-ui-spy.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `62` | The web (`62-web.js`): the secrets ledger, reputation, NPC-to-NPC ties, hearsay, the fact bus, neighborhood unease, and their events | No DOM. `ageUp` reaches `webTick` through a wrapper (after `youthTick`). `gcPeople` calls `webPrune`; `commitCrime`, `arrest`, the assault and murder actions, `affairBegins`, `caughtPopup`, `hookupFoundOut`, the hookup action and `promote` announce facts with `webFact`; interviews read `webHireEdge`, criminal trials read `webJuryEdge`, `cityMarketYear` reads `webUnease`, `continueAs` calls `webHeir`. |
+| `63–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1027-ui-web.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -218,7 +219,7 @@ built from `CONTENT_TAGS`, with the taboo master + subtypes grouped in their own
 **A year (`ageUp`).** Currencies → body → pregnancy → school → career → businesses and the market →
 prison → money → assets → cities (rent, landlords, tenants) → fame → the people around you → the wider family → parenting →
 romance → taboo family romance → royalty → the underworld →
-show business → sports → courts → chaos → gambling → the house (your book and stable) → growing up (home, lessons) → pets → milestones → story chapters → random events → new illness → death check. The order
+show business → sports → courts → chaos → gambling → the house (your book and stable) → growing up (home, lessons) → the web (ties, gossip, leaks) → pets → milestones → story chapters → random events → new illness → death check. The order
 is in `AGE_PHASES` (`25-ageup.js`).
 
 **Health.** Health drifts toward a target set by age and fitness (`healthTarget`), and
@@ -488,6 +489,40 @@ sheets `dossier` and `assets`). The career is the `spy` entry in `JOBS` (`specia
   rolls `exposeTraitor` (defect, deal or fight; `treason`, `espionage` and `leak` are added to `CRIMES` there).
   A captured spy waits in prison for a swap (`spyTick`).
 
+**The web.** `62-web.js`, drawn by `1027-ui-web.js` (`webCard` on the profile, `webFacts` chips on a
+person's page, sheet `web`, and a "Secrets & gossip" section of person actions with `group: 'web'`). It is the
+layer that lets systems affect each other instead of each keeping to itself. Build new content on it.
+- **Secrets:** `s.web.secrets[id] = { kind, subj, other, rom, sev, ev, knows, out, hush }` at the top of the
+  save, so it outlives each character. `SECRET_KINDS` lists the kinds (the player's `affair`, `cheated`, `crime`
+  and `killing`, and the `npc_*` ones the circle generates). `webNewSecret` makes one, `webLive`/`webMine`/`webHeard`
+  list them, `webLabel`/`webRumor` say them in words. `sev` is how bad it would be, `ev` how much proof there is.
+- **Leaking:** `webLeak` (from `webTick`) gives each living knower a yearly chance to tell someone along their
+  ties (`webLeakOdds`: enemies and exes talk, loved ones don't, a bought silence in `hush` mostly holds).
+  `webLearn` adds a knower, raises `ev`, calls `webStake` when the person it matters most to finds out (a
+  partner finds an affair, through the old `caughtPopup`), and `webCheckPublic` calls `webExpose` once five people
+  know or the proof is strong. A crime or killing nobody talked about can still be called in (`ev / 600` a
+  year). Exposure costs reputation, may push entries onto `M(s).flags.heat` for the cold-case roll, and for an
+  NPC's secret changes their life (an affair ends a marriage, a firing takes the job).
+- **Ties:** `webTies(s, p)` is everyone a person could tell: family from the family tree, `p.ties` for the
+  rest, and you when they know you. `webWeave` links your coworkers, classmates and friends to each other every
+  year; `webLink` keeps it symmetric and capped at six. `webPrune` (also run by `gcPeople`) drops anything pointing
+  at a person who is gone.
+- **Hearsay:** when a secret about someone else reaches you, `webHearsay` asks what to do (keep quiet, ask them,
+  help, pass it on, and with Mature on squeeze them). `webCircleDrama` gives the people you know a few secrets of
+  their own each year, adults only.
+- **Reputation:** `webRep(p) = { name, scandal }`, read through `webHireEdge` (interviews) and `webJuryEdge`
+  (criminal trials), drifting back to neutral, half passed to an heir by `webHeir`.
+- **Facts:** `onWebFact(type, fn)` registers a listener, `webFact(s, type, data)` announces; a listener that
+  throws is logged and skipped. Announced today: `crime_clean`, `arrested`, `killed`, `assault`, `affair_begun`,
+  `affair_found`, `fling_cheat`, `fling_found`, `promoted`. Add a fact in the file that knows it happened, and
+  a listener here (or in your own file) for what it should cause.
+- **Unease:** `webUneaseAdd` raises a city's unease (a killing is 6, a fight 1.5), `webUnease` is what
+  `cityMarketYear` subtracts from the city's price growth, and it fades 20% a year. The `web_vigil` event is
+  how the block reacts.
+- **Actions and events:** `web_silence` (ask, pay or, with Mature, lean on someone who knows), `web_confront`,
+  `web_coverup` (Crime menu); events `web_canvass`, `web_vigil`, `web_shunned` and the Mature `web_hush_money`.
+- **Tests:** `dev/verify/web.mjs`, and the life simulator checks secrets, ties and reputation stay valid.
+
 **Zoos.** `58-zoo.js`, drawn on the company sheet by `zooSection` (`1024-ui-zoo.js`). A zoo is a company with
 `ind: 'zoo'` and `co.zoo = { ticketPrice, welfare, visitorSat, exhibits, animals, breeding, ... }`, made on first
 touch by `zooOf`.
@@ -592,6 +627,7 @@ never fired and actions that never ran, which usually means a `when` that can't 
 | `dev/verify/house.mjs` | Owning the house: a standard book keeps about 5% of what's bet; an unlicensed book draws heat and a licensed one none; a felony blocks the license and some countries have none; credit fills the slate; a family eventually asks for its fifth and takes it; a raid on a bookie is a bookmaking charge; prison ends an unlicensed book; the big game's expected result is the hold and laying off locks a profit; a yearling from the sale is a named pet with a pedigree that goes into training at two and grows toward its ceiling; great horses win far more than poor ones; at nine they retire to the broodmare band or stud; a mare bred to your stallion foals next year with both parents' blood; horses count toward net worth and never run away; only three-year-olds run the Derby, once; the Gold Cup needs a stakes win; a big race pays its purse at the finish and goes on the record; a champion wins the Derby often but not always; a casino needs a clean record, has a venue in its city you can't gamble in, moves its revenue with the house edge, wins more whale years than it loses, often loses its license over a skim, and casino chains own casinos in other cities. |
 | `dev/verify/gambling.mjs` | Gambling: every city has a bookie and Silver Mesa its casinos and resorts; venues persist and belong to crime families or hotel companies; wagering climbs to Whale and the jet is free; bookies lend and the app doesn't; race odds carry a take, every horse finishes once and never runs backwards, the payout waits for the finish and another action settles it; season bets pay when the season is played; debts escalate and grow; 400 beatings break bones far more often than they kill; family is untouched with Mature off; markers become lawsuits; the self-exclusion list shuts casinos but not bookies; counting cards bans you across the chain; the main event is only in Silver Mesa. |
 | `dev/verify/sim-business.mjs` | Business balance report (add an industry id as the third argument to run just that one): every industry run 20 years under a sensible owner (who also franchises and buys a small rival when flush) and a hands-off owner. Survival, profit, size, IPO readiness, franchising and acquisitions at years 1/5/10/20. |
+| `dev/verify/web.mjs` | The web: an affair is a secret and the partner learning it fires the caught popup; a circle weaves into symmetric, capped ties that never dangle; a rumor reaches you as a popup and every choice runs; squeezing, leaning and the hush-money call stay hidden with Mature off; a killing is a secret that chills the victim's friends and makes the city uneasy, and an uneasy city's prices grow slower; scandal costs interviews and juries and heirs inherit half; a bought silence makes a knower far less likely to talk; a throwing listener never breaks the game; teenagers hear no gossip; every web event and every choice runs. |
 | `dev/verify/emoji-audit.mjs` | Fails on emoji newer than Emoji 12, which render as boxes on Windows 10. |
 | `dev/verify/godmode.mjs` | God Mode's per-person rules: parent and child ages, a spouse never under 18, bodies removed and restored across 18, clean names, clamped stats, trait conflicts and the limit of four, age limits on jobs, money, education, gender, orientation and home, and which relationships can change kind. |
 | `dev/verify/run-all.mjs` | `npm run verify`: the syntax check (in-process), then every other check as its own process, in parallel (one per core, `VERIFY_JOBS=n` to cap it), with each check's output printed when it finishes. The 300-life simulator is split into shards (a count that shares no factor with 10, so the personas spread evenly) and merged into one summary. About a minute on 12 cores. |

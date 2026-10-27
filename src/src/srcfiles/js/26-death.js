@@ -116,6 +116,7 @@ function continueAs(s, pid) {
   m.will = oldWill;
   m.wealthTier = estate > 1e6 ? 'rich' : 'middle';
   const age = ageOf(s, heir);
+  webHeir(s, old, heir); // the family name, good or bad (62-web.js)
 
   // Family, rebuilt around the heir.
   const rel = (lo, hi) => randInt(lo, hi);

@@ -45,6 +45,7 @@ function commitCrime(s, id) {
     add(s, { money: loot, karma: c.karma, happy: randInt(1, 4) });
     if (chance(c.later)) { M(s).flags.heat = (M(s).flags.heat || []).concat([{ crime: id, year: s.year }]); }
     tally(s, 'crimeLoot', loot);
+    webFact(s, 'crime_clean', { crime: id });
     return { text: vary(pick(CRIME_WIN[id])) + (loot ? ` You got ${fmtMoney(loot)}.` : ''), emoji: c.emoji };
   }
   if (c.deadly && chance(c.deadly)) { die(s, 'a police shootout'); return 'It went horribly wrong.'; }
@@ -72,6 +73,7 @@ function arrest(s, id) {
     return { text: 'You were caught. The police brought you home to your very disappointed parents.', tone: 'bad', emoji: '🚓' };
   }
   tally(s, 'arrests');
+  webFact(s, 'arrested', { crime: id });
   popup(s, {
     emoji: '⚖️', title: 'Court date', text: `You've been charged with ${c.verb}. Who will defend you?`, handler: 'trial', ctx: { crime: id },
     choices: LAWYERS.map((l) => ({ label: l.emoji + ' ' + l.name, value: l.id, sub: l.cost ? fmtMoney(price(s, l.cost)) : 'Free', disabled: price(s, l.cost) > M(s).money && l.cost > 0 })).concat([
@@ -98,7 +100,7 @@ onChoice('trial', (s, ctx, lid) => {
   const cost = price(s, L.cost);
   if (!pay(s, cost)) return cantAfford(cost);
   const priors = M(s).record.length;
-  let odds = c.conviction - L.bonus - (M(s).karma - 50) / 400 + priors * 0.04 + (M(s).wanted ? 0.1 : 0);
+  let odds = c.conviction - L.bonus - (M(s).karma - 50) / 400 + priors * 0.04 + (M(s).wanted ? 0.1 : 0) + webJuryEdge(s); // your name travels (62-web.js)
   if (trait(s, 'lucky')) odds -= 0.05;
   if (trait(s, 'charming')) odds -= 0.03;
   if (!chance(clamp(odds, 0.05, 0.97))) {
@@ -473,6 +475,7 @@ defAction({
     const me = skill(s, 'martial') + skill(s, 'fitness') / 2 + P(s).stats.health / 5 + (trait(s, 'hotheaded') ? 10 : 0) + randInt(0, 40);
     const them = Math.min(ageOf(s, p), 30) + p.stats.health / 4 + randInt(0, 40) - (ageOf(s, p) > 65 ? 25 : 0);
     tally(s, 'fights');
+    webFact(s, 'assault', { pid });
     add(s, { karma: -6 });
     setRel(s, pid, isFamilyKind(relKind(s, pid)) || K_ROMANCE.includes(relKind(s, pid)) ? relKind(s, pid) : 'enemy', 5);
     if (K_ROMANCE.includes(relKind(s, pid)) && chance(0.6)) endRomance(s, pid, relKind(s, pid) === 'spouse' ? 'exspouse' : 'ex');
@@ -524,6 +527,7 @@ onChoice('murder', (s, ctx, how) => {
   tally(s, 'murders');
   npcDies(s, p, how === 'accident' ? 'a tragic accident' : 'suspicious circumstances', { murdered: true });
   M(s).flags.heat = (M(s).flags.heat || []).concat([{ crime: 'murder', year: s.year }]);
+  webFact(s, 'killed', { pid: ctx.pid, how });
   if (chance(how === 'hitman' ? 0.2 : 0.35)) return arrest(s, 'murder');
   return { text: `${p.first} is dead. Nobody suspects you. Yet.`, tone: 'bad' };
 });

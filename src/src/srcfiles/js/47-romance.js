@@ -134,6 +134,7 @@ function affairBegins(s, pid, current) {
   r.sus = 10;
   r.hid = s.year;
   tally(s, 'affairs');
+  webFact(s, 'affair_begun', { pid, rom: current }); // the secret ledger (62-web.js)
   add(s, { karma: -5, happy: 4 });
   return { text: `${p.first} said yes... even though you're already with ${rom.first}. You're having an affair.`, tone: 'bad' };
 }
@@ -164,6 +165,7 @@ function caughtPopup(s, pid, rom) {
     text: `${q.first} found ${pick(CLUES)} ${p.first}.`,
     choices: [{ label: 'Deny everything', value: 'deny' }, { label: 'Confess and beg forgiveness', value: 'confess' }, { label: `Leave ${q.first} for ${p.first}`, value: 'leave' }, { label: 'Suggest opening the relationship', value: 'open' }],
   });
+  webFact(s, 'affair_found', { pid, rom });
 }
 // Your partner leaves you: a divorce or a breakup. Returns any extra text.
 function partnerLeaves(s, rom) { return relKind(s, rom) === 'spouse' ? divorce(s, rom, false).text : (endRomance(s, rom, 'ex'), ''); }
@@ -233,6 +235,7 @@ defAction({
 // A one-off hookup found out about (the hookup action and repeat flings).
 function hookupFoundOut(s, rom) {
   tally(s, 'caughtCheating');
+  webFact(s, 'fling_found', { rom });
   addRel(s, rom, -35);
   let out = ` ${nm(s, rom)} found out.`;
   if (relOf(s, rom).rel < 25 || chance(0.5)) {

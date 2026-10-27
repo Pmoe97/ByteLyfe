@@ -893,6 +893,8 @@ defAction({
     tally(s, 'hookups');
     // They stay in your life as a fling, and may come back (47-romance.js).
     const p = makeFling(s, c);
+    const cheating = romanticId(s) && !openWith(s, romanticId(s));
+    if (cheating) webFact(s, 'fling_cheat', { pid: p.id, rom: romanticId(s) }); // 62-web.js
     let out = `You hooked up with ${c.first}, ${c.age}. ${pick(['Fireworks.', 'It was... fine.', 'They left before sunrise.', "You don't regret it."])}`;
     if (chance(0.05)) { getSick(s, pick(STIS)); out += ' A few weeks later, you noticed something was off down there.'; }
     const rom = romanticId(s);
