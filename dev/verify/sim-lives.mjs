@@ -248,6 +248,7 @@ const youth = { lessons: 0, medals: 0, blackBelts: 0, captains: 0, titles: 0, va
 const military = { lives: 0, acts: 0, maxTours: 0 };
 const milSeen = new Set();
 const spies = { lives: 0, acts: 0, missions: 0, burned: 0, turned: 0 };
+const ventures = { schemes: 0, collapsed: 0, cons: 0, rings: 0, squeezes: 0, ops: 0, busts: 0, deaths: 0, vigs: 0, aided: 0, twists: 0, organized: 0, abuseSurvived: 0, abuseDone: 0 };
 const spySeen = new Set();
 const house = { books: 0, bookNet: 0, horses: 0, wins: 0, bigWins: 0, foals: 0, sold: 0, whales: 0, licenses: 0 };
 const cities = { moves: 0, places: 0, tenants: 0, maxTenants: 0, signed: 0, evicted: 0, wasEvicted: 0, beaten: 0, rent: 0 };
@@ -607,6 +608,7 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
   cities.places += (s.player.places || []).length;
   for (const [k, c] of [['lessons', 'lessonsStarted'], ['medals', 'lessonMedals'], ['blackBelts', 'blackBelts'], ['captains', 'captain'], ['titles', 'clubTitles'], ['valedictorians', 'valedictorian'], ['elite', 'eliteAdmit'], ['fullRides', 'fullRide'], ['detentions', 'detentions'], ['suspensions', 'suspensions'], ['expulsions', 'expulsions'], ['grounded', 'grounded'], ['bullied', 'bullied']]) youth[k] += lf[c] || 0;
   for (const [k, c] of [['missions', 'spyMissions'], ['burned', 'burned'], ['turned', 'turned']]) spies[k] += lf[c] || 0;
+  for (const [k, c] of [['schemes', 'schemesStarted'], ['collapsed', 'schemesCollapsed'], ['cons', 'conStarted'], ['rings', 'ringStarted'], ['squeezes', 'squeezes'], ['ops', 'opStarted'], ['busts', 'opBusts'], ['deaths', 'opDeaths'], ['vigs', 'vigStarted'], ['aided', 'casesAided'], ['twists', 'workTwists'], ['organized', 'organized'], ['abuseSurvived', 'abuseSurvived'], ['abuseDone', 'abuseDone']]) ventures[k] += lf[c] || 0;
   for (const [k, c] of [['books', 'booksStarted'], ['bookNet', 'bookNet'], ['horses', 'racehorses'], ['wins', 'ownerWins'], ['bigWins', 'bigRaceWins'], ['foals', 'foals'], ['sold', 'horsesSold'], ['whales', 'whaleBeaten'], ['licenses', 'licenseLost']]) house[k] += lf[c] || 0;
   if (s.challenge) { chal.started++; if (s.challenge.done) chal.done++; else if (s.challenge.failed || s.challenge.pid !== s.playerId) chal.failed++; }
   const nt = s.player.assets.reduce((n, a) => n + (a.tenants || []).length, 0); cities.tenants += nt; cities.maxTenants = Math.max(cities.maxTenants, nt);
@@ -614,7 +616,7 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
 }
 
 // One run's raw numbers. Shards write these; --merge adds them up.
-let agg = { lives: stats.lives, seed: SEED, maxSecs: (Date.now() - t0) / 1000, shards: 1, failures, fails, stats, biz, kin, courts, cities, chal, house, youth, military, spies, seen: [...g('STORY_SEEN')] };
+let agg = { lives: stats.lives, seed: SEED, maxSecs: (Date.now() - t0) / 1000, shards: 1, failures, fails, stats, biz, kin, courts, cities, chal, house, youth, military, spies, ventures, seen: [...g('STORY_SEEN')] };
 if (opts.json) { fs.writeFileSync(opts.json, JSON.stringify(agg)); process.exit(0); }
 if (opts.merge) agg = opts.merge.map((f) => JSON.parse(fs.readFileSync(f, 'utf8'))).reduce(mergeAgg);
 // Numbers add up (keys starting with "max" take the larger), lists join, objects merge.
@@ -633,7 +635,7 @@ function mergeAgg(a, b) {
 }
 report(agg);
 
-function report({ stats, biz, kin, courts, cities, chal, house, youth, military, spies, failures, fails, seed, maxSecs, shards, seen }) {
+function report({ stats, biz, kin, courts, cities, chal, house, youth, military, spies, ventures, failures, fails, seed, maxSecs, shards, seen }) {
 const avg = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0);
 const median = (a) => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[Math.floor(b.length / 2)] : 0; };
 const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k}:${v}`).join(', ');
@@ -659,6 +661,7 @@ console.log(`Cities (last gen per life): ${cities.moves} city moves · ${(cities
 console.log(`Challenges: ${chal.started} started · ${chal.done} completed · ${chal.failed} failed`);
 console.log(`Growing up (last gen per life): ${youth.lessons} lessons started, ${youth.medals} medals, ${youth.blackBelts} black belts · ${youth.captains} captains, ${youth.titles} club titles · ${youth.valedictorians} valedictorians, ${youth.elite} elite admissions, ${youth.fullRides} full rides · ${youth.detentions} detentions, ${youth.suspensions} suspensions, ${youth.expulsions} expulsions · grounded ${youth.grounded} times · ${youth.bullied} bullied`);
 console.log(`Spies: ${spies.lives} lives in the agency, ${spies.acts} intelligence actions, ${spies.missions} missions, ${spies.burned} burned covers, ${spies.turned} turned or doubled`);
+console.log(`Ventures: ${ventures.schemes} investment schemes (${ventures.collapsed} collapsed), ${ventures.cons} long cons, ${ventures.rings} blackmail rings (${ventures.squeezes} squeezes), ${ventures.ops} drug operations (${ventures.busts} busts, ${ventures.deaths} deaths), ${ventures.vigs} vigilantes, ${ventures.organized} neighborhood projects, ${ventures.aided} cases aided, ${ventures.twists} career twists, abuse: ${ventures.abuseSurvived} lives affected and ${ventures.abuseDone} lives where the player was the one doing it`);
 console.log(`Military: ${military.lives} lives served, ${military.acts} military actions, most tours in one life ${military.maxTours}`);
 console.log(`The house (last gen per life): ${house.books} books started, ${Math.round(house.bookNet).toLocaleString()} kept · ${house.horses} racehorses, ${house.wins} race wins, ${house.bigWins} big-race wins, ${house.foals} foals, ${house.sold} sold · casinos ${biz.byInd.casino || 0} company-years, ${house.whales} whale-beating years, ${house.licenses} licenses lost`);
 console.log(`Content tags on: ${TAG_IDS.map((t) => `${t} in ${stats.tagLives[t] || 0} lives`).join(', ')}`);

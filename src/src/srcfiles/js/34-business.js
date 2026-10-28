@@ -959,6 +959,7 @@ function liquidate(s, co) {
     }
   }
   co.closed = true;
+  webFact(s, 'biz_failed', { co: co.id, you: co.ceo === 'you', owed: net < 0 ? Math.min(-net, co.guaranteed || 0) : 0 });
   return text;
 }
 defAction({

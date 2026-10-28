@@ -239,11 +239,16 @@ const adultRecognized = (id) => ({ id: 'recognized', name: 'Someone who knows yo
   after: (s, out) => adultSlip(s, id, out === 'ok' ? 0.04 : out === 'meh' ? 0.3 : 0.75) });
 
 /* ---- the club dancer ---------------------------------------------------------------------- */
+// The club you work at is the city's real one (70-nightlife.js), a place with a mood and regulars (81-web2.js).
+// A club in a good mood pays better; one in a bad year does not.
+function adClubMood(s) { const c = adultClub(s), p = c && placeGet(s, c.key); return p ? clamp(0.85 + p.mood / 330, 0.85, 1.12) : 1; }
+function adultClub(s) { const v = nightVenues(s).find((x) => x.kind === 'club'); return v ? { key: nightPlaceKey(s, v), kind: 'night', name: v.name, emoji: '💃' } : null; }
 defWork('club_dancer', {
   meter: { name: 'Your name on the floor', emoji: '💃', start: 50, words: WORDS('Unknown', 'A new face', 'A regular act', 'A crowd favorite', 'The headliner') },
   desk: 'Your nights', tags: ADULT_TAGS, deal: () => 3, fired: 'The club let you go after a string of no-shows, and the stage went to someone else.',
-  payMul: (s, st) => ADULT_BOUNDS[adBound(st)].pay * (hereInfo(s).wage || 1),
-  kv: (s, st) => [['Your boundaries', ADULT_BOUNDS[adBound(st)].name], ['Who knows', AD_VIS[st.flags.vis] || 'Nobody']],
+  payMul: (s, st) => ADULT_BOUNDS[adBound(st)].pay * (hereInfo(s).wage || 1) * adClubMood(s),
+  place: (s) => adultClub(s),
+  kv: (s, st) => [['Where you dance', (adultClub(s) || { name: 'The club' }).name], ['Your boundaries', ADULT_BOUNDS[adBound(st)].name], ['Who knows', AD_VIS[st.flags.vis] || 'Nobody']],
   cards: [
     { id: 'friday', name: 'A packed Friday', emoji: '💃', w: 1.6, base: 0.5, pay: 500,
       intro: 'The floor is full, the DJ is late and the manager is pacing.',
@@ -421,6 +426,8 @@ defWork('creator', {
 defWork('club_owner', {
   meter: { name: 'Staff trust', emoji: '🎶', start: 50, words: WORDS('Distrusted', 'Watched', 'Respected', 'Trusted', 'Their champion') },
   desk: 'Your club', tags: ADULT_TAGS, deal: () => 3, fired: 'The owners let you go, and the staff did not look sorry.',
+  place: (s) => adultClub(s),
+  kv: (s) => [['Your club', (adultClub(s) || { name: 'The club' }).name]],
   cards: [
     { id: 'big_night', name: 'A sold-out Saturday', emoji: '🎶', w: 1.6, base: 0.5, pay: 1500,
       stages: [

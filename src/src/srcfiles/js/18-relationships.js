@@ -474,6 +474,7 @@ function askOutOdds(s, p) {
   if (trait(s, 'romantic')) odds += 0.08;
   if (netWorth(s) > 1e6) odds += 0.08;
   odds += intimDateEdge(s); // a reputation for nights out (68-intimacy.js)
+  odds += webVoteEdge(s) / 2; // people hear about a good name, and about a scandal (62-web.js)
   if (relOf(s, p.id)) odds += (relOf(s, p.id).rel - 50) / 120;
   return clamp(odds, 0.05, 0.95);
 }

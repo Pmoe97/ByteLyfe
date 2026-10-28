@@ -309,6 +309,12 @@ onChoice('uwFlip', (s, ctx, yes) => {
   tally(s, 'flipped');
   return { text: 'You signed the deal. From now on, every conversation goes on tape.', emoji: '🐀' };
 });
+// The family knows. Run, or face them.
+function ratFound(s) {
+  const u = uw(s), fam = myFamily(s);
+  if (!u.rat || s.pending.some((p) => p.handler === 'uwRatFound')) return;
+  popup(s, { emoji: '🐀', title: "They know", tone: 'bad', handler: 'uwRatFound', text: `${fam ? cap(fam.name) : 'The family'} found out you've been wearing a wire.`, choices: [{ label: 'Run: take witness protection', value: 'run' }, { label: 'Face them', value: 'face', tone: 'bad' }] });
+}
 // Witness protection: a new name in a new city, with everything underworld left behind.
 function witnessProtection(s) {
   const me = P(s), u = uw(s), C = country(s);
@@ -616,7 +622,7 @@ function uwTick(s) {
   if (u.museum) { earn('Museum tickets', collectionValue(s) * 0.05); m.fame = clamp100(m.fame + 1); u.heat = Math.max(0, u.heat - 6); }
   if (u.rat) {
     earn('Informant payments', price(s, 20000));
-    if (chance(0.12)) popup(s, { emoji: '🐀', title: "They know", tone: 'bad', handler: 'uwRatFound', text: `${fam ? cap(fam.name) : 'The family'} found out you've been wearing a wire.`, choices: [{ label: 'Run: take witness protection', value: 'run' }, { label: 'Face them', value: 'face', tone: 'bad' }] });
+    if (chance(0.05)) ratFound(s); // and the web: a secret that leaks (81-web2.js) is the rest of the risk
   }
   // Heat cools, unless it boils over into a raid.
   u.heat = Math.round(clamp(u.heat - 8 - (lowYear ? 10 : 0), 0, 100));

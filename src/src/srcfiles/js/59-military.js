@@ -549,10 +549,17 @@ function deserterYear(s) {
   if (!m || !m.deserter || m.deserter.caught) return;
   const d = m.deserter, war = activeWar(s);
   add(s, { happy: -2 });
-  const odds = clamp(0.1 + (d.hide === 'family' ? 0.15 : d.hide === 'border' ? -0.07 : -0.03) - skill(s, 'streetwise') / 800 + (war ? 0.03 : 0) + M(s).fame / 900, 0.02, 0.4);
+  // Everyone who knows (the web, 81-web2.js) is one more person who could tell the military police.
+  const odds = clamp(0.1 + (d.hide === 'family' ? 0.15 : d.hide === 'border' ? -0.07 : -0.03) - skill(s, 'streetwise') / 800 + (war ? 0.03 : 0) + M(s).fame / 900 + webKindPressure(s, 'deserter'), 0.02, 0.5);
   if (!chance(odds)) { if (chance(0.4)) log(s, '🕶️ You saw a military police car slow down outside, and it kept going.', 'bad'); return; }
+  deserterCaught(s);
+}
+// The military police have found you (a year's luck, or the web: someone told). A court-martial follows.
+function deserterCaught(s) {
+  const m = mil(s), d = m && m.deserter;
+  if (!d || d.caught) return;
   d.caught = true;
-  const cost = price(s, 12000);
+  const cost = price(s, 12000), war = activeWar(s);
   popup(s, {
     emoji: '⚖️', title: 'Court-martial', text: `The military police found you in ${s.year - d.year === 0 ? 'the first year' : nOf(s.year - d.year, 'year')}. A court-martial will decide how long you go away.`, handler: 'milCourt', ctx: { war: !!war },
     choices: [

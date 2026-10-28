@@ -170,6 +170,7 @@ defAction({
     add(s, { karma: Math.round(randInt(2, 4) / n), happy: Math.round(randInt(1, 3) / n) });
     addSkill(s, 'charisma', 1);
     tally(s, 'volunteering');
+    webFact(s, 'good_deed', { kind: 'volunteer' }); // a good name (62-web.js, 81-web2.js)
     return `You volunteered at ${pick(['an animal shelter', 'a soup kitchen', 'a senior center', 'a beach cleanup', 'a children’s hospital', 'a food bank', 'a community garden'])}.`;
   },
 });
@@ -269,6 +270,7 @@ onChoice('donate', (s, ctx, amt) => {
   const pts = clamp(Math.round(Math.log10(amt / econ(s)) * 2.5), 1, 18);
   add(s, { karma: pts, happy: Math.ceil(pts / 3), fame: amt >= price(s, 250000) ? randInt(2, 6) : 0 });
   tally(s, 'donated', amt);
+  webFact(s, 'good_deed', { kind: 'charity', amt, big: amt >= price(s, 250000), name: clamp(Math.round(pts / 3), 1, 6) });
   return `You donated ${fmtMoney(amt)}. ${pts >= 10 ? 'A building might get named after you.' : 'It felt good.'}`;
 });
 defAction({

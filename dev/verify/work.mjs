@@ -122,7 +122,8 @@ const job = (id, level) => { const s = adult(30); ctx.hire(s, id, level ?? 0); r
         ok(!threw, `${id}/${k.id} seed ${seed} ran (${threw && threw.stack.split('\n').slice(0, 3).join(' | ')})`);
         if (!threw) { inRange(s, `${id}/${k.id}`); played++; }
         if (s.dead) continue;
-        ok(st.ok + st.meh + st.bad === 1 || s.dead, `${id}/${k.id} counts once (${st.ok + st.meh + st.bad})`);
+        // A card with a twist can be followed by one more, and the twist is played here too.
+        ok(st.ok + st.meh + st.bad === 1 || (k.twist && st.ok + st.meh + st.bad === 2) || s.dead, `${id}/${k.id} counts once (${st.ok + st.meh + st.bad})`);
       }
     }
   }

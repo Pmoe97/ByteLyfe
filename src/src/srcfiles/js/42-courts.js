@@ -302,6 +302,7 @@ function judgment(s, k) {
 function verdict(s, k, won) {
   k.won = won;
   k.amt = judgment(s, k);
+  webFact(s, 'court_verdict', { id: k.id, won, side: k.side, type: k.type, claim: k.claim, co: !!k.co, name: caseName(s, k) }); // a verdict is public (81-web2.js)
   const plaintiffWins = (k.side === 'plaintiff') === won;
   const head = won ? `The ${pick(['jury', 'court'])} found for you in ${caseName(s, k)}.` : `The ${pick(['jury', 'court'])} found against you in ${caseName(s, k)}.`;
   const stakes = plaintiffWins ? ` The judgment: ${fmtMoney(k.amt)}${k.amt > k.claim ? ', punitive damages included' : ''}.` : '';

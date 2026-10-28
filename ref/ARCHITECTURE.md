@@ -76,8 +76,15 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `78` | Abduction and captivity (`78-secret-space.js`): the six secret rooms (renovation projects), taking someone, care, escape, knocks, searches, and a death in care | No DOM. Behind `mature` + `mature_violence`. Registers into `RENOVATION_PROJECTS` (05-data-assets.js); `completeRenovation` (17-assets.js) calls `ssBuilt`; a captive is a relationship of kind `captive` (hidden from `relPeople`, `reachable` false); a death goes through the web's `killed` fact and 72-violence.js's "what now". `ageUp` reaches `capYear` through a wrapper. |
 | `79` | The paper (`79-news.js`): articles about you and yours, detective hints by case progress, ordinary news | No DOM. `s.news`; `newsYear` through a wrapper; read on the Case files card (1028-ui-cases.js) in `1031-ui-news.js`. |
 | `80` | Ransom notes (`80-ransom.js`): the other side of the note, from silly to serious, real and hoax | No DOM. An event (`kn_ransom`) behind the same switches; writes to the paper. |
-| `81–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1030-ui-intimacy.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `81` | The web, part two (`81-web2.js`): a good name (deeds, pillar, the cushion), press and bus listeners, the deserter's, informant's and spy's secrets, places with regulars | No DOM. `onYear('web2')`. `62-web.js` calls `webCushion`, `webVoteEdge` and the `defSecretKind` hooks; 21-activities, 35, 34, 42, 60 announce facts; 53, 70 and 75 call `placeVisit`; 70 calls `placeIncident`. |
+| `82` | Schemes (`82-schemes.js`): the Ponzi scheme, the long con and (Mature) the blackmail ring | No DOM. `onYear('schemes')`. A collapse opens a case (63-cases.js), a victim (84) and a news item (79). Secret kinds `fraud`, `long_con`, `blackmail_ring`. |
+| `83` | The operation (`83-operation.js`): turf, product, supply, crew, rivals, raids, deaths, the cartel stage; a prison gang's ranks | No DOM. Behind `mature` + `mature_substances` (violent options also `mature_violence`). `onYear('operation')`; reads the underworld's dealer ladder (39) and `ratFound` is called by the web's `informant` secret. |
+| `84` | Street justice (`84-street-justice.js`): victims and fallout, witnesses, the vigilante | No DOM. Fallout is ungated; witnesses are Mature, the vigilante Mature + Violence. Listens to the `victim` fact (announced by 82 and 83). `onYear('street')`. |
+| `85` | Abuse (`85-abuse.js`): the victim's and the abuser's side of a toxic or abusive relationship | No DOM. Behind `mature` + `mature_themes`. `onYear('abuse')`. Nobody dies, nothing is sexual (checked by `dev/verify/abuse.mjs`). A victim's secret getting out is never a scandal (the `victim` flag on `defSecretKind`). |
+| `86` | Careers, part two (`86-careers-plus.js`): forensics and profiler tracks, patrol, paramedic/teacher/lawyer full systems, cook-offs, farm and fishing seasons, twists | Pure data on the career-cards engine plus a few case-file hooks (`caseAid`). Adds two jobs to `JOBS` and `JOB_IDS`, replaces the decks of a few existing ones, wraps `CAREER_YEAR.police`. |
+| `87` | Honors (`87-honors.js`): achievements and legacy titles for 81 to 86 | No DOM. Pure data. |
+| `88–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `1000+` | UI (`1000-ui-kit.js` … `1032-ui-ops.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -914,3 +921,24 @@ never fired and actions that never ran, which usually means a `when` that can't 
 | `dev/verify/godmode.mjs` | God Mode's per-person rules: parent and child ages, a spouse never under 18, bodies removed and restored across 18, clean names, clamped stats, trait conflicts and the limit of four, age limits on jobs, money, education, gender, orientation and home, and which relationships can change kind. |
 | `dev/verify/run-all.mjs` | `npm run verify`: the syntax check (in-process), then every other check as its own process, in parallel (one per core, `VERIFY_JOBS=n` to cap it), with each check's output printed when it finishes. The 300-life simulator is split into shards (a count that shares no factor with 10, so the personas spread evenly) and merged into one summary. About a minute on 12 cores. |
 | `dev/verify/ui-smoke.js` | Paste into the browser console: plays 60 years through the real UI, opening every sheet. |
+
+## The finishing pass (81 to 87)
+
+- **Yearly turns without editing the list.** `onYear(name, fn)` (25-ageup.js) registers a yearly turn that runs, in load
+  order, in one phase after `capYear` and before the paper. A hook that throws is logged and skipped, so a new system can
+  never stop the year. Files from 81 on use it; older files still have their own wrappers.
+- **New kinds of secret.** `defSecretKind(kind, { sev, icon, mine, rumor, expose, stake, tipOdds, victim })` (62-web.js).
+  `expose` runs when it gets out, `tipOdds` is a yearly risk with no knower needed, `victim` (a function or `true`) means its
+  getting out is no scandal for the subject. Used by 81 (`deserter`, `informant`, `spy_life`), 82 (`fraud`, `long_con`,
+  `blackmail_ring`), 83 (`operation`), 84 (`vigilante`) and 85 (`abuse`).
+- **Places.** `s.web.places[key]` (81-web2.js): `placeVisit(s, key, { kind, name, emoji }, [pids])`, `placeRegular`, `placeIncident`,
+  `placeVibe`, `placesYours`. A card deck can name its place with `def.place(s)` and the people it deals become regulars
+  (65-work.js). Regulars are tied to each other (`work` for a workplace, `place` otherwise).
+- **Facts added to the bus:** `good_deed`, `biz_event`, `biz_failed`, `court_verdict`, `spy_burned`, `memoir_out`, `secret_out`,
+  `place_incident` (all in 81), `victim` (announced by 82/83/84, `s.web.victims`).
+- **Career-cards extras (65-work.js):** `twist` and `only` on a card (a follow-up that opens at once after a good result),
+  `def.yearStart` (a season, a class), `def.place`, `def.kv`.
+- **Ventures UI.** `opsCard()` on the profile and `SHEETS.ops` (1032-ui-ops.js) show the scheme, the con, the files, the
+  operation and the vigilante; their actions are in the Schemes & Rackets, Underworld and Street Justice menus.
+- **Tests.** `web2`, `schemes`, `operation`, `justice`, `abuse` and `careers2` in `dev/verify/`; `ui-smoke-run.mjs` runs the
+  browser smoke test in headless Chromium; `dev/bump-versions.py` bumps the `?v=N` cache-busters of every changed file.

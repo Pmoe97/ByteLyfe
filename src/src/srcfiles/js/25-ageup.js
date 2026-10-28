@@ -9,9 +9,20 @@
 // (43-stories.js), familyTick (45-family.js), parentingTick (46-parenting.js) and romanceTick
 // (47-romance.js), tabooTick (48-taboo.js), cityTick (49-cities.js) fxTick (50-currency.js) chaosTick (51-chaos.js), gamblingTick (53-gambling.js), houseTick (54-house.js) and youthTick (56-growing-up.js) and militaryTick (59-military.js) and spyTick (60-spy.js) and webTick (62-web.js) and invTick (63-cases.js) and intimTick (68-intimacy.js) and subsYear (69-substances.js) and vioYear (72-violence.js) and serYear (73-serial.js) and darkYear (74-dark.js) and favorYear (75-work-life.js) and capYear (78-secret-space.js) and newsYear (79-news.js) live in later files, so they're called through wrappers. fxTick goes first so the whole year is told in its new exchange rates. royalTick follows npcTick so a monarch
 // who died this year is succeeded the same year.
+// Files after 80 register their yearly turn with onYear(name, fn) instead of editing the list below: they run in
+// load order, in one phase right after capYear and before the paper (newsYear). A hook that throws is logged and skipped,
+// so one new system can never stop the year.
+const YEAR_HOOKS = [];
+function onYear(name, fn) { YEAR_HOOKS.push({ name, fn }); }
+function runYearHooks(s) {
+  for (const h of YEAR_HOOKS) {
+    if (s.dead) return;
+    try { h.fn(s); } catch (e) { console.error('[ByteLyfe] yearly hook failed:', h.name, e); }
+  }
+}
 const AGE_PHASES = [
   (s) => fxTick(s), bodyTick, pregnancyTick, schoolTick, (s) => militaryTick(s), (s) => spyTick(s), careerTick, (s) => businessTick(s), prisonTick, financeTick,
-  assetTick, (s) => cityTick(s), fameTick, npcTick, (s) => familyTick(s), (s) => parentingTick(s), (s) => romanceTick(s), (s) => tabooTick(s), (s) => royalTick(s), (s) => uwTick(s), (s) => showbizTick(s), (s) => sportsTick(s), (s) => courtTick(s), (s) => chaosTick(s), (s) => gamblingTick(s), (s) => houseTick(s), (s) => youthTick(s), (s) => webTick(s), (s) => invTick(s), (s) => intimTick(s), (s) => subsYear(s), (s) => vioYear(s), (s) => serYear(s), (s) => darkYear(s), (s) => favorYear(s), (s) => capYear(s), (s) => newsYear(s), petTick, milestoneTick, (s) => storyTick(s), rollYearEvents, diseaseTick, deathCheck,
+  assetTick, (s) => cityTick(s), fameTick, npcTick, (s) => familyTick(s), (s) => parentingTick(s), (s) => romanceTick(s), (s) => tabooTick(s), (s) => royalTick(s), (s) => uwTick(s), (s) => showbizTick(s), (s) => sportsTick(s), (s) => courtTick(s), (s) => chaosTick(s), (s) => gamblingTick(s), (s) => houseTick(s), (s) => youthTick(s), (s) => webTick(s), (s) => invTick(s), (s) => intimTick(s), (s) => subsYear(s), (s) => vioYear(s), (s) => serYear(s), (s) => darkYear(s), (s) => favorYear(s), (s) => capYear(s), (s) => runYearHooks(s), (s) => newsYear(s), petTick, milestoneTick, (s) => storyTick(s), rollYearEvents, diseaseTick, deathCheck,
 ];
 
 function ageUp(s) {

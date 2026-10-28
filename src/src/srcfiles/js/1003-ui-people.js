@@ -131,6 +131,7 @@ SHEETS.profile = () => {
   html += `<div class="section-title">Health</div><div class="card">${known.length ? known.map((x) => kvRow(emo(DISEASES[x.id].emoji, 18) + ' ' + esc(DISEASES[x.id].name), 'since ' + x.since)).join('') : '<div class="muted">No known conditions.</div>'}${habits.map((k) => kvRow(emo(ADDICTIONS[k].emoji, 18) + ' ' + esc(ADDICTIONS[k].name) + ' habit', m.addictions[k] >= 50 ? '<span class="bad">Addicted</span>' : 'Developing')).join('')}</div>`;
   html += `<div class="section-title">Education</div><div class="card">${m.edu.degrees.length ? m.edu.degrees.map((x) => kvRow(esc(degreeLabel(x)), x.year)).join('') : '<div class="muted">No diplomas yet.</div>'}</div>`;
   html += webCard(); // 1027-ui-web.js
+  html += opsCard(); // 1032-ui-ops.js
   html += `<div class="section-title">Record</div><div class="card">${kvRow("Driver's license", m.license ? 'Yes' : '—')}${m.socials ? kvRow('Social media', `${esc(m.socials.handle)} · ${fmtNum(m.socials.followers)} followers${m.socials.verified ? ' · verified' : ''}`) : ''}${m.record.length ? m.record.map((r) => kvRow(esc(cap(CRIMES[r.crime].verb)), r.years ? `${r.years >= 99 ? 'life' : nOf(r.years, 'yr')} · ${r.year}` : `fined · ${r.year}`)).join('') : kvRow('Criminal record', 'Clean')}${m.wanted ? kvRow('Status', '<span class="bad">Fugitive</span>') : ''}</div>`;
   return { title: 'Your profile', html };
 };
