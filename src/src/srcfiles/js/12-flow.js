@@ -109,8 +109,12 @@ const CONTENT_TAGS = {
   taboo_extended: { name: 'Taboo: extended family', emoji: '👪', desc: 'Adult romance with aunts, uncles, cousins, nieces, nephews (18+ both). Requires the master switch too.' },
   taboo_inlaw: { name: 'Taboo: in-laws', emoji: '💍', desc: 'Adult romance with in-laws (18+ both). Requires the master switch too.' },
 };
+// True while a head start (90-head-start.js) lives the years before a custom life's starting age: nothing behind a switch
+// (chaos, mature, taboo) happens in them, whatever is switched on, because nobody chose it.
+let HEAD_START_RUN = false;
 function tagsOn(tags) {
   if (!tags || !tags.length) return true;
+  if (HEAD_START_RUN) return false;
   return tags.every((t) => !!META.settings[t]);
 }
 

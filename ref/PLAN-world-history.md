@@ -116,6 +116,12 @@ Extend `dev/verify/taboo.mjs`:
 
 ## Phase 2: start at any age (a head start)
 
+**Status: built** (`90-head-start.js`, `dev/verify/headstart.mjs`). Differences from the text below: content behind a
+switch is hidden by a global `HEAD_START_RUN` that `tagsOn` reads (not by `s.headStart`), and event choices whose code
+commits a crime, joins the mob, builds a habit or gambles are skipped when another exists (`HS_RISKY`); the check plays a
+head-started life ten more years instead of adding head-start lives to `sim-lives.mjs`, whose personas all assume a
+life that starts at birth.
+
 ### What a player sees
 
 In **Design a custom life**, next to "Birth year", a **Start at age** number field (0 to

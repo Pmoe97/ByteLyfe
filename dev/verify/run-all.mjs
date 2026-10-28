@@ -4,6 +4,7 @@
 //   - content tags (known tags only, filters hide tagged content)
 //   - taboo gate/inbreeding/event checks (48-taboo.js)
 //   - family romance: a relative you dated stays family, "are you sure?" before asking one out, old saves restored (family.mjs)
+//   - head start: a custom life that starts at any age, lived for you by an autopilot (90-head-start.js)
 //   - cities: city data, prices, moving, landlords and tenants (49-cities.js)
 //   - currencies: formats, exchange when emigrating, foreign savings (50-currency.js)
 //   - God Mode: the per-person editor's rules (28-sandbox.js)
@@ -67,6 +68,7 @@ const tasks = [
   { label: 'content tags', args: ['dev/verify/tags.mjs'] },
   { label: 'taboo checks', args: ['dev/verify/taboo.mjs'] },
   { label: 'family romance checks', args: ['dev/verify/family.mjs'] },
+  { label: 'head start checks', args: ['dev/verify/headstart.mjs'] },
   { label: 'cities checks', args: ['dev/verify/cities.mjs'] },
   { label: 'currency checks', args: ['dev/verify/currency.mjs'] },
   { label: 'God Mode checks', args: ['dev/verify/godmode.mjs'] },

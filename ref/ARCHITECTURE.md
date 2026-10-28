@@ -83,7 +83,8 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `85` | Abuse (`85-abuse.js`): the victim's and the abuser's side of a toxic or abusive relationship | No DOM. Behind `mature` + `mature_themes`. `onYear('abuse')`. Nobody dies, nothing is sexual (checked by `dev/verify/abuse.mjs`). A victim's secret getting out is never a scandal (the `victim` flag on `defSecretKind`). |
 | `86` | Careers, part two (`86-careers-plus.js`): forensics and profiler tracks, patrol, paramedic/teacher/lawyer full systems, cook-offs, farm and fishing seasons, twists | Pure data on the career-cards engine plus a few case-file hooks (`caseAid`). Adds two jobs to `JOBS` and `JOB_IDS`, replaces the decks of a few existing ones, wraps `CAREER_YEAR.police`. |
 | `87` | Honors (`87-honors.js`): achievements and legacy titles for 81 to 86 | No DOM. Pure data. |
-| `88–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
+| `90` | Head start (`90-head-start.js`): start a custom life at any age (0 to 60), the years before lived on autopilot | No DOM. Called by the custom-life sheet (`1004-ui-title.js`) through `createLifeWithHeadStart`. `pushRewind` and `checkAchievements` read `s.headStart`; `tagsOn` (12-flow.js) is false while it runs. |
+| `88–89`, `91–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
 | `1000+` | UI (`1000-ui-kit.js` … `1032-ui-ops.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
@@ -222,6 +223,20 @@ make the description a function (achievement `desc` and goal `text` may be funct
 - **Foreign savings:** `M(s).fxSave[code]` is a holding's value in your own money; `fxTick` moves it
   with the two currencies, `fxUnits` gives the foreign amount (which stays put), and `netWorth`
   includes it.
+
+**Head start.** `90-head-start.js`. A custom life can begin at any age up to `HEAD_START_MAX` (60).
+`createLifeWithHeadStart(opts, age)` is `createLife` plus `headStart(s, age)`: age up year by year, answer every
+popup from a policy (`HS_POLICY`, falling back to a random enabled choice that leans away from "never mind" rows
+and anything marked bad), and once a year let the life director take ordinary actions through the same action
+registry the menus use: apply for a job (the best interview answer is chosen), rent a place, use the dating app,
+propose, plan the wedding, try for a baby, save into the index fund. Answering popups alone leaves most characters
+at 25 unemployed and single with their parents, which is why the director exists. It never commits crimes,
+gambles, cheats, quits, emigrates or dates family; while it runs `HEAD_START_RUN` makes `tagsOn` false, so nothing
+behind a content switch happens in those years, and event choices whose code commits a crime, joins the mob, builds a
+habit or gambles are skipped when another choice exists. A character who dies or ends in prison is re-rolled with the
+same choices (`HEAD_START_TRIES`, then a life from birth). The rewind buffer is cleared at the end, an adult gets a
+free restyle, and a "Your story so far" popup (`hsSummary`) opens the life. The custom-life sheet's "Start at age"
+field moves the birth year back with it until the player types a birth year of their own.
 
 **Stories.** `STORY(id, { title, ages, w, when, ctx, chapters })` in `43-stories.js` is a chain of
 events across years. The `start` chapter is registered as an ordinary event (`st_<id>`, once per

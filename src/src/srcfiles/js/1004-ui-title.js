@@ -71,7 +71,13 @@ CLICK.loadLife = async (el, ds) => {
 
 /* ---- custom life ---------------------------------------------------- */
 // look: the creator's draft (1008-ui-look.js); lookSaved once the player pressed "Use this look".
-const CUSTOM = { first: '', last: '', gender: 'f', orient: 'straight', country: 'us', city: '', year: 0, wealth: 'random', traits: [], stats: null, look: null, lookSaved: false };
+// startAge: the life begins at this age, with the years before it lived for you (90-head-start.js).
+// yearTouched: the player typed a birth year, so a starting age no longer moves it.
+const CUSTOM = { first: '', last: '', gender: 'f', orient: 'straight', country: 'us', city: '', year: 0, startAge: 0, yearTouched: false, wealth: 'random', traits: [], stats: null, look: null, lookSaved: false };
+function custStartNote() {
+  const n = CUSTOM.startAge, born = CUSTOM.year;
+  return n > 0 ? `You will start in ${born + n}, at age ${n}. The years before are lived for you, and you will not choose what happens in them.` : 'You start as a newborn.';
+}
 function customPreviewLook() {
   if (!CUSTOM.look) CUSTOM.look = randomLook({ gender: CUSTOM.gender, country: CUSTOM.country }, { age: 0 });
   return CUSTOM.look;
@@ -94,7 +100,9 @@ SHEETS.custom = () => {
       <div class="field"><label>Country</label>${sel('country', COUNTRY_IDS.map((k) => [k, COUNTRIES[k].flag + ' ' + COUNTRIES[k].name]), CUSTOM.country)}</div>
       <div class="field"><label>City</label>${sel('city', [['', 'Random']].concat(C.cities.map((c) => [c, c])), CUSTOM.city)}</div>
       <div class="field-row"><div class="field grow"><label>Birth year</label><input type="number" data-in="cust" data-k="year" value="${CUSTOM.year}" min="1900" max="2200"></div>
-      <div class="field grow"><label>Family</label>${sel('wealth', [['random', 'Random']].concat(WEALTH_IDS.map((k) => [k, WEALTH[k].name]), C.monarchy ? [['royal', '👑 Royal family']] : []), CUSTOM.wealth)}</div></div>
+      <div class="field grow"><label>Start at age</label><input type="number" data-in="cust" data-k="startAge" value="${CUSTOM.startAge}" min="0" max="${HEAD_START_MAX}"></div></div>
+      <div class="note" id="cust-start-note" style="margin-top:-6px">${esc(custStartNote())}</div>
+      <div class="field-row"><div class="field grow"><label>Family</label>${sel('wealth', [['random', 'Random']].concat(WEALTH_IDS.map((k) => [k, WEALTH[k].name]), C.monarchy ? [['royal', '👑 Royal family']] : []), CUSTOM.wealth)}</div></div>
       ${C.monarchy ? '' : '<div class="note" style="margin-top:-6px">Royal families: pick the United Kingdom, Spain, Sweden or Japan.</div>'}
       <div class="field"><label>Personality (up to 3)</label><div class="chips">${TRAIT_IDS.map((t) => `<button class="chip ${CUSTOM.traits.includes(t) ? 'on' : ''}" data-a="custTrait" data-t="${t}" title="${esc(TRAITS[t].desc)}">${emo(TRAITS[t].emoji, 18)}${esc(TRAITS[t].name)}</button>`).join('')}</div><div class="note">Leave empty to inherit traits from your parents.</div></div>
       ${godOn() ? `<div class="field"><label class="row"><span class="grow">Set starting stats (God Mode)</span><button class="switch ${st ? 'on' : ''}" data-a="custStats" aria-label="Set starting stats"></button></label>
@@ -104,6 +112,15 @@ SHEETS.custom = () => {
 };
 INPUT.cust = (el, ds) => {
   const k = ds.k;
+  if (k === 'startAge') {
+    // Until the player picks a birth year, the life starts in the present: the birth year moves back with the age.
+    CUSTOM.startAge = clamp(Math.round(Number(el.value) || 0), 0, HEAD_START_MAX);
+    if (!CUSTOM.yearTouched) { CUSTOM.year = clamp(new Date().getFullYear() - CUSTOM.startAge, 1900, 2200); const y = $('input[data-k="year"]'); if (y) y.value = CUSTOM.year; }
+    const note = $('#cust-start-note');
+    if (note) note.textContent = custStartNote();
+    return;
+  }
+  if (k === 'year') CUSTOM.yearTouched = true;
   CUSTOM[k] = k === 'year' ? clamp(Number(el.value) || new Date().getFullYear(), 1900, 2200) : el.value;
   if (k === 'country') { CUSTOM.city = ''; CUSTOM.first = randomFirst(CUSTOM.country, CUSTOM.gender); CUSTOM.last = randomLast(CUSTOM.country); if (CUSTOM.wealth === 'royal' && !COUNTRIES[CUSTOM.country].monarchy) CUSTOM.wealth = 'random'; customLookChanged(); renderSheet(); }
 };
@@ -119,7 +136,9 @@ CLICK.custTrait = (el, ds) => {
 };
 CLICK.custStats = () => { CUSTOM.stats = CUSTOM.stats ? null : { happy: 80, health: 90, smarts: 60, looks: 60 }; renderSheet(); };
 INPUT.custStat = (el, ds) => { CUSTOM.stats[ds.k] = Number(el.value); const v = $('#cs-' + ds.k); if (v) v.textContent = el.value; };
-CLICK.custStart = async () => {
+CLICK.custStart = async (el) => {
+  const age = CUSTOM.startAge;
+  if (age > 0 && el) { el.disabled = true; el.textContent = `Living your first ${nOf(age, 'year')}...`; await new Promise((r) => setTimeout(r, 40)); } // let that paint first
   await saveNow();
   const o = { first: cleanName(CUSTOM.first), last: cleanName(CUSTOM.last), gender: CUSTOM.gender, orient: CUSTOM.orient, country: CUSTOM.country, city: CUSTOM.city || undefined, year: CUSTOM.year, wealth: ['random', 'royal'].includes(CUSTOM.wealth) ? undefined : CUSTOM.wealth, royal: CUSTOM.wealth === 'royal', traits: CUSTOM.traits.slice() };
   if (CUSTOM.stats && godOn()) Object.assign(o, CUSTOM.stats);
@@ -128,7 +147,10 @@ CLICK.custStart = async () => {
   CUSTOM.last = '';
   CUSTOM.look = null;
   CUSTOM.lookSaved = false;
-  startLife(createLife(o));
+  CUSTOM.startAge = 0;
+  CUSTOM.yearTouched = false;
+  CUSTOM.year = 0;
+  startLife(age > 0 ? createLifeWithHeadStart(o, age) : createLife(o));
 };
 
 /* ---- saved lives ---------------------------------------------------- */

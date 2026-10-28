@@ -8,6 +8,7 @@ const REWIND = {}; // life id -> JSON snapshots, oldest first
 const REWIND_MAX = 10;
 
 function pushRewind(s) {
+  if (s.headStart) return; // a head start (90-head-start.js) is not a life you can rewind into
   const a = REWIND[s.id] || (REWIND[s.id] = []);
   a.push(JSON.stringify(s));
   if (a.length > REWIND_MAX) a.shift();

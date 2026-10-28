@@ -904,6 +904,12 @@ Nothing graphic, nothing sexual, nobody dies, and it is never the victim's fault
 on actions), and breaking up with one no longer drops them out of Family: they go back to being a sister, with "Sister · Ex"
 on the sheet. Saves made before are repaired when they load.
 
+**Start at any age.** A custom life can begin at any age from 0 to 60. The years before are lived for you, and you do not choose
+what happens in them: school and college, a first job, a place of your own, maybe a partner, a wedding and kids, as an autopilot
+that answers every popup and takes ordinary, sensible actions, and never crime, gambling, cheating or anything behind a content
+switch. If that character dies or is in prison when it ends, the years are lived again. You open on "Your story so far", with the
+whole life in the log and one free redesign of your adult look.
+
 **Careers, part two (finishing Phase 3).**
 - **Forensic science and behavioral analysis** are tracks of their own. They work real case files: a good year moves a case
   and can close it, a bad one sets it back, and promotion needs the cases you moved.
