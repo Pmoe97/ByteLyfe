@@ -56,7 +56,8 @@ function startLife(s) {
 }
 CLICK.newRandom = async () => {
   await saveNow();
-  startLife(createLife({}));
+  // "Any year since 1920": the life is born in a past year, and lives through what happened in it (88-world.js).
+  startLife(createLife(META.settings.randomBirth === 'past' ? { year: randInt(1920, new Date().getFullYear()) } : {}));
 };
 CLICK.loadLife = async (el, ds) => {
   const s = await loadLife(ds.id);
@@ -102,6 +103,7 @@ SHEETS.custom = () => {
       <div class="field-row"><div class="field grow"><label>Birth year</label><input type="number" data-in="cust" data-k="year" value="${CUSTOM.year}" min="1900" max="2200"></div>
       <div class="field grow"><label>Start at age</label><input type="number" data-in="cust" data-k="startAge" value="${CUSTOM.startAge}" min="0" max="${HEAD_START_MAX}"></div></div>
       <div class="note" id="cust-start-note" style="margin-top:-6px">${esc(custStartNote())}</div>
+      ${histOn() ? `<div class="field"><label>Or pick an era</label><div class="chips">${CUST_ERAS.map(([y, l]) => `<button class="chip ${CUSTOM.yearTouched && CUSTOM.year === y ? 'on' : ''}" data-a="custEra" data-y="${y}">${y} · ${esc(l)}</button>`).join('')}</div><div class="note">Born in a past year, you live through the real events of your time. Everyday things like phones, jobs and prices are still modern.</div></div>` : ''}
       <div class="field-row"><div class="field grow"><label>Family</label>${sel('wealth', [['random', 'Random']].concat(WEALTH_IDS.map((k) => [k, WEALTH[k].name]), C.monarchy ? [['royal', '👑 Royal family']] : []), CUSTOM.wealth)}</div></div>
       ${C.monarchy ? '' : '<div class="note" style="margin-top:-6px">Royal families: pick the United Kingdom, Spain, Sweden or Japan.</div>'}
       <div class="field"><label>Personality (up to 3)</label><div class="chips">${TRAIT_IDS.map((t) => `<button class="chip ${CUSTOM.traits.includes(t) ? 'on' : ''}" data-a="custTrait" data-t="${t}" title="${esc(TRAITS[t].desc)}">${emo(TRAITS[t].emoji, 18)}${esc(TRAITS[t].name)}</button>`).join('')}</div><div class="note">Leave empty to inherit traits from your parents.</div></div>
@@ -125,6 +127,9 @@ INPUT.cust = (el, ds) => {
   if (k === 'country') { CUSTOM.city = ''; CUSTOM.first = randomFirst(CUSTOM.country, CUSTOM.gender); CUSTOM.last = randomLast(CUSTOM.country); if (CUSTOM.wealth === 'royal' && !COUNTRIES[CUSTOM.country].monarchy) CUSTOM.wealth = 'random'; customLookChanged(); renderSheet(); }
 };
 CLICK.custSet = (el, ds) => { CUSTOM[ds.k] = ds.v; if (ds.k === 'gender') { CUSTOM.first = randomFirst(CUSTOM.country, ds.v); customLookChanged(); } renderSheet(); };
+// Real-world history (88-world.js): a few eras to be born into, each with something that is coming.
+const CUST_ERAS = [[1912, 'Grew up in the Depression'], [1946, 'Postwar baby'], [1965, 'Cold War kid'], [1981, 'Millennial'], [1997, 'Gen Z']];
+CLICK.custEra = (el, ds) => { CUSTOM.year = Number(ds.y); CUSTOM.yearTouched = true; renderSheet(); };
 CLICK.custRoll = () => { CUSTOM.first = randomFirst(CUSTOM.country, CUSTOM.gender); CUSTOM.last = randomLast(CUSTOM.country); renderSheet(); };
 CLICK.custTrait = (el, ds) => {
   const t = ds.t;
@@ -175,7 +180,7 @@ SHEETS.graveyard = () => {
   if (!g.length) return { title: 'Hall of lives', html: '<div class="empty">Lives you finish will be remembered here.</div>' };
   return {
     title: 'Hall of lives',
-    html: `<div class="note">${g.length} ${plural(g.length, 'life', 'lives')} lived. Average age ${Math.round(sum(g, (x) => x.age) / g.length)}.</div><div class="list">${g.slice(0, 150).map((r) => itemRow({ ico: r.titleEmoji || '⚰️', t: `${esc(r.name)} <span class="faint">${r.born}–${r.died}</span>`, s: `${esc(r.title)} · died ${esc(deathPhrase(r.cause))} at ${r.age} · ${fmtMoneyShort(r.worth, META.settings.currency === 'usd' ? null : curFmt(curOf(r.country)))}${r.gen > 1 ? ' · gen ' + r.gen : ''}` })).join('')}</div>`,
+    html: `<div class="note">${g.length} ${plural(g.length, 'life', 'lives')} lived. Average age ${Math.round(sum(g, (x) => x.age) / g.length)}.</div><div class="list">${g.slice(0, 150).map((r) => itemRow({ ico: r.titleEmoji || '⚰️', t: `${esc(r.name)} <span class="faint">${r.born}–${r.died}</span>`, s: `${esc(r.title)} · died ${esc(deathPhrase(r.cause))} at ${r.age}${(r.lived || []).length ? ' · ' + (r.lived || []).map((id) => (HIST[id] ? HIST[id].emoji : '')).join('') : ''} · ${fmtMoneyShort(r.worth, META.settings.currency === 'usd' ? null : curFmt(curOf(r.country)))}${r.gen > 1 ? ' · gen ' + r.gen : ''}` })).join('')}</div>`,
   };
 };
 SHEETS.achievements = () => {

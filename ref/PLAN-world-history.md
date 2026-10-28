@@ -223,6 +223,16 @@ Also make 1 in 20 lives in `sim-lives.mjs` start with a head start to a random a
 
 ## Phase 3: the world engine (history, part one)
 
+**Status: built** (`09-data-history.js`, `88-world.js`, `89-world-events.js`, `1033-ui-world.js`, `dev/verify/world.mjs`),
+with the Depression, the Second World War for the United Kingdom, the United States and Germany, and COVID-19 wired end to end.
+Differences from the text below: only the numeric knobs live in `fx`; `market`, `crypto`, `fxShock`, `biz`, `disease`, `blast`,
+`closed`, `furlough`, `support`, `cash` and `war` are properties of the row (so `fx` is all numbers). A number in `fx`, `biz`,
+`fxShock` and `support` may be an array of one value per year. `yearsBy: { cc: [from, to] }` lets a country enter an event
+late (the United States in 1941) and `openBy: { cc: ... }` gives it its own opening. The function that lays someone off is
+`worldLayOff` (the business engine already has a `layOff`), and `dev/verify/globals.mjs` now fails the build on any top-level
+name declared twice. It found three older clashes that were real bugs, now fixed: showbiz casting calls showed the college
+acceptances popup, lawsuits read "chances look a transfer is possible", and landlord ratings always showed one star.
+
 The system that makes real events data. Content comes in Phases 4 to 6.
 
 ### Files

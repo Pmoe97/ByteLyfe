@@ -44,7 +44,7 @@ const SILKS = ['#E5484D', '#3E8EF7', '#F5B700', '#30A46C', '#8E4EC6', '#F76B15',
 const BOOKIE_NICKS = ['the Accountant', 'Two Phones', 'Sunday', 'the Professor', 'Lucky', 'Uncle', 'Paperclip', 'the Vet', 'Slow Hands', 'Grandpa'];
 
 function gambleAge(s) { return Math.max(18, country(s).drink); }
-function canGamble(s) { return free(s) && A(s) >= gambleAge(s); }
+function canGamble(s) { return free(s) && A(s) >= gambleAge(s) && !worldClosed(s, 'gambling'); } // casinos close in a pandemic (88-world.js)
 function gamb(s) { const m = M(s); return m.gamb || (m.gamb = { at: {}, bets: [], debts: [], race: null, poker: { rating: 0, cashes: 0, wins: 0, rivals: [] }, excluded: 0, trip: null }); }
 function excluded(s) { return gamb(s).excluded > s.year; }
 function vById(s, id) { return (s.venues || {})[id] || null; }

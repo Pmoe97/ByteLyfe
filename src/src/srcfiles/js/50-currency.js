@@ -79,6 +79,7 @@ function fxTick(s) {
     f.prev = f.str;
     let g = 0.25 * (1 - f.str) + gauss(0, C.vol);
     if (C.vol >= 0.08 && chance(0.03)) g -= randFloat(0.15, 0.3);
+    g += worldFxShock(s, k); // a real crisis (88-world.js)
     f.str = clamp(Math.round(f.str * (1 + g) * 1000) / 1000, 0.5, 1.6);
   }
   // Foreign savings ride their currency against yours.

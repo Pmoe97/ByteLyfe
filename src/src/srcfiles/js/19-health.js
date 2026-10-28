@@ -14,7 +14,15 @@ function getSick(s, id, opts) {
   return true;
 }
 // 'a common cold', 'the flu', 'pneumonia'.
-function diseaseNoun(id) { const D = DISEASES[id]; return (D.art ? D.art + ' ' : '') + D.name.toLowerCase(); }
+function diseaseNoun(id) { const D = DISEASES[id]; return D.noun || (D.art ? D.art + ' ' : '') + D.name.toLowerCase(); }
+// How much deadlier an illness is at your age: an ageMult table ([[lo, hi, x], ...]) if it has one, else the old rule (worse past 70).
+// A vaccine (flag vaxd, for illnesses with a vax factor: 09-data-history.js) makes the worst of it much less likely.
+function diseaseAgeMult(s, D, age) {
+  let x = age > 70 ? 1.5 : 1;
+  if (D.ageMult) { const row = D.ageMult.find(([lo, hi]) => age >= lo && age <= hi); x = row ? row[2] : 1; }
+  if (D.vax && M(s).flags.vaxd) x *= D.vax;
+  return x;
+}
 function knownDiseases(s) { return M(s).diseases.filter((d) => d.known); }
 function hasDisease(s, id) { return M(s).diseases.some((d) => d.id === id); }
 function cureDisease(s, id) { M(s).diseases = M(s).diseases.filter((d) => d.id !== id); }
@@ -73,7 +81,7 @@ function bodyTick(s) {
       announce(s, { emoji: '🤒', title: "You don't feel well", text: `You've been feeling off for a while. A doctor diagnosed you with ${diseaseNoun(d.id)}.`, tone: 'bad' });
     }
     if ((D.dur && years >= D.dur) || (D.fade && chance(D.fade))) { cureDisease(s, d.id); log(s, `🌤️ You recovered from ${diseaseNoun(d.id)}.`, 'good'); continue; }
-    if (D.fatal && chance(D.fatal * (d.known ? 1 : 1.3) * (age > 70 ? 1.5 : 1))) { p.stats.health = clamp100(p.stats.health + hd); die(s, D.name.toLowerCase()); return; }
+    if (D.fatal && chance(D.fatal * (d.known ? 1 : 1.3) * diseaseAgeMult(s, D, age))) { p.stats.health = clamp100(p.stats.health + hd); die(s, D.cause || D.name.toLowerCase()); return; }
   }
   for (const id in m.addictions) {
     const sev = m.addictions[id], X = ADDICTIONS[id];

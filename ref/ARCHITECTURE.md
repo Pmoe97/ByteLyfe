@@ -29,6 +29,7 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | --- | --- | --- |
 | `00` | Utilities (`rand`, `pick`, `vary`, money formatting) | Pure |
 | `01–08` | Data tables (countries, careers, diseases, crimes, assets, industries…) | Pure data, no logic at load |
+| `09` | History (`09-data-history.js`): the real events of 1900 to 2025 as rows (`H(id, {...})`), and the two illnesses they bring | Pure data. The row format is documented at the top of the file. |
 | `10–29` | Engine | **No DOM.** Must run in Node. |
 | `30–33` | Event content (`EV(...)` calls) | Uses engine helpers at runtime only |
 | `34–35` | Business engine and company events | No DOM. `ageUp` reaches `businessTick` through a wrapper because it loads later. |
@@ -83,9 +84,11 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `85` | Abuse (`85-abuse.js`): the victim's and the abuser's side of a toxic or abusive relationship | No DOM. Behind `mature` + `mature_themes`. `onYear('abuse')`. Nobody dies, nothing is sexual (checked by `dev/verify/abuse.mjs`). A victim's secret getting out is never a scandal (the `victim` flag on `defSecretKind`). |
 | `86` | Careers, part two (`86-careers-plus.js`): forensics and profiler tracks, patrol, paramedic/teacher/lawyer full systems, cook-offs, farm and fishing seasons, twists | Pure data on the career-cards engine plus a few case-file hooks (`caseAid`). Adds two jobs to `JOBS` and `JOB_IDS`, replaces the decks of a few existing ones, wraps `CAREER_YEAR.police`. |
 | `87` | Honors (`87-honors.js`): achievements and legacy titles for 81 to 86 | No DOM. Pure data. |
+| `88` | The world (`88-world.js`): what is going on in a year and place, the knobs the rest of the game reads, the yearly world hook, historical wars | No DOM. `onYearStart('world', worldYear)` runs first in every year (25-ageup.js). Read through `wfx`/`wfxCat` by `jobOpenOdds`, `livingCost`, `cityMarketYear` (49), `careerTick` (15), `financeTick`, `financeTerms` (16, 17), `fxTick` (50), `marketYear` (37), `industryMods` (34), `warYear`/`draftYear` (59), `bodyTick` (19), `canGamble` (53). |
+| `89` | World events (`89-world-events.js`): personal events (`wd_*`) and achievements for living through them | Event content. Each is gated on `worldHas(s, id)`. |
 | `90` | Head start (`90-head-start.js`): start a custom life at any age (0 to 60), the years before lived on autopilot | No DOM. Called by the custom-life sheet (`1004-ui-title.js`) through `createLifeWithHeadStart`. `pushRewind` and `checkAchievements` read `s.headStart`; `tagsOn` (12-flow.js) is false while it runs. |
 | `88–89`, `91–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
-| `1000+` | UI (`1000-ui-kit.js` … `1032-ui-ops.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
+| `1000+` | UI (`1000-ui-kit.js` … `1033-ui-world.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
 - **Function hoisting stops at the file edge.** Code that runs at *load time* (top-level
   statements, like `const AGE_PHASES = [bodyTick, …]`) can only use names from earlier
@@ -238,6 +241,24 @@ same choices (`HEAD_START_TRIES`, then a life from birth). The rewind buffer is 
 free restyle, and a "Your story so far" popup (`hsSummary`) opens the life. The custom-life sheet's "Start at age"
 field moves the birth year back with it until the player types a birth year of their own.
 
+**The world.** `09-data-history.js` and `88-world.js`. An event is a row of data: the years and places it covers, how hard
+it hits each country (`sev`) and how strong it is in each year (`curve`), numbers it adds to the game (`fx`: jobs, layoff, cut, pay,
+housing, living, rates, tax, mood, each a number scaled by the curve or an array of one value a year), and the rest as
+properties of the row: `market`, `crypto`, `fxShock`, `biz`, `disease`, `blast`, `closed`, `furlough`, `support`, `cash`,
+`war`, and the texts. `worldAt(year, cc, city)` lists what is active (memoized), `wfx(s, knob)` adds a knob up over it, and
+`wfxCat` scales it per kind of job (`cats`). The game reads those numbers where it already decides things (the list in the
+layout table); nothing in the row is code. `worldYear` (first in every year) tells you about an event the first time you
+live through it (a popup for the big kinds; a child gets the family's version), then does what is yearly: mood, payments,
+lost savings, illness for you and for people you know (an `ageMult` table makes it deadlier for the old), a disaster in
+your city, parents and spouses losing work and finding it again, and a line in the paper. Layoffs come through
+`worldCareerYear` (a furlough where the country pays one). Real wars come from `historyWarYear`: while history governs a
+year no made-up war starts, a war row starts and ends in its years with its own draft (ages, men only, women when it says
+so), and `endWar` uses the row's ending. The stock market follows the row's `market` returns (and without one, no random
+crash or boom). `s.world.seen` (one per family line) remembers what has been announced, `M(s).worldLived` what this character
+lived through. Everything is behind `META.settings.history` (on by default) and inside `HIST_FROM..HIST_TO`. The World
+sheet and header chip are `1033-ui-world.js`; `dev/verify/globals.mjs` keeps top-level names unique across files (a
+repeated name silently replaces the earlier one).
+
 **Stories.** `STORY(id, { title, ages, w, when, ctx, chapters })` in `43-stories.js` is a chain of
 events across years. The `start` chapter is registered as an ordinary event (`st_<id>`, once per
 life), so it rolls with the year's events. A choice calls `nextChapter(s, st, 'name', lo, hi)` to
@@ -263,7 +284,7 @@ answer re-check, `rollBizEvent` and `actionAvailable` all call it. A new tag nee
 `CONTENT_TAGS` entry and a boolean default in `META.settings`. The Settings toggles are
 built from `CONTENT_TAGS`, with the taboo master + subtypes grouped in their own section.
 
-**A year (`ageUp`).** Currencies → body → pregnancy → school → career → businesses and the market →
+**A year (`ageUp`).** The world (`onYearStart`: what is going on, the year's payments, illness, disasters, who loses a job) → currencies → body → pregnancy → school → career → businesses and the market →
 prison → money → assets → cities (rent, landlords, tenants) → fame → the people around you → the wider family → parenting →
 romance → taboo family romance → royalty → the underworld →
 show business → sports → courts → chaos → gambling → the house (your book and stable) → growing up (home, lessons) → the web (ties, gossip, leaks) → investigations (case files, detectives) → pets → milestones → story chapters → random events → new illness → death check. The order

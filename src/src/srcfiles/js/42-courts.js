@@ -116,7 +116,7 @@ function caseOdds(s, k, mod) {
   const x = k.merit + myEdge(s, k) - k.their + (M(s).karma - 50) / 10 + skill(s, 'charisma') / 20 + (mod || 0);
   return clamp(1 / (1 + Math.exp(-(x - 50) / 12)), 0.03, 0.97);
 }
-function oddsWord(p) { return p >= 0.7 ? 'strong' : p >= 0.5 ? 'decent' : p >= 0.3 ? 'shaky' : 'grim'; }
+function trialOddsWord(p) { return p >= 0.7 ? 'strong' : p >= 0.5 ? 'decent' : p >= 0.3 ? 'shaky' : 'grim'; }
 function partyName(s, k) { const co = k.co && company(s, k.co); return co ? co.name : P(s).last; }
 function caseName(s, k) { return k.side === 'plaintiff' ? `${partyName(s, k)} v. ${k.cap}` : `${k.cap} v. ${partyName(s, k)}`; }
 function casePhrase(k) { const T = CASE_TYPES[k.type]; return k.why || vary((k.side === 'plaintiff' ? T.p : T.d) || 'over ' + T.name.toLowerCase()); }
@@ -235,7 +235,7 @@ function settlementOffer(s, k) {
   const co = k.co && company(s, k.co), cash = co ? co.cash : M(s).money;
   popup(s, {
     emoji: '🤝', title: 'Settlement offer', handler: 'ctOffer', ctx: { id: k.id, amt },
-    text: plaintiff ? `${k.vs} offered to settle ${caseName(s, k)} for ${fmtMoney(amt)}. Your chances at trial look ${oddsWord(o)}.` : `${k.vs} will drop ${caseName(s, k)} for ${fmtMoney(amt)}. Your chances at trial look ${oddsWord(o)}.`,
+    text: plaintiff ? `${k.vs} offered to settle ${caseName(s, k)} for ${fmtMoney(amt)}. Your chances at trial look ${trialOddsWord(o)}.` : `${k.vs} will drop ${caseName(s, k)} for ${fmtMoney(amt)}. Your chances at trial look ${trialOddsWord(o)}.`,
     choices: plaintiff
       ? [{ label: `Accept ${fmtMoney(amt)}`, value: 'yes' }, { label: 'Counter: ask for more', value: 'counter' }, { label: 'See them in court', value: 'no' }]
       : [{ label: `Pay ${fmtMoney(amt)} and settle`, value: 'yes', disabled: cash < amt }, { label: 'Counter: offer half', value: 'counter' }, { label: 'See them in court', value: 'no' }],
@@ -274,7 +274,7 @@ function trialDay(s, k) {
   const o = caseOdds(s, k), cams = M(s).fame >= 40;
   popup(s, {
     emoji: '⚖️', title: 'Your day in court', handler: 'ctTrial', ctx: { id: k.id },
-    text: `${caseName(s, k)} goes to trial${cams ? ', with TV cameras in the courtroom' : ''}${inPrison(s) ? '. You testify in an orange jumpsuit' : ''}. Your chances look ${oddsWord(o)}. How do you take the stand?`,
+    text: `${caseName(s, k)} goes to trial${cams ? ', with TV cameras in the courtroom' : ''}${inPrison(s) ? '. You testify in an orange jumpsuit' : ''}. Your chances look ${trialOddsWord(o)}. How do you take the stand?`,
     choices: [
       { label: '📋 Stick to the facts', value: 'facts' },
       { label: '😢 Speak from the heart', value: 'heart' },
@@ -413,7 +413,7 @@ onChoice('ctPick', (s, ctx, id) => {
   const L = counselOf(k.lawyer);
   popup(s, {
     emoji: CASE_TYPES[k.type].emoji, title: caseName(s, k), handler: 'ctManage', ctx: { id: k.id }, choices,
-    text: `${k.side === 'plaintiff' ? `You're suing ${k.vs}` : `${k.vs} is suing ${k.co ? partyName(s, k) : 'you'}`} for ${fmtMoney(k.claim)} ${casePhrase(k)}. ${k.lawyer === 'self' ? "You're representing yourself" : `Your counsel: ${L.name.toLowerCase()}`}. ${k.stage === 'appeal' ? 'The appeals court rules next year.' : `Trial in ${k.trial}. Your chances look ${oddsWord(o)}.`}`,
+    text: `${k.side === 'plaintiff' ? `You're suing ${k.vs}` : `${k.vs} is suing ${k.co ? partyName(s, k) : 'you'}`} for ${fmtMoney(k.claim)} ${casePhrase(k)}. ${k.lawyer === 'self' ? "You're representing yourself" : `Your counsel: ${L.name.toLowerCase()}`}. ${k.stage === 'appeal' ? 'The appeals court rules next year.' : `Trial in ${k.trial}. Your chances look ${trialOddsWord(o)}.`}`,
   });
 });
 onChoice('ctManage', (s, ctx, v) => {

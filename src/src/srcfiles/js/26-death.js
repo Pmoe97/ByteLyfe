@@ -40,7 +40,7 @@ function die(s, cause) {
     kids: myChildren(s, { dead: true }).length, achievements: m.achievements.slice(),
     goals: m.goals.filter((g) => g.done).length + '/' + m.goals.length,
     stats: Object.assign({}, p.stats), karma: m.karma, fame: m.fame, edu: degreeLabel(bestDegree(s)),
-    epitaph: epitaphFor(s, titles),
+    epitaph: epitaphFor(s, titles), lived: worldLivedList(s, 4), // the big events of their time (88-world.js)
   };
   s.lineage.push(rec);
   s.pending = [];

@@ -237,9 +237,10 @@ function bizForecast(s, co) {
 // What an industry with its own layer adds to the forecast: a revenue multiplier, a
 // reputation pull and running costs. (casinoMods: 54-house.js, zooMods: 58-zoo.js).
 function industryMods(s, co) {
-  if (co.ind === 'casino') return casinoMods(s, co);
-  if (co.ind === 'zoo' && typeof zooMods === 'function') return zooMods(s, co);
-  return { rev: 1, rep: 0, cost: 0 };
+  const world = 1 + clamp(worldBiz(s, co.ind), -0.7, 1); // a real boom or bust in the industry (88-world.js)
+  if (co.ind === 'casino') { const m = casinoMods(s, co); return Object.assign({}, m, { rev: m.rev * world }); }
+  if (co.ind === 'zoo' && typeof zooMods === 'function') { const m = zooMods(s, co); return Object.assign({}, m, { rev: m.rev * world }); }
+  return { rev: world, rep: 0, cost: 0 };
 }
 
 /* ---- franchising ----------------------------------------------------

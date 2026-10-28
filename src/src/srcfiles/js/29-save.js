@@ -10,7 +10,7 @@
  * ===================================================================== */
 
 const META = {
-  settings: { theme: 'auto', textSize: 'medium', showHidden: true, autoPopups: false, confirmAge: false, reduceMotion: false, currency: 'local', godMode: true, language: 'clean', chaos: false, mature: false, mature_intimacy: false, mature_substances: false, mature_adultwork: false, mature_violence: false, mature_themes: false, taboo: false, taboo_parent: false, taboo_step: false, taboo_sibling: false, taboo_child: false, taboo_grand: false, taboo_extended: false, taboo_inlaw: false },
+  settings: { theme: 'auto', textSize: 'medium', showHidden: true, autoPopups: false, confirmAge: false, reduceMotion: false, currency: 'local', godMode: true, history: true, randomBirth: 'now', language: 'clean', chaos: false, mature: false, mature_intimacy: false, mature_substances: false, mature_adultwork: false, mature_violence: false, mature_themes: false, taboo: false, taboo_parent: false, taboo_step: false, taboo_sibling: false, taboo_child: false, taboo_grand: false, taboo_extended: false, taboo_inlaw: false },
   achievements: {}, // id -> first unlock time
   graveyard: [], // past lives, newest first
   challenges: { done: {}, daily: { last: null, streak: 0, best: 0 }, history: [] }, // 52-challenges.js

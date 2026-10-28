@@ -910,6 +910,16 @@ that answers every popup and takes ordinary, sensible actions, and never crime, 
 switch. If that character dies or is in prison when it ends, the years are lived again. You open on "Your story so far", with the
 whole life in the log and one free redesign of your adult look.
 
+**The real world (part one).** Lives in 1900 to 2025 live through real events, behind a Settings switch that is on by default
+(*Real-world history*), with a header chip and a World sheet that say what is going on and what it means for you. Three events
+so far: the Great Depression (the crash and the market year by year, layoffs and pay cuts, half the jobs gone, rents and prices
+falling, bank runs, the breadline, the Dust Bowl), the Second World War (real draft ages for the United Kingdom, the United States
+and Germany, men only and women only in the years Britain called them, rationing, victory gardens, evacuees, air raids, V-E Day,
+enlisting after Pearl Harbor), and COVID-19 (the illness, hardest on the old, and people you know dying of it, closed shops,
+travel and schools, furlough in some countries and layoffs in others, relief payments, a vaccine to choose, a crash to sit
+through). Real wars replace the made-up ones in those years. Random lives can be born "any year since 1920", and a custom life can
+pick an era.
+
 **Careers, part two (finishing Phase 3).**
 - **Forensic science and behavioral analysis** are tracks of their own. They work real case files: a good year moves a case
   and can close it, a bad one sets it back, and promotion needs the cases you moved.

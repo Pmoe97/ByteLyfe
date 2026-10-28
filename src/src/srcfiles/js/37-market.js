@@ -39,7 +39,7 @@ function ensureMarket(s) {
     }
     return mk;
   }
-  const mk = (s.market = { year: s.year, ret: 0.07, idx: 1000, ticked: 0, seq: 0, inds: INDUSTRY_IDS.length, firms: {} });
+  const mk = (s.market = { year: 0, ret: 0.07, idx: 1000, ticked: 0, seq: 0, inds: INDUSTRY_IDS.length, firms: {} });
   for (const ind of INDUSTRY_IDS) for (let size = 0; size < RIVALS_PER_IND; size++) newFirm(s, mk, ind, size);
   return mk;
 }
@@ -89,6 +89,10 @@ function marketYear(s) {
     const roll = rand();
     if (roll < 0.06) r = -randFloat(0.18, 0.4);
     else if (roll < 0.11) r = randFloat(0.22, 0.38);
+    // Real years are real: the history table sets what the market did (and when it says nothing, no random crash or boom).
+    const wm = worldMarket(s);
+    mk.cause = null;
+    if (wm) { r = wm.ret !== null ? wm.ret + gauss(0, 0.02) : gauss(0.08, 0.11); mk.cause = wm.ev ? wm.ev.name : null; }
     mk.year = s.year;
     mk.ret = Math.round(r * 1000) / 1000;
     mk.idx = Math.max(50, Math.round(mk.idx * (1 + mk.ret)));
@@ -102,7 +106,7 @@ function marketTick(s) {
   if (mk.ticked === s.year) return;
   mk.ticked = s.year;
   const pct = Math.round(mk.ret * 100);
-  if (A(s) >= 16 && (mk.ret <= -0.18 || mk.ret >= 0.22)) log(s, mk.ret < 0 ? `📉 The stock market crashed: down ${-pct}% this year.` : `📈 Stocks boomed: the market rose ${pct}% this year.`, mk.ret < 0 ? 'bad' : 'good');
+  if (A(s) >= 16 && (mk.ret <= -0.18 || mk.ret >= 0.22)) log(s, mk.ret < 0 ? `📉 The stock market crashed: down ${-pct}% this year${mk.cause ? `, during ${mk.cause}` : ''}.` : `📈 Stocks boomed: the market rose ${pct}% this year${mk.cause ? `, during ${mk.cause}` : ''}.`, mk.ret < 0 ? 'bad' : 'good');
   for (const f of Object.values(mk.firms)) firmYear(s, mk, f);
   // Dividends on what you hold.
   let div = 0;
@@ -112,7 +116,7 @@ function marketTick(s) {
 
 function firmYear(s, mk, f) {
   const I = INDUSTRIES[f.ind];
-  const g = clamp(gauss(0.03 + (mk.ret - 0.07) * 0.6 + (f.rep - 50) / 500, (I.vol || 0.1) + 0.04), -0.5, 1);
+  const g = clamp(gauss(0.03 + (mk.ret - 0.07) * 0.6 + (f.rep - 50) / 500 + worldBiz(s, f.ind), (I.vol || 0.1) + 0.04), -0.5, 1); // worldBiz: a real boom or bust in the industry (88-world.js)
   f.rev = Math.max(1, Math.round(f.rev * (1 + g)));
   // Decades of compounding can't push a firm past three times the biggest rival size.
   const top = (INDUSTRIES[f.ind].rivalSizes || [[1, 4], [8, 30], [60, 300]])[2][1] * 3 * locRevenue(s, f.ind);

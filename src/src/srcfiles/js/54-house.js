@@ -351,7 +351,7 @@ function horseValue(s, p) {
   return price(s, 15000 * Math.exp((q - 64) / 5) * ageF * (1 + h.stakes.length * 0.15 + bigWins(h) * 0.5));
 }
 function stableValue(s) { return sum(racehorses(s), (p) => horseValue(s, p)); }
-function stars(est) { const n = clamp(Math.round((est - 52) / 5), 1, 5); return '★'.repeat(n) + '☆'.repeat(5 - n); }
+function horseStars(est) { const n = clamp(Math.round((est - 52) / 5), 1, 5); return '★'.repeat(n) + '☆'.repeat(5 - n); }
 
 // Buying: the yearling sale (pedigree and promise) or a claiming race (proven, cheaper).
 defAction({
@@ -372,7 +372,7 @@ onChoice('hsBuyWhere', (s, ctx, v) => {
     }
     popup(s, {
       emoji: '🔨', title: 'The yearling sale', text: 'Four lots in the ring. The catalog stars are the experts’ guess, and the experts are often wrong.', handler: 'hsLot', ctx: { lots },
-      choices: lots.map((l, i) => ({ label: `Lot ${i + 1}: a ${l.sex === 'f' ? 'filly' : 'colt'} by ${l.sire}`, value: i, sub: `${stars(l.est)} · ${fmtMoney(l.cost)}`, disabled: M(s).money < l.cost })).concat([{ label: 'Go home', value: null }]),
+      choices: lots.map((l, i) => ({ label: `Lot ${i + 1}: a ${l.sex === 'f' ? 'filly' : 'colt'} by ${l.sire}`, value: i, sub: `${horseStars(l.est)} · ${fmtMoney(l.cost)}`, disabled: M(s).money < l.cost })).concat([{ label: 'Go home', value: null }]),
     });
     return;
   }

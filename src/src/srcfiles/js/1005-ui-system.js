@@ -9,6 +9,7 @@ SHEETS.menu = () => ({
     ${itemRow({ a: 'sheet', ds: { k: 'profile' }, ico: avatarOf(P(G), 44), t: 'Profile', s: 'Look, traits, skills, health, record', chev: true })}
     ${itemRow({ a: 'sheet', ds: { k: 'goals' }, ico: icon('trophy', 30), t: 'Goals & achievements', s: `${M(G).goals.filter((g) => g.done).length}/${M(G).goals.length} life goals done`, chev: true })}
     ${itemRow({ a: 'sheet', ds: { k: 'lineage' }, ico: icon('tree', 30), t: 'Family line', s: `Generation ${G.gen}`, chev: true })}
+    ${histOn() ? itemRow({ a: 'sheet', ds: { k: 'world' }, ico: '🌍', t: 'The world', s: worldMenuLine(), chev: true }) : ''}
     ${itemRow({ a: 'sheet', ds: { k: 'timemachine' }, ico: icon('hourglass', 30), t: 'Time machine', s: rewindDepth(G) ? `Go back up to ${nOf(rewindDepth(G), 'year')}` : 'Age up to build history', chev: true })}
     ${godOn() ? itemRow({ a: 'sheet', ds: { k: 'sandbox' }, ico: icon('crown', 30), t: 'God Mode', s: 'Edit stats, money, skills, looks and more', chev: true }) : ''}
     ${itemRow({ a: 'sheet', ds: { k: 'settings' }, ico: icon('gear', 30), t: 'Settings', s: 'Theme, text size, content, saves', chev: true })}
@@ -108,6 +109,8 @@ SHEETS.settings = () => {
         ${toggle('showHidden', 'Show karma & fame', 'Karma is hidden in some life sims. Not here.')}
         ${toggle('autoPopups', 'Pop up every event', 'Off: small happenings only appear in your life log.')}
         ${toggle('confirmAge', 'Confirm before aging up')}
+        ${toggle('history', '🌍 Real-world history', 'Lives in past years live through real events: the Depression, the World Wars, 2008, the pandemic. Off: the world is made up, as it always was.')}
+        <div class="field"><label>Random lives are born</label>${seg('randomBirth', [['now', 'This year'], ['past', 'Any year since 1920']])}</div>
         ${toggle('godMode', 'God Mode buttons', 'Off hides God Mode everywhere: the menu, people’s pages, your companies and the custom-life stat picker.')}
         ${toggle('reduceMotion', 'Reduce motion')}
       </div>

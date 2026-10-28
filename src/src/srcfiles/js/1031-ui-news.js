@@ -10,7 +10,7 @@ SHEETS.news = () => {
   let year = null;
   for (const a of list) {
     if (a.y !== year) { year = a.y; html += `<div class="section-title">${esc(String(year))}</div>`; }
-    html += `<div class="card" style="margin-bottom:8px"><div class="muted" style="font-size:.8em">${a.you ? 'About you, or yours' : 'Local news'}</div><div style="font-weight:700;margin:2px 0 4px">${esc(a.head)}</div><div class="muted">${esc(a.body)}</div></div>`;
+    html += `<div class="card" style="margin-bottom:8px"><div class="muted" style="font-size:.8em">${a.you ? 'About you, or yours' : a.kind === 'world' ? 'In the world' : 'Local news'}</div><div style="font-weight:700;margin:2px 0 4px">${esc(a.head)}</div><div class="muted">${esc(a.body)}</div></div>`;
   }
   return { title: '📰 The paper', html };
 };

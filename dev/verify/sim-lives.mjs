@@ -273,7 +273,12 @@ for (let i = 0; i < (opts.merge ? 0 : N); i++) {
   // One life in ten is born royal, and one plays a challenge (hand-made, daily or random).
   try {
     if (i % 10 === 6) { const all = g('CHALLENGES').filter((c) => !c.chaos || META.settings.chaos); s = ctx.startChallenge(chance(0.6) ? pick(all) : chance(0.5) ? ctx.dailyChallenge(`2026-01-${String(1 + (i % 28)).padStart(2, '0')}`) : ctx.randomChallenge()); }
-    else s = ctx.createLife(i % 10 === 0 ? { country: pick(['uk', 'es', 'se', 'jp']), royal: true } : {});
+    else {
+      // A third of the lives are born in a past year, so they live through real history (88-world.js); the personas steer by age, so they work in any year.
+      const o = i % 10 === 0 ? { country: pick(['uk', 'es', 'se', 'jp']), royal: true } : {};
+      if (i % 3 === 1) { o.year = randInt(1900, 2000); stats.pastBirths = (stats.pastBirths || 0) + 1; }
+      s = ctx.createLife(o);
+    }
   } catch (e) { fail('createLife threw: ' + e.stack); continue; }
   check(s, 'birth');
   stats.lives++;

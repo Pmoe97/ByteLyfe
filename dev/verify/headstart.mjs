@@ -34,7 +34,7 @@ function resolveAll(s) {
   let n = 0;
   while (s.pending.length && n++ < 80) {
     const pp = s.pending[0], en = pp.choices.map((c, i) => [c, i]).filter(([c]) => !c.disabled);
-    const idx = en.length ? en[Math.floor(Math.random() * en.length)][1] : 0;
+    const idx = en.length ? en[Math.floor(ctx.run('rand()') * en.length)][1] : 0;
     if (!ctx.resolvePopup(s, pp.id, idx, pp.input ? 'Sam' : undefined)) s.pending.shift();
   }
 }
