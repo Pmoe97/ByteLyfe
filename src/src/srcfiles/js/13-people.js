@@ -256,7 +256,8 @@ function generateFamily(s, me, o) {
   setRel(s, p2.id, 'parent', randInt(45, 95));
 
   // Older siblings.
-  const nOlder = weighted([0, 1, 2, 3], (n) => [42, 34, 17, 7][n]);
+  const boom = worldSiblingBonus(s); // a baby boom (88-world.js) makes families bigger
+  const nOlder = weighted([0, 1, 2, 3], (n) => [42 * (1 - boom), 34, 17 * (1 + boom), 7 * (1 + 2 * boom)][n]);
   for (let i = 0; i < nOlder; i++) {
     const maxAge = Math.min(momAge - 17, dadAge - 17, 16);
     if (maxAge < 1) break;

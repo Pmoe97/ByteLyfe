@@ -920,6 +920,19 @@ travel and schools, furlough in some countries and layoffs in others, relief pay
 through). Real wars replace the made-up ones in those years. Random lives can be born "any year since 1920", and a custom life can
 pick an era.
 
+**The real world (part two): the headline events.** The rest of the big ones, each with its own numbers and a few moments that
+put you inside it: the First World War (real draft years and ages for Britain, France, Germany, Italy, the United States and
+Canada; volunteers only in Australia and Ireland; letters from the front; the armistice), the 1918 flu (it kills the young as
+well as the old, and shuts schools and clubs; a mask, nursing a sick relative), the postwar boom (jobs, rising pay and home
+prices, bigger families), the Korean War (families fleeing south) and the Vietnam War (the American draft lottery by birthday
+and the Australian ballot; protest or support), the Cold War and its moments (Sputnik, the Wall, the missile crisis,
+Chernobyl), the Moon landing, the oil shocks (gas lines, loans at 17%), Black Monday, the fall of the Wall, the dot-com boom and
+bust (stock options, a start-up; tech jobs and pay swing three times as hard), September 11 and the long wars after it (a
+recruiter's office; Afghanistan and Iraq, with no draft), the 2008 crisis (a mortgage worth more than the house, a failing bank)
+and the euro crisis (austerity, leaving for Australia), the inflation surge (a 15% rent rise, the energy bill), and the crypto
+years as they really went. The Second World War now covers every country: Italy, Japan, France, Canada, Australia, the
+Philippines, India, South Africa and the neutral ones (Sweden, Spain, Ireland) too.
+
 **Careers, part two (finishing Phase 3).**
 - **Forensic science and behavioral analysis** are tracks of their own. They work real case files: a good year moves a case
   and can close it, a bad one sets it back, and promotion needs the cases you moved.

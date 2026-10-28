@@ -471,10 +471,15 @@ function deferEligible(s) { return inSchool(s) || dependents(s).length > 0 || P(
 function draftYear(s, w) {
   const m = M(s), a = A(s), ages = (w && w.draftAges) || [18, 30]; // a real war names its own ages, and calls up men (88-world.js)
   if (!w || !w.draft || a < ages[0] || a > ages[1] || !histDraftsMe(s, w) || inService(s) || inPrison(s) || (mil(s) && (mil(s).vet || mil(s).deserter))) return;
+  if (w.lottery && s.year >= (w.lottery.from || 0)) return lotteryYear(s, w); // a draw by birthday, not a roll (88-world.js)
   if (m.flags['draft_' + w.id] || isMonarch(s, P(s)) || !chance(0.5)) return;
   m.flags['draft_' + w.id] = s.year;
+  draftNotice(s, w, '');
+}
+// The letter, and the five things anyone can do about it. `lead` opens it ("Your number in the lottery was 73. ").
+function draftNotice(s, w, lead) {
   popup(s, {
-    emoji: '📜', title: 'Draft notice', text: `A letter from the ministry of defense: you have been selected for service in ${w.name}. You must report in thirty days.`, handler: 'milDraft', ctx: { wid: w.id },
+    emoji: '📜', title: 'Draft notice', text: `${lead}A letter from the ministry of defense: you have been selected for service in ${w.name}. You must report in thirty days.`, handler: 'milDraft', ctx: { wid: w.id },
     choices: [
       { label: 'Report for duty', value: 'report', sub: 'Two years, or until the war ends' },
       { label: 'Claim a deferment', value: 'defer', sub: deferEligible(s) ? 'You qualify' : 'You probably will not qualify' },

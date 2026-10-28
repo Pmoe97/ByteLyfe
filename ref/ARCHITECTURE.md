@@ -29,7 +29,7 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | --- | --- | --- |
 | `00` | Utilities (`rand`, `pick`, `vary`, money formatting) | Pure |
 | `01–08` | Data tables (countries, careers, diseases, crimes, assets, industries…) | Pure data, no logic at load |
-| `09` | History (`09-data-history.js`): the real events of 1900 to 2025 as rows (`H(id, {...})`), and the two illnesses they bring | Pure data. The row format is documented at the top of the file. |
+| `09` | History (`09-data-history.js`, `09-data-history-2.js`): the real events of 1900 to 2025 as rows (`H(id, {...})`), and the two illnesses they bring. The first holds the format, the Depression, the Second World War and COVID; the second the other headline events | Pure data. The row format is documented at the top of `09-data-history.js`. |
 | `10–29` | Engine | **No DOM.** Must run in Node. |
 | `30–33` | Event content (`EV(...)` calls) | Uses engine helpers at runtime only |
 | `34–35` | Business engine and company events | No DOM. `ageUp` reaches `businessTick` through a wrapper because it loads later. |
@@ -85,7 +85,7 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `86` | Careers, part two (`86-careers-plus.js`): forensics and profiler tracks, patrol, paramedic/teacher/lawyer full systems, cook-offs, farm and fishing seasons, twists | Pure data on the career-cards engine plus a few case-file hooks (`caseAid`). Adds two jobs to `JOBS` and `JOB_IDS`, replaces the decks of a few existing ones, wraps `CAREER_YEAR.police`. |
 | `87` | Honors (`87-honors.js`): achievements and legacy titles for 81 to 86 | No DOM. Pure data. |
 | `88` | The world (`88-world.js`): what is going on in a year and place, the knobs the rest of the game reads, the yearly world hook, historical wars | No DOM. `onYearStart('world', worldYear)` runs first in every year (25-ageup.js). Read through `wfx`/`wfxCat` by `jobOpenOdds`, `livingCost`, `cityMarketYear` (49), `careerTick` (15), `financeTick`, `financeTerms` (16, 17), `fxTick` (50), `marketYear` (37), `industryMods` (34), `warYear`/`draftYear` (59), `bodyTick` (19), `canGamble` (53). |
-| `89` | World events (`89-world-events.js`): personal events (`wd_*`) and achievements for living through them | Event content. Each is gated on `worldHas(s, id)`. |
+| `89` | World events (`89-world-events.js`, `89-world-events-2.js`): personal events (`wd_*`) and achievements for living through them | Event content. Each is gated on `worldHas(s, id)`. |
 | `90` | Head start (`90-head-start.js`): start a custom life at any age (0 to 60), the years before lived on autopilot | No DOM. Called by the custom-life sheet (`1004-ui-title.js`) through `createLifeWithHeadStart`. `pushRewind` and `checkAchievements` read `s.headStart`; `tagsOn` (12-flow.js) is false while it runs. |
 | `88–89`, `91–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
 | `1000+` | UI (`1000-ui-kit.js` … `1033-ui-world.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
@@ -253,10 +253,10 @@ lost savings, illness for you and for people you know (an `ageMult` table makes 
 your city, parents and spouses losing work and finding it again, and a line in the paper. Layoffs come through
 `worldCareerYear` (a furlough where the country pays one). Real wars come from `historyWarYear`: while history governs a
 year no made-up war starts, a war row starts and ends in its years with its own draft (ages, men only, women when it says
-so), and `endWar` uses the row's ending. The stock market follows the row's `market` returns (and without one, no random
+so), and `endWar` uses the row's ending. A war row can name a lottery (`lottery: { age, cutoff, from }`): at that age a birthday draws a number, and at or under the year's cut-off the notice comes (`lotteryYear`; the United States from 1970, and Australia). Two wars at once (Afghanistan and Iraq): the bigger is the one you live through, of two the same size the newer, and the other picks up when it ends. The stock market follows the row's `market` returns (and without one, no random
 crash or boom). `s.world.seen` (one per family line) remembers what has been announced, `M(s).worldLived` what this character
 lived through. Everything is behind `META.settings.history` (on by default) and inside `HIST_FROM..HIST_TO`. The World
-sheet and header chip are `1033-ui-world.js`; `dev/verify/globals.mjs` keeps top-level names unique across files (a
+sheet and header chip are `1033-ui-world.js`; a row can also be `quiet` (numbers only: the baby boom's bigger families, the crypto years), force or hide its `popup`, set its `tone`, and set its `salience` (how much it is on people's minds, for the header chip); `dev/verify/globals.mjs` keeps top-level names unique across files (a
 repeated name silently replaces the earlier one).
 
 **Stories.** `STORY(id, { title, ages, w, when, ctx, chapters })` in `43-stories.js` is a chain of

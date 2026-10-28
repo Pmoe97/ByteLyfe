@@ -70,7 +70,7 @@ function walk(o, path, out) {
     for (const c of e.cities || []) { const [cc, city] = c.split(':'); ok(cities[cc] && cities[cc][city], `${n}: unknown city ${c}`); }
     if (e.curve) ok(e.curve.length === span(e) && e.curve.every((x) => x >= 0 && x <= 2), `${n}: the curve has ${e.curve && e.curve.length} values for ${span(e)} years`);
     for (const k of Object.keys(e.fx || {})) { ok(FX.includes(k), `${n}: unknown knob ${k}`); if (Array.isArray(e.fx[k])) ok(e.fx[k].length === span(e), `${n}: ${k} has ${e.fx[k].length} values for ${span(e)} years`); }
-    for (const k of Object.keys(e.cats || {})) { ok(FX.includes(k), `${n}: cats names unknown knob ${k}`); for (const c of Object.keys(e.cats[k])) ok(cats[c], `${n}: cats names unknown job kind ${c}`); }
+    for (const k of Object.keys(e.cats || {})) { ok(FX.includes(k), `${n}: cats names unknown knob ${k}`); for (const c of Object.keys(e.cats[k])) ok(c === '_' || cats[c], `${n}: cats names unknown job kind ${c}`); }
     for (const y of Object.keys(e.market || {})) ok(+y >= e.years[0] && +y <= e.years[1] && Math.abs(e.market[y]) <= 1, `${n}: market year ${y}`);
     for (const cc of Object.keys(e.marketCc || {})) { ok(COUNTRIES[cc], `${n}: marketCc ${cc}`); for (const y of Object.keys(e.marketCc[cc])) ok(+y >= e.years[0] && +y <= e.years[1], `${n}: marketCc ${cc} year ${y}`); }
     for (const y of Object.keys(e.crypto || {})) ok(+y >= e.years[0] && +y <= e.years[1], `${n}: crypto year ${y}`);
@@ -85,19 +85,21 @@ function walk(o, path, out) {
       ok(COUNTRIES[cc], `${n}: war in unknown country ${cc}`);
       ok(w.name && w.foe && w.theater && w.end && ['victory', 'defeat', 'ceasefire'].includes(w.result) && w.intensity >= 1 && w.intensity <= 4, `${n}/${cc}: a war needs a name, foe, theater, end, result and intensity`);
       ok(y[0] <= y[1] && y[0] >= e.years[0] - 3 && y[1] <= e.years[1], `${n}/${cc}: war years ${y} against event years ${e.years}`);
-      if (w.draft) ok(w.draft[0] >= y[0] && w.draft[1] <= y[1] && w.draftAges && w.draftAges[0] < w.draftAges[1], `${n}/${cc}: draft years and ages`);
+      if (w.draft) ok(w.draft[0] >= y[0] && w.draft[1] <= y[1] && w.draftAges && w.draftAges[0] <= w.draftAges[1], `${n}/${cc}: draft years and ages`);
     }
-    ok(e.open && e.open.title && e.open.text, `${n}: it needs an opening`);
+    if (!e.quiet) { // (a quiet row is only numbers)
+      ok(e.open && e.open.title && e.open.text, `${n}: it needs an opening`);
+      ok(e.news && e.news.length >= (e.kind === 'moment' ? 2 : 3) && e.news.every((x) => x.length === 2 && x[0] && x[1]), `${n}: news items for the paper`);
+      ok(e.blurb, `${n}: a blurb for the World sheet`);
+    }
     for (const cc of Object.keys(e.openBy || {})) ok(COUNTRIES[cc] && e.openBy[cc].title && e.openBy[cc].text, `${n}: openBy ${cc}`);
-    ok(e.news && e.news.length >= 3 && e.news.every((x) => x.length === 2 && x[0] && x[1]), `${n}: three or more news items`);
-    ok(e.blurb, `${n}: a blurb for the World sheet`);
     walkText(e, n);
   }
 }
 
 /* 2. every knob, with an event made up for it ------------------------------ */
 {
-  const id = 'test_all', now = 1955;
+  const id = 'test_all', now = 1905, QUIET = 1910; // no real event touches these years
   g('H')(id, {
     name: 'a test of everything', chip: 'Test', emoji: '🧪', kind: 'econ', years: [now, now + 1], where: ['us', 'uk'], sev: { us: 1, uk: 0.5 },
     fx: { jobs: -0.5, layoff: 0.5, cut: 0.2, pay: -0.05, housing: -0.1, living: 0.2, rates: 0.05, tax: 0.03, mood: -4 },
@@ -116,7 +118,7 @@ function walk(o, path, out) {
 
   // jobs
   const odds = (st, jobId) => ctx.jobOpenOdds(st, jobId);
-  const quiet = A0('us', 1990);
+  const quiet = A0('us', QUIET);
   ok(odds(s, 'accountant') < odds(quiet, 'accountant') * 0.65, `the job board empties (${odds(s, 'accountant').toFixed(2)} against ${odds(quiet, 'accountant').toFixed(2)})`);
   ok(odds(s, 'retail') <= 0.05 + 1e-9 || odds(s, 'retail') < odds(s, 'accountant'), 'and empties faster in the job kind that takes more of it');
 
@@ -126,14 +128,14 @@ function walk(o, path, out) {
   const house = { kind: 'house', value: 100000 };
   ok(Math.abs(ctx.financeTerms(house, s).rate - 0.115) < 1e-9, `a mortgage costs 5 points more (${ctx.financeTerms(house, s).rate})`);
   ok(!!ctx.financeTerms(house, quiet) && Math.abs(ctx.financeTerms(house, quiet).rate - 0.065) < 1e-9, 'and does not in a quiet year');
-  const taxed = employed(A0('us', now)), plain = employed(A0('us', 1990));
+  const taxed = employed(A0('us', now)), plain = employed(A0('us', QUIET));
   taxed.player.career.salary = plain.player.career.salary = 60000; taxed.player.money = plain.player.money = 0;
   taxed.player.housing = plain.player.housing = { type: 'parents', assetId: null, rent: 0, name: '' };
   ctx.financeTick(taxed); ctx.financeTick(plain);
   ok(taxed.player.money < plain.player.money - 1000, `a higher tax rate takes more (${taxed.player.money} against ${plain.player.money})`);
   // savings pay more in a high-rate year
   const sv = (st) => { st.player.invest.savings = 100000; ctx.financeTick(st); return st.player.invest.savings; };
-  ok(avg(Array.from({ length: 30 }, () => sv(A0('us', now)))) > avg(Array.from({ length: 30 }, () => sv(A0('us', 1990)))) + 3000, 'savings earn the higher rate');
+  ok(avg(Array.from({ length: 30 }, () => sv(A0('us', now)))) > avg(Array.from({ length: 30 }, () => sv(A0('us', QUIET)))) + 3000, 'savings earn the higher rate');
   // crypto and the market follow the table
   const cr = A0('us', now); cr.player.invest.crypto = 10000; ctx.financeTick(cr);
   ok(cr.player.invest.crypto > 17000 && cr.player.invest.crypto < 23000, `crypto does what the table says (${cr.player.invest.crypto})`);
@@ -143,19 +145,19 @@ function walk(o, path, out) {
 
   // layoffs, pay cuts, raises, housing
   const trial = (cc, year, job, n) => { let laid = 0, cut = 0; for (let i = 0; i < n; i++) { const st = employed(A0(cc, year), job); st.player.career.salary = 50000; st.player.career.perf = 70; ctx.careerTick(st); if (!st.player.career) laid++; else if (st.player.career.salary < 50000) cut++; } return { laid, cut }; };
-  const bad = trial('us', now, 'retail', 200), calm = trial('us', 1990, 'retail', 200);
+  const bad = trial('us', now, 'retail', 200), calm = trial('us', QUIET, 'retail', 200);
   ok(bad.laid >= 30 && calm.laid <= 3, `a bad year costs jobs (${bad.laid} of 200 against ${calm.laid})`);
   ok(bad.cut >= 20 && calm.cut === 0, `and pay (${bad.cut} cut)`);
   const raise = (cc, year) => avg(Array.from({ length: 60 }, () => { const st = employed(A0(cc, year), 'accountant'); st.player.career.salary = 50000; st.player.career.perf = 90; ctx.careerTick(st); return st.player.career ? st.player.career.salary : 50000; }));
-  ok(raise('us', 1990) > 50300, 'a good performer gets a raise in a quiet year');
-  ok(raise('us', now) < raise('us', 1990), 'but not in a year that freezes pay');
+  ok(raise('us', QUIET) > 50300, 'a good performer gets a raise in a quiet year');
+  ok(raise('us', now) < raise('us', QUIET), 'but not in a year that freezes pay');
   const hgrowth = (year) => avg(Array.from({ length: 40 }, () => { const st = A0('us', year); const cs = ctx.cityMarketYear(st, 'us', st.people[st.playerId].city); return cs.g; }));
-  ok(hgrowth(now) < hgrowth(1990) - 0.06, 'rents and home prices fall');
+  ok(hgrowth(now) < hgrowth(QUIET) - 0.06, 'rents and home prices fall');
 
   // currencies, businesses
   const fx = (year) => { const st = A0('us', year); ctx.fxTick(st); return st.fx.GBP.str; };
-  ok(avg(Array.from({ length: 30 }, () => fx(now))) < avg(Array.from({ length: 30 }, () => fx(1990))) - 0.15, 'a currency takes the shock');
-  const sa = A0('us', now), sb = A0('us', 1990);
+  ok(avg(Array.from({ length: 30 }, () => fx(now))) < avg(Array.from({ length: 30 }, () => fx(QUIET))) - 0.15, 'a currency takes the shock');
+  const sa = A0('us', now), sb = A0('us', QUIET);
   ok(ctx.industryMods(sa, { ind: 'airline' }).rev < 0.6 && ctx.industryMods(sb, { ind: 'airline' }).rev === 1 && ctx.industryMods(sa, { ind: 'cafe' }).rev === 1, 'an industry takes its hit, and others do not');
 
   // payments, lost savings, mood, closures
@@ -164,8 +166,8 @@ function walk(o, path, out) {
   ok(pay.player.money > 1000 + 400 || pay.player.money >= 0, `a payment arrives and savings are lost (${pay.player.money})`);
   ok(pay.player.invest.savings === 1000, `half the savings are lost (${pay.player.invest.savings})`);
   ok(P(pay).stats.happy <= happy0 - 2, `the mood drops (${happy0} to ${P(pay).stats.happy})`);
-  ok(ctx.worldClosed(pay, 'travel') && !ctx.worldClosed(A0('us', 1990), 'travel'), 'travel is closed');
-  ok(!ctx.actionAvailable(ACTIONS.vacation, pay) && ctx.actionAvailable(ACTIONS.vacation, A0('us', 1990)), 'so the vacation action is not offered');
+  ok(ctx.worldClosed(pay, 'travel') && !ctx.worldClosed(A0('us', QUIET), 'travel'), 'travel is closed');
+  ok(!ctx.actionAvailable(ACTIONS.vacation, pay) && ctx.actionAvailable(ACTIONS.vacation, A0('us', QUIET)), 'so the vacation action is not offered');
   ok(!ctx.actionAvailable(ACTIONS.nightlife, pay) && !ctx.actionAvailable(ACTIONS.gym, pay), 'nor the club or the gym');
   ok(!ctx.canGamble(pay), 'nor the casino');
   ok(ctx.worldEffects(pay).some((t) => /Jobs are scarce/.test(t)) && ctx.worldEffects(pay).some((t) => /Closed:/.test(t)), 'the World sheet says so');
@@ -297,8 +299,8 @@ function walk(o, path, out) {
 
   // The sheet's text.
   const st = lifeAt('us', 2020, 30);
-  ok(ctx.worldEffects(st).length >= 3 && ctx.worldHeadline(st) === HIST.covid, 'the World sheet has something to say, and the header names the biggest thing');
-  ok(!ctx.worldHeadline(lifeAt('us', 2005, 30)), 'and nothing in a quiet year');
+  ok(ctx.worldEffects(st).length >= 3 && ctx.worldHeadline(st) === HIST.covid, `the World sheet has something to say, and the header names the biggest thing (${ctx.worldHeadline(st) && ctx.worldHeadline(st).id})`);
+  ok(!ctx.worldHeadline(lifeAt('us', 1910, 30)), 'and nothing in a quiet year');
 }
 
 /* 4. history off ------------------------------------------------------------------- */
@@ -381,12 +383,113 @@ function walk(o, path, out) {
   everyChoice('wd_window_visit', lifeAt('us', 2020, 30, (s) => { const p = ctx.relPeople(s, ['parent'])[0]; p.birthYear = 2020 - 72; }), EVENTS.wd_window_visit);
   everyChoice('wd_covid_vaccine', lifeAt('us', 2021, 30), EVENTS.wd_covid_vaccine);
   everyChoice('wd_covid_crash', lifeAt('us', 2020, 30, (s) => { s.player.invest.index = 50000; }), EVENTS.wd_covid_crash);
+  // Phase 4: the headline events.
+  const wars = (cc, year, age, setup) => lifeAt(cc, year, age, setup);
+  everyChoice('wd_ww1_letter', wars('uk', 1916, 30, (st) => { const b = ctx.relPeople(st, ['sibling'])[0] || ctx.makeAdultNear(st, { minAge: 20, maxAge: 30 }); if (!ctx.relOf(st, b.id)) ctx.setRel(st, b.id, 'friend', 60); b.gender = 'm'; b.birthYear = 1916 - 24; }), EVENTS.wd_ww1_letter);
+  everyChoice('wd_armistice', wars('uk', 1918, 30), EVENTS.wd_armistice);
+  everyChoice('wd_armistice (Germany)', wars('de', 1918, 30), EVENTS.wd_armistice);
+  everyChoice('wd_flu_mask', wars('us', 1918, 30), EVENTS.wd_flu_mask);
+  everyChoice('wd_flu_nurse', wars('us', 1918, 30), EVENTS.wd_flu_nurse);
+  everyChoice('wd_family_car', wars('us', 1955, 35, rich), EVENTS.wd_family_car);
+  everyChoice('wd_korea_flee', wars('kr', 1950, 30), EVENTS.wd_korea_flee);
+  everyChoice('wd_korea_kid', wars('kr', 1950, 9), EVENTS.wd_korea_kid);
+  everyChoice('wd_sputnik', wars('us', 1957, 10), EVENTS.wd_sputnik);
+  everyChoice('wd_missile_crisis', wars('us', 1962, 30, rich), EVENTS.wd_missile_crisis);
+  everyChoice('wd_chernobyl', wars('se', 1986, 30), EVENTS.wd_chernobyl);
+  everyChoice('wd_draft_protest', wars('us', 1969, 22), EVENTS.wd_draft_protest);
+  everyChoice('wd_moon', wars('us', 1969, 12), EVENTS.wd_moon);
+  everyChoice('wd_gas_lines', wars('us', 1974, 30, (st) => { rich(st); st.player.license = true; }), EVENTS.wd_gas_lines);
+  everyChoice('wd_black_monday', wars('us', 1987, 40, (st) => { st.player.invest.index = 60000; }), EVENTS.wd_black_monday);
+  everyChoice('wd_wall_piece', wars('de', 1989, 30), EVENTS.wd_wall_piece);
+  everyChoice('wd_stock_options', wars('us', 1999, 30, (st) => employed(st, 'software')), EVENTS.wd_stock_options);
+  everyChoice('wd_startup', wars('us', 1998, 28), EVENTS.wd_startup);
+  everyChoice('wd_enlist_2001', wars('us', 2002, 20), EVENTS.wd_enlist_2001);
+  everyChoice('wd_flying_again', wars('us', 2002, 30, (st) => { rich(st); st.player.worldLived = ['sept11']; }), EVENTS.wd_flying_again);
+  everyChoice('wd_underwater', wars('us', 2009, 35, (st) => { st.player.assets.push({ id: 'h9', kind: 'house', name: 'house', value: 150000, cond: 80, loanId: 'l9' }); st.player.loans.push({ id: 'l9', kind: 'house', name: 'Mortgage', balance: 180000, rate: 0.06, years: 25, payment: 14000, assetId: 'h9', missed: 0 }); st.player.housing = { type: 'own', assetId: 'h9', rent: 0, name: 'house' }; }), EVENTS.wd_underwater);
+  everyChoice('wd_bank_failed', wars('us', 2008, 40, (st) => { st.player.money = 90000; }), EVENTS.wd_bank_failed);
+  everyChoice('wd_emigrate_crisis', wars('ie', 2011, 27, rich), EVENTS.wd_emigrate_crisis);
+  everyChoice('wd_rent_hike', wars('us', 2022, 30, (st) => { st.player.housing = { type: 'rent', assetId: null, rent: 18000, name: 'flat', ll: { name: 'x', style: 'kind', mood: 50, stars: 4 } }; }), EVENTS.wd_rent_hike);
+  everyChoice('wd_energy_bill', wars('uk', 2022, 30, rich), EVENTS.wd_energy_bill);
   // They stay out of the wrong place and time.
   ok(!ctx.eventEligible(lifeAt('us', 2005, 30, rich), EVENTS.wd_bankrun) && !ctx.eventEligible(lifeAt('de', 1941, 8), EVENTS.wd_evacuee), 'these events need their time and place');
   ok(!ctx.eventEligible(lifeAt('us', 2020, 30), EVENTS.wd_covid_wedding), 'and their people');
   const ach = ctx.lifeAt ? null : null;
   const old = lifeAt('us', 1935, 30); ctx.worldYear(old); ctx.checkAchievements(old);
   ok(old.player.achievements.includes('wd_hard_times'), 'living through the Depression is an achievement');
+}
+
+/* 7. the headline events ----------------------------------------------------------- */
+{
+  const rate = (n, f) => { let k = 0; for (let i = 0; i < n; i++) if (f(i)) k++; return k / n; };
+  // Every authored war starts and ends in its years, with its result, whatever else is going on.
+  let checked = 0;
+  for (const id of HIST_IDS) {
+    const ev = HIST[id];
+    for (const cc of Object.keys(ev.war || {})) {
+      const e = ev.war[cc], y = e.years || ev.yearsBy && ev.yearsBy[cc] || ev.years, st = lifeAt(cc, y[0] - 1, 30);
+      for (let yr = y[0] - 1; yr <= y[1] + 1; yr++) { st.year = yr; ctx.worldReset(); ctx.historyWarYear(st); }
+      // (A war that a bigger or newer one pushes aside for some of its years does not end on its own date: it is only asked to have been fought.)
+      let alone = true;
+      for (let yr = y[0]; yr <= y[1]; yr++) { const w = ctx.histWarFor({ year: yr }, cc); if (!w || w.entry !== e) alone = false; }
+      const log = st.wars.log.filter((x) => x.hid === id && x.cc === cc);
+      if (!alone) { ok(log.length <= 1, `${id}/${cc}: fought at most once`); continue; }
+      ok(log.length === 1 && log[0].start === y[0] && log[0].end === y[1] && log[0].result === e.result, `${id}/${cc}: the war runs ${y[0]} to ${y[1]} as ${e.result} (${JSON.stringify(log.map((x) => [x.start, x.end, x.result]))})`);
+      checked++;
+    }
+  }
+  ok(checked >= 40, `every war in the table was run (${checked})`);
+  // The First World War: who was called up, and who was not.
+  const called = (cc, year0, born) => { let n = 0, hit = 0; for (let i = 0; i < 30; i++) { const st = ctx.createLife({ country: cc, year: born, gender: 'm' }); st.pending = []; let d = false, guard = 0; while (!st.dead && st.year < 1919 && guard++ < 100) { if (st.pending.length) { const pp = st.pending[0]; if (pp.handler === 'milDraft') d = true; if (!ctx.resolvePopup(st, pp.id, 0, pp.input ? 'x' : undefined)) st.pending.shift(); continue; } ctx.ageUp(st); } if (st.dead && st.year < 1914) continue; n++; if (d) hit++; } return n ? hit / n : 0; };
+  ok(called('uk', 1914, 1895) > 0.45 && called('fr', 1914, 1895) > 0.6 && called('de', 1914, 1895) > 0.6, 'British, French and German men are called up in the Great War');
+  ok(called('au', 1914, 1895) === 0 && called('ie', 1914, 1895) === 0 && called('se', 1914, 1895) === 0, 'Australian and Irish men volunteered, and Swedish men were neutral');
+  // The draft lottery: the share of birthdays that are called follows the year's cut-off.
+  const dim = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const lot = (year, cc) => { let n = 0, hit = 0; for (let mo = 1; mo <= 12; mo++) for (let d = 1; d <= dim[mo - 1]; d++) { const st = lifeAt(cc, year, cc === 'au' ? 20 : 19, (x) => { P(x).bday = [mo, d]; P(x).gender = 'm'; ctx.warSlot(x, cc).war = ctx.makeHistWar(x, cc, ctx.histWarFor(x, cc)); ctx.warSlot(x, cc).war.draft = true; }); ctx.draftYear(st, ctx.activeWar(st, cc)); n++; if (st.pending.some((q) => q.handler === 'milDraft')) hit++; } return hit / n; };
+  const l70 = lot(1970, 'us'), l72 = lot(1972, 'us'), a68 = lot(1968, 'au');
+  ok(Math.abs(l70 - 195 / 366) < 0.04 && Math.abs(l72 - 95 / 366) < 0.04, `the American lottery follows the cut-off (${l70.toFixed(2)} in 1970, ${l72.toFixed(2)} in 1972)`);
+  ok(Math.abs(a68 - 120 / 366) < 0.05, `and so does the Australian ballot (${a68.toFixed(2)})`);
+  const notLot = lot(1970, 'us') > 0 && (() => { const st = lifeAt('us', 1970, 30, (x) => { P(x).gender = 'm'; ctx.warSlot(x, 'us').war = ctx.makeHistWar(x, 'us', ctx.histWarFor(x, 'us')); ctx.warSlot(x, 'us').war.draft = true; }); ctx.draftYear(st, ctx.activeWar(st, 'us')); return !st.pending.length; })();
+  ok(notLot, 'a man of 30 is not in the lottery');
+  // The baby boom makes bigger families.
+  const sibs = (born) => { let t = 0; for (let i = 0; i < 400; i++) t += ctx.relPeople(ctx.createLife({ country: 'us', year: born }), ['sibling']).length; return t / 400; };
+  ok(sibs(1955) > sibs(1990) + 0.12, `families are bigger in the boom (${sibs(1955).toFixed(2)} against ${sibs(1990).toFixed(2)} older siblings)`);
+  // The 1918 flu: the old and the young die of it, and it shuts the clubs.
+  ok(rate(200, () => { const st = lifeAt('us', 1918, 30); ctx.worldYear(st); return ctx.hasDisease(st, 'flu1918'); }) > 0.15, 'many catch the 1918 flu');
+  ok(!ctx.actionAvailable(ACTIONS.nightlife, lifeAt('us', 1918, 30)) && ctx.actionAvailable(ACTIONS.nightlife, lifeAt('us', 1921, 30)), 'and the clubs shut for a year');
+  const mask = (care) => rate(300, () => { const st = lifeAt('us', 1918, 30, care ? (x) => { x.player.flags.fluCare = true; } : null); ctx.worldYear(st); return ctx.hasDisease(st, 'flu1918'); });
+  ok(mask(true) < mask(false) * 0.85, 'a mask helps a little');
+  ok(rate(300, () => { const st = lifeAt('us', 1918, 30); st.player.diseases.push({ id: 'flu1918', since: 1918, known: true }); const p = P(st); p.stats.health = 90; ctx.bodyTick(st); return st.dead; }) > 0.02, 'it kills the young');
+  // Oil shocks: money costs more, and the board empties.
+  ok(Math.abs(ctx.personalRate(lifeAt('us', 1974, 30)) - 0.17) < 0.011, `a loan in 1974 costs about 17% (${ctx.personalRate(lifeAt('us', 1974, 30)).toFixed(3)})`);
+  ok(ctx.personalRate(lifeAt('ng', 1974, 30)) === 0.11, 'but not in an oil exporter');
+  // The Wall, the dot-com years, 2008 and the euro crisis.
+  const techLay = rate(600, () => { const st = employed(lifeAt('us', 2001, 30), 'software'); st.player.career.perf = 60; ctx.careerTick(st); return !st.player.career; });
+  const shopLay = rate(600, () => { const st = employed(lifeAt('us', 2001, 30), 'retail'); st.player.career.perf = 60; ctx.careerTick(st); return !st.player.career; });
+  ok(techLay > shopLay + 0.05, `tech work goes first in 2001 (${techLay.toFixed(2)} against ${shopLay.toFixed(2)})`);
+  const boomJobs = avg(Array.from({ length: 20 }, () => ctx.jobOpenOdds(lifeAt('us', 1999, 30), 'software'))), bustJobs = avg(Array.from({ length: 20 }, () => ctx.jobOpenOdds(lifeAt('us', 2002, 30), 'software')));
+  ok(boomJobs > bustJobs + 0.1, `tech jobs: ${boomJobs.toFixed(2)} in 1999, ${bustJobs.toFixed(2)} in 2002`);
+  const euroCut = (job) => rate(150, () => { const st = employed(lifeAt('es', 2010, 30), job); const was = 50000; st.player.career.salary = was; st.player.career.perf = 70; ctx.careerTick(st); return st.player.career && st.player.career.salary < was * 0.97; });
+  ok(euroCut('police') > 0.25 && euroCut('retail') === 0, `in the euro crisis public pay is cut, and shop pay is not (${euroCut('police').toFixed(2)}, ${euroCut('retail').toFixed(2)})`);
+  const house09 = avg(Array.from({ length: 30 }, () => { const st = lifeAt('us', 2009, 30); return ctx.cityMarketYear(st, 'us', P(st).city).g; })), house97 = avg(Array.from({ length: 30 }, () => { const st = lifeAt('us', 1910, 30); return ctx.cityMarketYear(st, 'us', P(st).city).g; }));
+  ok(house09 < house97 - 0.05, `home prices fall in 2009 (${house09.toFixed(3)} against ${house97.toFixed(3)})`);
+  ok(avg(Array.from({ length: 20 }, () => ctx.marketYear(lifeAt('us', 2008, 30)).ret)) < -0.3, 'and the market in 2008');
+  ok(ctx.worldHeadline(lifeAt('us', 2009, 30)) === HIST.gfc, 'the header names it');
+  // Crypto does what it did.
+  const cr = (year) => { const st = lifeAt('us', year, 30); st.player.invest.crypto = 10000; ctx.financeTick(st); return st.player.invest.crypto; };
+  ok(cr(2017) > 120000 && cr(2018) < 4000, `crypto in 2017 and 2018 (${cr(2017)}, ${cr(2018)})`);
+  // Inflation: the cost of living, rates and the paper.
+  ok(ctx.livingCost(lifeAt('us', 2022, 30), 20000) > ctx.livingCost(lifeAt('us', 1910, 30), 20000) * 1.07, 'living costs rise in 2022');
+  ok(ctx.personalRate(lifeAt('us', 2022, 30)) > 0.14, 'and so do rates');
+  ok(ctx.worldYear && (() => { const st = lifeAt('us', 1970, 30); st.news = []; for (let i = 0; i < 12; i++) { st.year = 1970 + (i % 2); ctx.worldYear(st); } return st.news.some((n) => n.kind === 'world'); })(), 'big events make the paper');
+  // Korea at home: the job board is thin, and the year is hard.
+  ok(avg(Array.from({ length: 20 }, () => ctx.jobOpenOdds(lifeAt('kr', 1951, 30), 'accountant'))) < avg(Array.from({ length: 20 }, () => ctx.jobOpenOdds(lifeAt('kr', 1960, 30), 'accountant'))) * 0.75, 'jobs are scarce in wartime Korea');
+  // No made-up war in a year history governs, even with two wars at once.
+  const both = lifeAt('us', 2001, 30); let seen = [];
+  for (let y = 2001; y <= 2013; y++) { both.year = y; ctx.worldReset(); ctx.historyWarYear(both); const w = ctx.activeWar(both, 'us'); seen.push(w ? (w.name === 'the Iraq War' ? 'I' : 'A') : '-'); }
+  ok(seen[1] === 'A' && seen[2] === 'I' && seen[9] === 'I' && seen[10] === '-' && seen[11] === 'A', `the bigger of two wars is the one you live through, and the other picks up when it ends (${seen.join('')})`);
+  const uk = lifeAt('uk', 2001, 30); seen = [];
+  for (let y = 2001; y <= 2015; y++) { uk.year = y; ctx.worldReset(); ctx.historyWarYear(uk); const w = ctx.activeWar(uk, 'uk'); seen.push(w ? (w.name === 'the Iraq War' ? 'I' : 'A') : '-'); }
+  ok(seen[1] === 'A' && seen[2] === 'I' && seen[7] === 'I' && seen[8] === '-' && seen[9] === 'A', `of two the same size, the newer (${seen.join('')})`);
 }
 
 console.log(failures ? `World checks: ${failures} failure(s)` : `World checks passed (${HIST_IDS.length} events).`);

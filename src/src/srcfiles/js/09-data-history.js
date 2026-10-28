@@ -20,13 +20,15 @@
  *       housing  added to a city's yearly change in rents and home prices
  *       living   living costs, as a share     rates  added to savings and bond yields, and to new loans
  *       tax      added to the income tax rate     mood  happiness, each year
- *   cats: { knob: { jobCat: multiplier } }   how much of a knob each kind of job gets (04-data-careers.js JOB_CATS)
+ *   cats: { knob: { jobCat: multiplier, _: multiplier } }   how much of a knob each kind of job gets (04-data-careers.js
+ *                                  JOB_CATS); _ is the multiplier for every kind not named (default 1)
  *   market: { year: return }, marketCc: { cc: { year: return } }   the stock market's return, by year
  *   crypto: { year: return }       and crypto's
  *   fxShock: { CUR: share }        a currency's strength that year (a number or an array, like fx)
  *   biz: { industry: share }       demand for a business industry (08-data-business.js)
- *   disease: { id, odds, ages, npc: [[lo, hi, odds], ...] }   an illness: your chance of catching it, and each year's
- *                                  chance that someone you know of that age dies of it
+ *   disease: { id, odds, ages, guards: [{ flag, mult }], npc: [[lo, hi, odds], ...] }   an illness: your chance of catching
+ *                                  it (times mult for each flag you have, a vaccine or a mask), and each year's chance that
+ *                                  someone you know of that age dies of it
  *   blast: { home, hurt, dead, npc }, cause   a local disaster's yearly odds: your home damaged, you hurt, you killed,
  *                                  somebody you know in that place killed
  *   closed: ['travel', 'nightlife', 'gambling', 'gym', 'school']   what shuts down while the strength is 0.5 or more
@@ -36,6 +38,13 @@
  *   war: { cc: { name, foe, foeAdj, theater, years, intensity, draft: [from, to], draftAges, draftWomen: [from, to],
  *               civil, result: 'victory' | 'defeat' | 'ceasefire', end, open } }   the war a country fights (59-military.js)
  *   open / openBy: { cc: ... }: { title, text, kid }   what you are told the first time you live through it
+ *   popup: true | false            force or suppress the popup (default: econ, war, pandemic and unrest pop up; a moment is a line in the log)
+ *   tone: 'good'                   for a happy event (default: bad, except a moment)
+ *   quiet: true                    a background row: its numbers apply, but it is never announced, charted or remembered
+ *   salience: n                    how much it is on people's minds, for the header chip (default 1; a far-off war with no draft is less)
+ *   siblings: share                a baby boom: how much likelier a bigger family is for a child born in these years
+ *   war[cc].lottery: { age, cutoff, from }   a draft by lottery: at that age, a draw by birthday; at or under the cut-off (a number, or
+ *                                  { year: n, _: n }) the notice comes
  *   yearly: [...]  a line for the log in later years   close: the line the year after it ends
  *   news: [[head, body], ...]      the paper   blurb: one sentence for the World sheet
  * })
@@ -102,11 +111,40 @@ H('ww2', {
       end: 'The war ended in victory, over a long summer. Soldiers came home to parades, and to a country that was suddenly very rich and very tired.' },
     de: { name: 'the Second World War', foe: 'the Allies', foeAdj: 'Allied', theater: 'Europe', years: [1939, 1945], intensity: 4, draft: [1939, 1945], draftAges: [18, 45], result: 'defeat',
       end: 'The war is over, and Germany has lost it. The cities are rubble and the country is occupied. Nobody has a plan for tomorrow beyond finding something to eat.' },
+    fr: { name: 'the Second World War', foe: 'Germany', foeAdj: 'German', theater: 'France and the Rhine', years: [1939, 1945], intensity: 4, draft: [1939, 1940], draftAges: [20, 45], result: 'victory',
+      end: 'France was liberated in 1944, and the war ended in 1945. The country that came out of it was exhausted, divided about what had happened, and determined to rebuild.' },
+    it: { name: 'the Second World War', foe: 'the Allies', foeAdj: 'Allied', theater: 'Africa, the Mediterranean and Italy itself', years: [1940, 1945], intensity: 4, draft: [1940, 1943], draftAges: [18, 40], result: 'defeat',
+      end: 'Italy changed sides in 1943, and then the war was fought the whole length of the country until 1945. When it ended, the cities were in ruins and the people were tired of everything.' },
+    jp: { name: 'the Second World War', foe: 'the Allies', foeAdj: 'Allied', theater: 'China and the Pacific', years: [1937, 1945], intensity: 4, draft: [1937, 1945], draftAges: [20, 40], result: 'defeat',
+      end: 'The war is over, and Japan has lost it. The cities are in ashes. On the radio, for the first time, people heard the emperor speak. Nobody knew what to do next.' },
+    ca: { name: 'the Second World War', foe: 'the Axis powers', foeAdj: 'Axis', theater: 'Europe and the Atlantic', years: [1939, 1945], intensity: 3, draft: [1944, 1945], draftAges: [19, 45], result: 'victory',
+      end: 'The war ended in victory. Canada had built a great army, a great navy and a great many factories, and its soldiers came home to a very different country.' },
+    au: { name: 'the Second World War', foe: 'the Axis powers', foeAdj: 'Axis', theater: 'the Pacific and North Africa', years: [1939, 1945], intensity: 3, draft: [1942, 1945], draftAges: [18, 35], result: 'victory',
+      end: 'The war ended in victory. The Pacific had come very close to home, and nobody in Australia would think about the world the same way again.' },
+    ph: { name: 'the Second World War', foe: 'Japan', foeAdj: 'Japanese', theater: 'the Philippines', years: [1941, 1945], intensity: 4, result: 'victory',
+      end: 'The Philippines was liberated in 1945, after years of occupation and a ruinous battle for the capital. The country was free, and the capital was rubble.' },
+    in: { name: 'the Second World War', foe: 'the Axis powers', foeAdj: 'Axis', theater: 'Burma and the Middle East', years: [1939, 1945], intensity: 2, result: 'victory',
+      end: 'The war ended in victory, and the soldiers of the largest volunteer army in history came home. A great many people were asking what came next.' },
+    za: { name: 'the Second World War', foe: 'the Axis powers', foeAdj: 'Axis', theater: 'North Africa and Italy', years: [1939, 1945], intensity: 2, result: 'victory',
+      end: 'The war ended in victory, and the soldiers came home.' },
+    br: { name: 'the Second World War', foe: 'the Axis powers', foeAdj: 'Axis', theater: 'Italy and the Atlantic', years: [1942, 1945], intensity: 1, result: 'victory',
+      end: 'The war ended in victory. Brazilian soldiers had fought in Italy, and came home to a country that wanted change.' },
+    mx: { name: 'the Second World War', foe: 'the Axis powers', foeAdj: 'Axis', theater: 'the Pacific', years: [1942, 1945], intensity: 1, result: 'victory',
+      end: 'The war ended. Mexico had been a small part of a very large war.' },
   },
   openBy: {
     uk: { title: 'Britain is at war', text: 'On the third of September the prime minister announced it on the radio: Britain is at war with Germany. Gas masks have been handed out, the blackout begins tonight, and every household is asked to do its part.', kid: 'The adults listened to the radio in silence. Then your school was told it would be moved to the countryside.' },
     us: { title: 'War', text: 'Japan has attacked Pearl Harbor, and the United States is at war. Factories turn to tanks and aircraft, the draft widens, and nearly everyone will be touched by it.', kid: 'The whole country listened to the radio, and nobody turned it off. Your family keeps a map on the wall now.' },
     de: { title: 'War', text: 'Germany is at war. The newspapers say it will be quick. Ration cards are issued, young men are called up, and nobody is certain what the end of it will be.', kid: 'Fathers and older brothers are leaving in uniform. Your mother holds your hand a little tighter than she used to.' },
+    fr: { title: 'France is at war', text: 'France has declared war on Germany. Men of every age are being called up, the cities are blacked out, and everyone has been told that the great line of forts on the border will hold.', kid: 'Fathers are leaving on trains, and there are sandbags in front of the school.' },
+    it: { title: 'Italy enters the war', text: 'Italy has entered the war on the German side. The newspapers promise a quick victory. The men are called up, and the shops are emptier every month.', kid: 'The older boys are leaving, and there is less to eat than there used to be.' },
+    jp: { title: 'War', text: 'Japan’s war in China is growing into something much bigger. The factories, the schools and the newspapers are all turned towards it. The men are called up, and the shortages begin.', kid: 'There are drills at school, and the older boys are leaving for the army.' },
+    ca: { title: 'Canada is at war', text: 'Canada has declared war on Germany, a week after Britain. There are lines out the door of every recruiting office, and the factories are turning to shells and trucks.', kid: 'Everyone is collecting scrap and saving stamps for the war.' },
+    au: { title: 'Australia is at war', text: 'Australia is at war alongside Britain. Young men are enlisting by the thousand, and the country is a long way from the fighting. For now.', kid: 'The grown-ups listen to the radio all night, and the older boys are leaving.' },
+    ph: { title: 'The war arrives', text: 'Japanese forces have attacked the Philippines. Manila is bombed within days, and the whole country is about to live under occupation.', kid: 'Planes have come over the city, and the family has been taken out to the countryside.' },
+    se: { title: 'At the edge of the war', text: 'The war has spread across Europe, and Sweden has stayed out of it. Troops line the borders, goods are rationed, and everyone is careful about what they say.', kid: 'There are soldiers everywhere, and a lot of talk about being careful.' },
+    es: { title: 'A country that has had enough of war', text: 'Spain stays out of the war. The Civil War is only just over, and the country is poor and hungry and glad not to be fighting.', kid: 'There is never enough to eat, and the grown-ups are grateful it is not worse.' },
+    ie: { title: 'The Emergency', text: 'Ireland is neutral, and calls the war "the Emergency." There is rationing and censorship, and the ships do not come as often as they used to.', kid: 'There are shortages of everything, and a lot of turf burning in the stove.' },
   },
   open: { title: 'The world is at war', text: 'War has spread across the world. Armies are on the move, and the effects reach far beyond the fighting: rationing, shortages, young men gone, and a constant fear about the news.', kid: 'The grown-ups talk about the war all the time, and about the people who are far away.' },
   yearly: [
@@ -139,7 +177,7 @@ H('covid', {
     jobs: { service: 1.5, fame: 1.8, sports: 1.8, transport: 1.2, tech: -0.2, office: 0.3, business: 0.5, health: -0.5 },
   },
   market: { 2020: 0.18, 2021: 0.29 },
-  disease: { id: 'covid', odds: [0.14, 0.30, 0.55], npc: [[0, 39, 0.0006], [40, 59, 0.004], [60, 69, 0.012], [70, 79, 0.03], [80, 120, 0.07]] },
+  disease: { id: 'covid', odds: [0.14, 0.30, 0.55], guards: [{ flag: 'vaxd', mult: 0.5 }], npc: [[0, 39, 0.0006], [40, 59, 0.004], [60, 69, 0.012], [70, 79, 0.03], [80, 120, 0.07]] },
   closed: ['travel', 'nightlife', 'gambling', 'gym', 'school'],
   furlough: ['uk', 'ie', 'ca', 'au', 'de', 'fr', 'it', 'es', 'se', 'jp', 'kr'],
   support: { us: [1200, 2000, 0], jp: [900, 0, 0], br: [120, 80, 0], za: [60, 0, 0], ph: [100, 0, 0], in: [30, 0, 0], mx: [40, 0, 0], ng: [30, 0, 0] },

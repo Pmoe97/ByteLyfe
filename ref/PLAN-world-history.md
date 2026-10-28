@@ -410,6 +410,12 @@ war: {
 
 ## Phase 4: the headline events (history, part two)
 
+**Status: built** (`09-data-history-2.js`, `89-world-events-2.js`; `lotteryYear`, `salience`, `cats._`, `guards`, `quiet`, `popup`
+and `tone` in the engine). All the rows below exist, and the Second World War now has every country. Where the plan said "the
+Wall comes down" and "the Cold War", the build splits them into moments (`sputnik`, `berlin_wall`, `missile_crisis`, `chernobyl`)
+inside a background Cold War row. The two occupations (France 1940 to 1944, the Philippines 1942 to 1945) move to Phase 5 with the
+country events.
+
 Fifteen events everybody alive would remember. Each gets: the data row, its knobs, 2 to 4
 personal events (`89-world-events.js`, ids `wd_*`), and 4 to 6 news items. Numbers are starting
 points for tuning, not gospel. Market returns are approximate US large-company returns (Appendix A).

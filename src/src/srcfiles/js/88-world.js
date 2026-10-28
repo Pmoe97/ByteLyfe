@@ -63,21 +63,23 @@ function wfx(s, knob, cc, city) {
   for (const a of worldAt(s.year, cc || P(s).country, city || P(s).city)) t += evKnob(a.ev, a.ev.fx && a.ev.fx[knob], a.i) * a.sev;
   return t;
 }
+// How much of a knob one kind of job takes: its own number in the row's cats, else the row's `_`, else all of it.
+function evCat(ev, knob, cat) {
+  const c = ev.cats && ev.cats[knob];
+  if (!c) return 1;
+  return c[cat] !== undefined ? c[cat] : c._ !== undefined ? c._ : 1;
+}
 // The same, for one kind of job (04-data-careers.js JOB_CATS): an event can hit some of them harder.
 function wfxCat(s, knob, cat, cc, city) {
   let t = 0;
-  for (const a of worldAt(s.year, cc || P(s).country, city || P(s).city)) {
-    const m = a.ev.cats && a.ev.cats[knob] && a.ev.cats[knob][cat];
-    t += evKnob(a.ev, a.ev.fx && a.ev.fx[knob], a.i) * a.sev * (m === undefined ? 1 : m);
-  }
+  for (const a of worldAt(s.year, cc || P(s).country, city || P(s).city)) t += evKnob(a.ev, a.ev.fx && a.ev.fx[knob], a.i) * a.sev * evCat(a.ev, knob, cat);
   return t;
 }
 // The event doing most of one knob (for naming it in a sentence).
 function worldCause(s, knob, cat) {
   let best = null, bv = 0;
   for (const a of worldActive(s)) {
-    const m = cat && a.ev.cats && a.ev.cats[knob] && a.ev.cats[knob][cat];
-    const v = Math.abs(evKnob(a.ev, a.ev.fx && a.ev.fx[knob], a.i) * a.sev * (m === undefined ? 1 : m));
+    const v = Math.abs(evKnob(a.ev, a.ev.fx && a.ev.fx[knob], a.i) * a.sev * (cat ? evCat(a.ev, knob, cat) : 1));
     if (v > bv) { bv = v; best = a; }
   }
   return best;
@@ -156,13 +158,15 @@ function worldYear(s) {
   m.worldLived = m.worldLived || [];
   for (const x of act) {
     const ev = x.ev;
+    if (ev.quiet) { if (chance(0.5)) worldPost(s, ev); continue; } // a background row: its numbers apply, and it is never announced
     if (!m.worldLived.includes(x.id)) m.worldLived.push(x.id);
     if (!w.seen[x.id]) {
       w.seen[x.id] = s.year;
       const o = worldOpening(ev, cc);
       if (o && a >= 4) {
         const text = a < 13 && o.kid ? o.kid : o.text;
-        if (WORLD_POPUP.includes(ev.kind) || (ev.kind === 'disaster' && ev.cities)) announce(s, { emoji: ev.emoji, title: o.title, text, tone: ev.kind === 'moment' ? 'good' : 'bad', log: `${ev.emoji} ${text}` });
+        const pop = ev.popup !== undefined ? ev.popup : WORLD_POPUP.includes(ev.kind) || (ev.kind === 'disaster' && ev.cities);
+        if (pop) announce(s, { emoji: ev.emoji, title: o.title, text, tone: ev.tone || (ev.kind === 'moment' ? 'good' : 'bad'), log: `${ev.emoji} ${text}` });
         else log(s, `${ev.emoji} ${text}`);
       }
     } else if (ev.yearly && ev.yearly.length && chance(0.4) && a >= 6) log(s, `${ev.emoji} ${vary(pick(ev.yearly))}`);
@@ -210,7 +214,7 @@ function worldIllness(s, x) {
   if (!D) return;
   const age = bodyAge(s, P(s));
   let odds = evKnob(ev, d.odds, x.i) * x.sev;
-  if (m.flags.vaxd && D.vax) odds *= 0.5;
+  for (const gd of d.guards || []) if (m.flags[gd.flag]) odds *= gd.mult; // a vaccine, a mask, staying in
   if ((!d.ages || (age >= d.ages[0] && age <= d.ages[1])) && !hasDisease(s, d.id) && chance(clamp(odds, 0, 0.9)) && getSick(s, d.id)) log(s, `${D.emoji} You came down with ${diseaseNoun(d.id)}.`, 'bad');
   // People you know: the old, and the unlucky.
   if (d.npc) {
@@ -267,22 +271,26 @@ function worldPeople(s, act) {
 }
 
 /* ---- historical wars (59-military.js asks first, every year) ------------------------------- */
-// The authored war a country is fighting this year: { ev, entry, years }, or null.
+// The authored war a country is fighting this year: { ev, entry, years }, or null. Two at once (Afghanistan and Iraq):
+// the bigger one is the one you live through, and the other picks up when it ends.
 function histWarFor(s, cc) {
+  let best = null;
   for (const id of HIST_IDS) {
     const ev = HIST[id], e = ev.war && ev.war[cc];
     if (!e) continue;
     const y = e.years || evRange(ev, cc);
-    if (s.year >= y[0] && s.year <= y[1]) return { ev, entry: e, years: y };
+    if (s.year < y[0] || s.year > y[1]) continue;
+    // The bigger war, and of two the same size the newer: the front the country's attention has moved to.
+    if (!best || (e.intensity || 3) > (best.entry.intensity || 3) || ((e.intensity || 3) === (best.entry.intensity || 3) && y[0] > best.years[0])) best = { ev, entry: e, years: y };
   }
-  return null;
+  return best;
 }
 function makeHistWar(s, cc, def) {
   const e = def.entry;
   return {
     id: uid(s, 'w'), cc, name: e.name, foe: e.foe, foeAdj: e.foeAdj || e.foe, theater: e.theater || 'the front', start: def.years[0], intensity: e.intensity || 3, momentum: 0, draft: false,
     dead: randInt(20, 120) * (e.intensity || 3), hid: def.ev.id, endYear: def.years[1], draftYears: e.draft || null, draftAges: e.draftAges || null, draftWomen: e.draftWomen || null,
-    result: e.result || 'ceasefire', endText: e.end || null, civil: !!e.civil,
+    result: e.result || 'ceasefire', endText: e.end || null, civil: !!e.civil, lottery: e.lottery || null,
   };
 }
 // true: history governs wars here this year, so the random ones stay out of it.
@@ -292,10 +300,12 @@ function historyWarYear(s) {
   let w = st.war;
   if (w && !w.hid) return false; // a made-up war already under way (a life from before history) runs its course
   const def = histWarFor(s, cc);
+  // A bigger war breaks out while a smaller one is on (the smaller one goes quiet until it ends).
+  if (w && def && def.ev.id !== w.hid && ((def.entry.intensity || 3) > w.intensity || ((def.entry.intensity || 3) === w.intensity && def.years[0] > w.start))) { st.war = null; w = null; }
   if (!w) {
     if (!def) { st.quiet++; return true; }
     w = st.war = makeHistWar(s, cc, def);
-    log(s, `🚨 ${warLine(w)} began.`, 'bad');
+    log(s, def.years[0] < s.year ? `🚨 ${warLine(w)} is still going on.` : `🚨 ${warLine(w)} began.`, 'bad');
   } else {
     w.dead += randInt(40, 260) * w.intensity;
   }
@@ -305,6 +315,25 @@ function historyWarYear(s) {
   if (!inService(s) && w.intensity >= 2 && chance(0.4)) add(s, { happy: -1 });
   if (s.year >= w.endYear) { w.momentum = w.result === 'victory' ? 3 : w.result === 'defeat' ? -3 : 0; endWar(s, st, w); }
   return true;
+}
+// A draft by lottery: on the year you reach the age, your birthday draws a number; at or under the year's cut-off, the notice comes.
+function lotteryYear(s, w) {
+  const m = M(s), L = w.lottery, key = 'lot_' + w.id + '_' + s.year;
+  if (A(s) !== L.age || m.flags[key] || isMonarch(s, P(s))) return;
+  m.flags[key] = 1;
+  const cut = typeof L.cutoff === 'number' ? L.cutoff : (L.cutoff[s.year] !== undefined ? L.cutoff[s.year] : (L.cutoff._ || 120));
+  const [mo, d] = P(s).bday, n = ((mo * 31 + d * 17 + s.year * 7) % 366) + 1;
+  if (n > cut) { log(s, `🎲 The draft lottery drew your birthday: number ${n}. Numbers up to ${cut} were called this year. Not yours.`, 'good'); return; }
+  m.flags['draft_' + w.id] = s.year;
+  draftNotice(s, w, `The draft lottery drew your birthday: number ${n}, and numbers up to ${cut} are being called. `);
+}
+// The sibling count of a baby boom: how much likelier a bigger family is for a child born in one (a share, from the rows' `siblings`).
+function worldSiblingBonus(s) {
+  if (!histOn()) return 0;
+  const me = s.playerId && s.people[s.playerId];
+  let t = 0;
+  for (const a of worldAt(s.year, me ? me.country : 'us', me ? me.city : '')) t += (a.ev.siblings || 0) * a.sev;
+  return clamp(t, 0, 0.6);
 }
 // Whether the call-up reaches you: men in the age band, and (when a war says so) unmarried women of 20 to 30.
 function histDraftsMe(s, w) {
@@ -342,8 +371,9 @@ function worldLivedList(s, max) {
   const ids = (M(s).worldLived || []).filter((id) => HIST[id] && !HIST[id].quiet).slice().sort((a, b) => WORLD_KIND_RANK[HIST[a].kind] - WORLD_KIND_RANK[HIST[b].kind]);
   return max ? ids.slice(0, max) : ids;
 }
-// The one event worth a chip in the header: the biggest thing going on right now.
+// The one event worth a chip in the header: the biggest thing going on right now (strength times how much it is on people's minds:
+// a row's `salience`, 1 unless it says otherwise, so a long war far away does not push a pandemic off the screen).
 function worldHeadline(s) {
-  const l = worldActive(s).filter((a) => !a.ev.quiet && a.ev.kind !== 'moment' && a.k >= 0.3).sort((a, b) => WORLD_KIND_RANK[a.ev.kind] - WORLD_KIND_RANK[b.ev.kind] || b.k - a.k);
+  const l = worldActive(s).filter((a) => !a.ev.quiet && a.ev.kind !== 'moment' && a.k >= 0.3).sort((a, b) => b.k * (b.ev.salience ?? 1) - a.k * (a.ev.salience ?? 1));
   return l[0] ? l[0].ev : null;
 }
