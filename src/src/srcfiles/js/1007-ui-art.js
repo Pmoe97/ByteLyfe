@@ -148,8 +148,11 @@ const AVLIB = (() => {
       { d: 'M76 56 C82 42 92 35 100 34 M90 55 C96 41 104 35 112 36 M106 56 C114 43 122 39 128 42', s: c.shade, w: 1.4, o: 0.5 },
       { d: 'M80 43 C94 37 110 37 124 44', s: c.hi, w: 2.8, o: 0.58 },
     ] }),
+    // The cap and the curls are separate layers: they wind in opposite directions, so as one
+    // path their overlaps cancelled out and left holes showing the face and forehead.
     curls: (c) => ({ front: [
-      { d: 'M58.5 92 C58.5 68 76 50 100 50 C124 50 141.5 68 141.5 92 C138 82 131 76 123 73.5 C115 71 107 72 100 71.5 C93 72 85 71 77 73.5 C69 76 62 82 58.5 92 Z ' + curlBlobs.map(([x, y, r]) => circ(x, y, r)).join(' '), f: c.base },
+      { d: 'M58.5 92 C58.5 68 76 50 100 50 C124 50 141.5 68 141.5 92 C138 82 131 76 123 73.5 C115 71 107 72 100 71.5 C93 72 85 71 77 73.5 C69 76 62 82 58.5 92 Z', f: c.base },
+      { d: curlBlobs.map(([x, y, r]) => circ(x, y, r)).join(' '), f: c.base },
       { d: curlMarks(curlBlobs), s: c.shade, w: 1.6, o: 0.6 },
       { d: curlMarks([[74, 52, 12], [88, 43.5, 12.5], [100, 41, 13]]), s: c.hi, w: 1.8, o: 0.55, t2: 'translate(-1.5 -3)' },
     ] }),
