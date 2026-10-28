@@ -260,6 +260,22 @@ const newsKinds = (s) => (s.news || []).map((a) => a.kind);
   META.settings.mature = false; META.settings.mature_substances = false;
 }
 
+// The club you work at is a place with regulars.
+{
+  META.settings.mature = true; META.settings.mature_adultwork = true;
+  const s = adult(25);
+  ctx.hire(s, 'club_dancer', 0);
+  const c = ctx.wkCtx(s, { who: 'regular' });
+  const club = ctx.nightVenues(s).find((v) => v.kind === 'club');
+  const pl = ctx.placeGet(s, ctx.nightPlaceKey(s, club));
+  ok(!!pl && pl.reg.includes(c.pid) && pl.name === club.name, 'a dancer\'s regulars are the club\'s regulars');
+  const def = g('WORKDECK').club_dancer;
+  ok(def.kv(s, ctx.wkState(s, 'club_dancer')).some((r) => r[1] === club.name), 'and the desk says where you dance');
+  pl.mood = 100; const hi = def.payMul(s, ctx.wkState(s, 'club_dancer')); pl.mood = 0; const lo = def.payMul(s, ctx.wkState(s, 'club_dancer'));
+  ok(hi > lo, 'a club in a good mood pays better');
+  META.settings.mature = false; META.settings.mature_adultwork = false;
+}
+
 /* 5. events ------------------------------------------------------------------------------------ */
 {
   const setup = (id) => {

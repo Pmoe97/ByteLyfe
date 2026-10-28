@@ -244,8 +244,11 @@ function webExpose(s, sec, how) {
   const me = sec.subj === s.playerId, subj = s.people[sec.subj];
   if (me) {
     const p = P(s);
-    webRepAdd(p, { scandal: Math.round(5 * sec.sev * webCushion(s)), name: -3 * sec.sev });
-    for (const par of relPeople(s, ['parent', 'sibling', 'child'])) addRel(s, par.id, -sec.sev);
+    // A victim's secret getting out is not a scandal (85-abuse.js): the people who love them rally instead.
+    const kd = secretKind(sec), vic = typeof kd.victim === 'function' ? kd.victim(s, sec) : !!kd.victim;
+    if (vic) webRepAdd(p, { name: 1 });
+    else webRepAdd(p, { scandal: Math.round(5 * sec.sev * webCushion(s)), name: -3 * sec.sev });
+    for (const par of relPeople(s, ['parent', 'sibling', 'child'])) addRel(s, par.id, vic ? 2 : -sec.sev);
     const rom = romanticId(s);
     let extra = '';
     if (sec.kind === 'affair' && rom && rom === sec.rom && sec.other && relKind(s, sec.other) === 'lover') caughtPopup(s, sec.other, rom);

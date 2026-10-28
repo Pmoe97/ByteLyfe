@@ -13,6 +13,8 @@ function webFacts(p) {
   if (knows.length) chip('🤫', `Knows ${nOf(knows.length, 'secret')} of yours`, 'bad');
   const about = webAbout(G, p.id);
   if (about.length) chip('🗣️', 'You know something about them');
+  const ab = typeof abOf === 'function' ? abOf(G) : null;
+  if (ab && ab.pid === p.id) chip(ab.role === 'victim' ? '🕯️' : '🪞', ab.role === 'victim' ? `${abWord(ab.level)}: this is not your fault` : `What you are doing is ${abWord(ab.level).toLowerCase()}`, 'bad');
   const shared = [...webTies(G, p).keys()].filter((id) => id !== G.playerId && relOf(G, id)).length;
   if (shared) chip('🕸️', `Talks to ${nOf(shared, 'person', 'people')} you know`);
   return chips.length ? `<div class="chips" style="justify-content:center;margin-top:10px">${chips.join('')}</div>` : '';

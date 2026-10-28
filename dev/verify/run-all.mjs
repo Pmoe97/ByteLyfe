@@ -18,6 +18,7 @@
 //   - schemes: a Ponzi scheme, the long con, the blackmail ring (82-schemes.js)
 //   - the operation: the drug business, its crew, rivals, raids, deaths, and a prison gang's ranks (83-operation.js)
 //   - street justice: victims and fallout, witnesses, the vigilante (84-street-justice.js)
+//   - toxic and abusive relationships, from both sides, with a way out at every stage (85-abuse.js)
 //   - investigations: case files, detectives, series, arrests, police casework (63-cases.js, 64-detective.js)
 //   - career cards: the decks, dealing, playing every card, outcomes, autopilot, people (65-work.js, 66-work-decks.js)
 //   - language dial and intimacy: the dial, gating, adults only, nights, consequences, spark, friends with benefits (67-language.js, 68-intimacy.js)
@@ -78,6 +79,7 @@ const tasks = [
   { label: 'scheme checks', args: ['dev/verify/schemes.mjs'] },
   { label: 'operation checks', args: ['dev/verify/operation.mjs'] },
   { label: 'street justice checks', args: ['dev/verify/justice.mjs'] },
+  { label: 'abuse checks', args: ['dev/verify/abuse.mjs'] },
   { label: 'investigation checks', args: ['dev/verify/inv.mjs'] },
   { label: 'career-card checks', args: ['dev/verify/work.mjs'] },
   { label: 'language and intimacy checks', args: ['dev/verify/intim.mjs'] },

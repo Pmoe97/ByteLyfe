@@ -87,7 +87,12 @@ function wkPerson(s, role) {
 }
 function wkCtx(s, k) {
   const c = {};
-  if (k.who) { const p = wkPerson(s, k.who); c.pid = p.id; c.who = fullName(p); c.first = p.first; }
+  if (k.who) {
+    const p = wkPerson(s, k.who); c.pid = p.id; c.who = fullName(p); c.first = p.first;
+    // A job with a place (the club you dance at, the bar you work) makes the people it deals into its regulars (81-web2.js).
+    const d = M(s).career && WORKDECK[M(s).career.id], pl = d && d.place && d.place(s);
+    if (pl && typeof placeVisit === 'function') placeVisit(s, pl.key, pl, [p.id]);
+  }
   if (k.pay) {
     const def = WORKDECK[M(s).career.id];
     c.amt = price(s, Math.round(k.pay * (1 + M(s).career.level * 0.3) * (def && def.payMul ? def.payMul(s, wkState(s, M(s).career.id)) : 1)));
