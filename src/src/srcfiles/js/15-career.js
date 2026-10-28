@@ -508,7 +508,7 @@ onChoice('election', (s, ctx, bi) => {
   const cost = [0, 5000, 50000, 500000, 5000000].map((b) => price(s, b * Math.pow(3, toLevel)))[bi];
   if (!pay(s, cost)) return cantAfford(cost);
   const c = M(s).career;
-  let odds = 0.25 + skill(s, 'charisma') / 250 + (M(s).karma - 50) / 300 + M(s).fame / 400 + bi * 0.08 - toLevel * 0.06 + vetElectionEdge(s);
+  let odds = 0.25 + skill(s, 'charisma') / 250 + (M(s).karma - 50) / 300 + M(s).fame / 400 + bi * 0.08 - toLevel * 0.06 + vetElectionEdge(s) + webVoteEdge(s); // a good name, or a scandal, is on the ballot (62-web.js)
   if (c && c.id === 'politician') odds += (c.perf - 50) / 150;
   if (trait(s, 'charming')) odds += 0.06;
   addSkill(s, 'charisma', 2);
@@ -535,7 +535,7 @@ onChoice('reelect', (s, ctx, v) => {
   const c = M(s).career;
   if (!c) return;
   if (v === 'quit') { const t = careerTitle(s); leaveJob(s, 'retired'); return `You stepped down as ${t}.`; }
-  const odds = clamp(0.2 + c.perf / 110 + (M(s).karma - 50) / 300, 0.05, 0.92);
+  const odds = clamp(0.2 + c.perf / 110 + (M(s).karma - 50) / 300 + webVoteEdge(s), 0.05, 0.92);
   if (chance(odds)) { c.perf = clamp100(c.perf + 5); add(s, { happy: 6 }); return { text: 'You won re-election!', tone: 'good' }; }
   const t = careerTitle(s);
   leaveJob(s, 'lost election');

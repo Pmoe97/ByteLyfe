@@ -52,7 +52,9 @@ onChoice('nightGo', (s, ctx, vid) => {
   const cost = price(s, NIGHT_COST[v.kind]);
   if (!pay(s, cost)) return cantAfford(cost);
   bump(s, 'nightlife');
-  const c = { kind: v.kind, name: v.name, vibe: v.vibe, k: 'vibe', drunk: 0, hi: [], met: null, plan: [], spent: cost, gain: 0, lines: [] };
+  const pk = nightPlaceKey(s, v); // the place remembers you (81-web2.js)
+  placeVisit(s, pk, { kind: 'night', name: v.name, emoji: NIGHT_EMOJI[v.kind] });
+  const c = { kind: v.kind, name: v.name, vibe: clamp100(v.vibe + placeVibe(s, pk)), pk, k: 'vibe', drunk: 0, hi: [], met: null, plan: [], spent: cost, gain: 0, lines: [] };
   popup(s, {
     emoji: NIGHT_EMOJI[v.kind], title: v.name, handler: 'nightStep', ctx: c,
     text: { bar: 'Low light, a jukebox, and a bartender who nods at you like they remember you. It could be a quiet night. It could not.', club: 'The bass hits your ribs before the door closes behind you. Everybody is looking at everybody else.', after: 'No sign, no name on the door, a stranger checks you off a list. Inside, it is four in the morning for a lot of people, and it will not stop.' }[v.kind],
@@ -128,6 +130,7 @@ function nightOffer(s, c) {
 function nightIncident(s, c) {
   const id = pick(Object.keys(NIGHT_INCIDENTS).filter((k) => k !== 'bouncer' || c.drunk >= 2 || c.intensity === 2));
   c.k = 'incident'; c.inc = id;
+  placeIncident(s, c.pk, id); // a bad night is remembered by the place (81-web2.js)
   popup(s, { emoji: '🚨', title: c.name, handler: 'nightStep', ctx: c, text: NIGHT_INCIDENTS[id].text, choices: NIGHT_INCIDENTS[id].choices.map((x, i) => ({ label: x[0], value: i })) });
 }
 function nightHome(s, c) {
@@ -152,6 +155,7 @@ onChoice('nightStep', (s, c, v) => {
       const p = wkPerson(s, 'regular');
       c.met = p.id;
       addRel(s, p.id, 6);
+      placeRegular(s, c.pk, p.id);
       bits.push(`You ended up talking to ${p.first} for most of an hour.`);
     }
     c.plan = nightPlan(c, s);

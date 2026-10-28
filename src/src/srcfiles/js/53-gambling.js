@@ -184,6 +184,7 @@ function visitVenue(s, v) {
   const st = vStand(s, v.id);
   if (st.banned > s.year) return { text: `You're banned from ${v.name} until ${st.banned}.`, nolog: true };
   st.visits++;
+  placeVisit(s, 'gamb:' + v.id, { kind: 'gamb', name: v.name, emoji: VENUE_KINDS[v.kind].emoji }); // a place with regulars (81-web2.js)
   const K = VENUE_KINDS[v.kind], owed = owedTo(s, v);
   const games = K.games.filter((g) => g !== 'count' || (P(s).stats.smarts >= 65 && skill(s, 'cards') >= 25));
   popup(s, {

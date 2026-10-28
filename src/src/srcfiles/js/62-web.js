@@ -27,7 +27,7 @@ const WEB_MAX_SECRETS = 60;
 const WEB_MAX_TIES = 6;
 // How the people in your life group together: coworkers know each other, and so on.
 const WEB_TIE_KIND = { coworker: 'work', boss: 'work', classmate: 'school', teacher: 'school', friend: 'friend', bestie: 'friend', cellmate: 'cell' };
-const WEB_TELL_WEIGHT = { friend: 3, work: 2, school: 2, kin: 1.5, you: 1.5, cell: 1 };
+const WEB_TELL_WEIGHT = { friend: 3, work: 2, school: 2, place: 2, kin: 1.5, you: 1.5, cell: 1 };
 
 function webOf(s) {
   if (!s.web) s.web = { seq: 0, secrets: {}, unease: {} };
@@ -45,6 +45,10 @@ function webRepAdd(p, d) {
 // Odds nudges other systems read. A scandal costs you job offers and juries' goodwill.
 function webHireEdge(s) { const r = webRep(P(s)); return -r.scandal / 300 + (r.name - 50) / 500; }
 function webJuryEdge(s) { const r = webRep(P(s)); return r.scandal / 400 - (r.name - 50) / 500; }
+// A good name softens a fall: someone people respect gets the benefit of the doubt (up to a quarter off the scandal).
+function webCushion(s) { return 1 - clamp((webRep(P(s)).name - 50) / 200, 0, 0.25); }
+// What a good name does for an election and for asking someone out: read by the politics code and romance odds.
+function webVoteEdge(s) { const r = webRep(P(s)); return (r.name - 50) / 400 - r.scandal / 350; }
 function webRepWord(r) {
   if (r.scandal >= 60) return 'Infamous';
   if (r.scandal >= 30) return 'Talked about';
@@ -67,6 +71,10 @@ const SECRET_KINDS = {
   npc_habit: { sev: 2, icon: '🍺' },
   adult_work: { sev: 3, icon: '🎭' }, // what you do for a living, from 71-adult-work.js
 };
+// Later files add their own kinds: defSecretKind('fraud', { sev, icon, mine(s, sec), rumor(s, sec), expose(s, sec, how) -> text,
+// stake(s, sec, pid) -> true when the person it matters most to has been dealt with }). 81-web2.js and the crime and dark files use it.
+function defSecretKind(kind, def) { SECRET_KINDS[kind] = def; return def; }
+const secretKind = (sec) => SECRET_KINDS[sec.kind] || {};
 const NPC_CRIME_NOTES = ['a drunk-driving stop', 'a shoplifting charge', 'a bar fight', 'a bounced-check scandal'];
 const NPC_HABIT_NOTES = ['drinking', 'gambling', 'pill'];
 
@@ -103,6 +111,7 @@ function webLabel(s, sec) {
   if (sec.kind === 'killing') return `what happened to ${b}`;
   if (sec.kind === 'sti') return `a diagnosis you have not told ${webName(s, sec.rom)} about`;
   if (sec.kind === 'adult_work') return adultWorkLabel(s, sec);
+  if (secretKind(sec).mine) return secretKind(sec).mine(s, sec);
   return webRumor(s, sec);
 }
 function webRumor(s, sec) {
@@ -114,7 +123,7 @@ function webRumor(s, sec) {
     case 'npc_crime': return `${a} got caught up in ${sec.note || 'trouble with the law'} and kept it quiet`;
     case 'npc_fired': return `${a} was fired and hasn't told anyone`;
     case 'npc_habit': return `${a} has a serious ${sec.note || 'drinking'} problem`;
-    default: return `${a} is hiding something`;
+    default: return secretKind(sec).rumor ? secretKind(sec).rumor(s, sec) : `${a} is hiding something`;
   }
 }
 
@@ -210,6 +219,7 @@ function webStake(s, sec, pid) {
   const rom = romanticId(s);
   if (!rom || rom !== pid || sec.out) return;
   if (sec.kind === 'adult_work') { adultPartnerFound(s, sec, rom); return; }
+  if (secretKind(sec).stake && secretKind(sec).stake(s, sec, pid)) return;
   if (sec.kind === 'sti' && sec.rom === rom) {
     sec.out = true;
     sec.outYear = s.year;
@@ -234,7 +244,7 @@ function webExpose(s, sec, how) {
   const me = sec.subj === s.playerId, subj = s.people[sec.subj];
   if (me) {
     const p = P(s);
-    webRepAdd(p, { scandal: 5 * sec.sev, name: -3 * sec.sev });
+    webRepAdd(p, { scandal: Math.round(5 * sec.sev * webCushion(s)), name: -3 * sec.sev });
     for (const par of relPeople(s, ['parent', 'sibling', 'child'])) addRel(s, par.id, -sec.sev);
     const rom = romanticId(s);
     let extra = '';
@@ -248,10 +258,13 @@ function webExpose(s, sec, how) {
       if (sec.kind === 'killing' && sec.ev >= 60 && chance(0.5) && !inPrison(s) && !s.dead) { const r = arrest(s, 'murder'); if (r && r.text) log(s, r.text, 'bad'); }
     }
     if (sec.kind === 'adult_work') extra = adultExposed(s, sec);
+    if (secretKind(sec).expose) extra += secretKind(sec).expose(s, sec, how) || '';
     announce(s, { emoji: '📣', title: 'It got out', text: `${cap(webLabel(s, sec))} is no longer a secret. ${how === 'tip' ? 'Someone called it in.' : 'People are talking.'}${extra}`, tone: 'bad' });
+    webFact(s, 'secret_out', { sid: sec.id, kind: sec.kind, me: true, how });
     return;
   }
   if (!subj) return;
+  webFact(s, 'secret_out', { sid: sec.id, kind: sec.kind, me: false, pid: subj.id, how });
   if (sec.kind === 'npc_affair') {
     const mate = subj.partner && s.people[subj.partner];
     if (mate) { subj.partner = null; subj.married = false; mate.partner = null; mate.married = false; }
@@ -407,6 +420,8 @@ function webLeak(s) {
     }
     // Nobody talked: someone called it in.
     if (!sec.out && sec.subj === s.playerId && (sec.kind === 'crime' || sec.kind === 'killing') && chance(sec.ev / 600)) webExpose(s, sec, 'tip');
+    // Kinds with a risk of their own that no knower is needed for (an informant's wire, a ledger an auditor finds).
+    else if (!sec.out && sec.subj === s.playerId && secretKind(sec).tipOdds && chance(secretKind(sec).tipOdds(s, sec))) webExpose(s, sec, 'tip');
   }
 }
 function webDecay(s) {

@@ -14,6 +14,7 @@
 //   - military: wars, deployments, the draft, desertion, veterans' benefits (59-military.js)
 //   - spy: recruitment, missions, assets, double agents, getting burned (60-spy.js)
 //   - web: secrets that leak, ties, hearsay, reputation, neighborhood unease (62-web.js)
+//   - web part two: a good name, the press and the bus, deserters' and informants' secrets, places with regulars (81-web2.js)
 //   - investigations: case files, detectives, series, arrests, police casework (63-cases.js, 64-detective.js)
 //   - career cards: the decks, dealing, playing every card, outcomes, autopilot, people (65-work.js, 66-work-decks.js)
 //   - language dial and intimacy: the dial, gating, adults only, nights, consequences, spark, friends with benefits (67-language.js, 68-intimacy.js)
@@ -70,6 +71,7 @@ const tasks = [
   { label: 'military checks', args: ['dev/verify/military.mjs'] },
   { label: 'spy checks', args: ['dev/verify/spy.mjs'] },
   { label: 'web checks', args: ['dev/verify/web.mjs'] },
+  { label: 'web part two checks', args: ['dev/verify/web2.mjs'] },
   { label: 'investigation checks', args: ['dev/verify/inv.mjs'] },
   { label: 'career-card checks', args: ['dev/verify/work.mjs'] },
   { label: 'language and intimacy checks', args: ['dev/verify/intim.mjs'] },

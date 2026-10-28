@@ -185,6 +185,7 @@ onChoice('venueGo', (s, ctx, v) => {
   }
   // join: you meet people, and you hear things
   addRel(s, a.id, 3); addRel(s, b.id, 2);
+  placeVisit(s, 'work:' + M(s).career.id + ':' + ctx.v, { kind: 'work', name: cap(ctx.v), emoji: '☕' }, [a.id, b.id]); // a place with regulars (81-web2.js)
   if (typeof webLink === 'function') webLink(s, a.id, b.id, 'work'); // coworkers who share a venue talk to each other
   const heard = venueGossip(s, a, crew);
   return heard ? { text: `${a.first} and ${b.first} got talking, and you listened.`, tone: '' } : `You swapped stories with ${a.first} and ${b.first}. Nothing happened, which is what the break room is for.`;

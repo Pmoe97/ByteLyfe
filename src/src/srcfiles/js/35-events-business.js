@@ -27,6 +27,7 @@ function rollBizEvent(s, co) {
   });
   const ev = weighted(pool, (e) => e.w ?? 1);
   if (!ev) return;
+  webFact(s, 'biz_event', { id: ev.id, co: co.id, you: co.ceo === 'you' }); // the press and your name listen (81-web2.js)
   const text = vary(typeof ev.text === 'function' ? ev.text(s, co) : ev.text);
   if (ev.auto) {
     const r = ev.auto(s, co);

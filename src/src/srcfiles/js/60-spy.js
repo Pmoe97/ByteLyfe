@@ -436,6 +436,7 @@ function burnSpy(s, how) {
   if (!sp || !c || !isSpyJob(c.id) || sp.burned) return;
   sp.burned = { year: s.year, how };
   sp.burns++;
+  webFact(s, 'spy_burned', { how });
   tally(s, 'burned');
   sp.cover.strength = 0;
   const text = { blown: 'Your face is in a foreign file now. Your cover is gone.', hunted: 'Three services know your name. You cannot work in the field again as you are.', expelled: 'You are known to everyone as the diplomat who was expelled.' }[how];
@@ -735,6 +736,7 @@ function writeMemoir(s, kind) {
   const sp = ensureSpy(s);
   sp.memoir = true;
   tally(s, 'memoir');
+  webFact(s, 'memoir_out', { kind }); // a book is public (81-web2.js)
   const base = { tellall: 120000, clean: 25000, novel: 60000 }[kind];
   const income = price(s, Math.round(base * (1 + M(s).fame / 100 + skill(s, 'writing') / 100) * randFloat(0.6, 1.5)));
   add(s, { money: income, fame: { tellall: randInt(8, 20), clean: randInt(2, 6), novel: randInt(3, 9) }[kind], karma: kind === 'tellall' ? -3 : 0 });
