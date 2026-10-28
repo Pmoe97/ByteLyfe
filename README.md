@@ -54,4 +54,4 @@ Before committing, `python3 dev/bump-versions.py` bumps the `?v=N` cache-buster 
 | `src/src/srcfiles/css/` | Styles, in cascade order |
 | `local-dev/` | Dev server and the Perchance shim (never shipped) |
 | `dev/verify/` | Node harnesses and the browser smoke test (never shipped) |
-| `ref/` | Design docs: [`ARCHITECTURE.md`](ref/ARCHITECTURE.md), [`ROADMAP.md`](ref/ROADMAP.md) |
+| `ref/` | Design docs: [`ARCHITECTURE.md`](ref/ARCHITECTURE.md), [`ROADMAP.md`](ref/ROADMAP.md), and the plan for the next arc, [`PLAN-world-history.md`](ref/PLAN-world-history.md) |

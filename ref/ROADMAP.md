@@ -1043,6 +1043,23 @@ Phases 1 to 4 are all built, in this order:
 6. Serial offenders, adult dark themes, abduction and toxic relationships (Phase 4, parts three to six).
 7. **Next:** the rest of the Next up list below, each of which now plugs into the web.
 
+## Next arc: the world outside (planned)
+
+The detailed plan is [`PLAN-world-history.md`](PLAN-world-history.md). In order:
+
+1. **Family fixes.** A confirmation before asking out a relative, and breaking up with one puts
+   them back in your family instead of "Others".
+2. **Start at any age.** A custom life can begin at an older age; the years before are lived on
+   autopilot (popups answered, a job, a home, maybe a partner), and you don't choose what happens.
+3. **Real-world history.** Lives in 1900 to 2025 live through the biggest events: both World Wars
+   and the draft, the 1918 flu, the Depression, the postwar boom, the Cold War, Vietnam, the oil
+   shocks, the dot-com bust, 2008, COVID and the inflation surge, plus country events and disasters
+   in your city. They move the stock market, jobs and layoffs, pay, rents and home prices, living
+   costs, interest rates and currencies, and come with personal events that put you in the moment.
+   Data-driven (`09-data-history.js`), behind a `history` setting, on by default.
+4. **Later:** generated world events for the years after 2025, and era gates (no social media in
+   1950, money shown in francs and marks before the euro).
+
 ## Next up
 
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
@@ -1066,7 +1083,8 @@ web (secrets, reputation, ties, places) as it is built.
 
 **Historical eras.** Living through the Middle Ages, a revolution or the world wars would mean
 replacing nearly every data table (jobs, prices, assets, events, medicine). That makes it a
-spin-off for the distant future, not an expansion.
+spin-off for the distant future, not an expansion. The lighter version, modern life with real
+events layered on top (1900 to 2025), is planned above under "The world outside".
 
 ## Not planned
 
