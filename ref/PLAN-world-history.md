@@ -493,6 +493,14 @@ currencies, use `jobs`, `rates` and `mood` for those events and leave `fxShock` 
 
 Small, city-level, mostly positive. A log line or one popup, a short local effect.
 
+**Status: built** (`09-data-history-6.js`, `89-world-events-4.js`). The Games (24 rows, `games: year`) and 42 disasters are built by
+two small functions, `histGames` and `histDisaster`; the firsts are `first_radio`, `first_tv`, `first_color_tv`,
+`first_home_computer`, `first_mobile`, `first_web`, `first_smartphone` and `first_social`, each with its own year per country in
+`yearsBy` (Phase 7b reads those for the era gates). A one-year disaster row runs three years with a `curve` of `[1, 0, 0]`: the blast
+and the opening happen in the first year, and `fx` arrays carry the dip and the rebound; a row whose strength is zero is not announced
+to someone who has just moved in. An event whose `ctx` sets a flag must not make its own `when` false (23-events.js asks `when` again
+when you choose), so `wd_games` and `wd_aftermath` store the year.
+
 - **The Olympics come to your city** (two years before through the Games: `jobs +0.1`,
   `housing +0.04` for that city; the year of: ★ volunteer, buy tickets, or rent your place to
   visitors): London 1908, 1948, 2012; Stockholm 1912; Paris 1924, 2024; Los Angeles 1932, 1984;

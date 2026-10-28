@@ -947,6 +947,16 @@ India (the wars, liberalization, demonetisation), Nigeria, the Philippines (Peop
 generator or solar panels). Dated events now come the year they happen, and history's events are weighted up so a life meets
 them (`sure: true`, and a default weight of 10 for `wd_` events).
 
+**The real world (part four): local moments.** Things that happen to one city. The Olympic Games come to 24 host cities (London
+1908, 1948 and 2012, Stockholm, Paris, Los Angeles, Melbourne, Rome, Tokyo twice, Mexico City, Munich, Montreal, Seoul, Barcelona,
+Atlanta, Sydney, Rio, and the Winter Games in Sapporo, Calgary, Turin and Vancouver): two years of building and visitors (more
+jobs, rising rents), then the year itself, when you can volunteer, buy tickets, or rent your place to visitors. Forty-odd
+disasters strike one city or one region, from the Halifax explosion and the Great Kantō earthquake through Cyclone Tracy, Kobe and
+Hurricane Andrew to the Porto Alegre floods and the 2025 Los Angeles fires: homes damaged or lost, people hurt, people you know
+lost, home prices dipping and coming back, the building trades hiring the year after. The morning after, you help dig out, mend your
+home, give to the relief fund, or leave the city. And the arrival of radio, television, color television, the home computer, the
+mobile phone, the web, the smartphone and social media, in each country's own year (Phase 7 turns these into era gates).
+
 **Careers, part two (finishing Phase 3).**
 - **Forensic science and behavioral analysis** are tracks of their own. They work real case files: a good year moves a case
   and can close it, a bad one sets it back, and promotion needs the cases you moved.

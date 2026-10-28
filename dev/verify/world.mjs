@@ -363,9 +363,10 @@ function walk(o, path, out) {
       if (!pp) { ok(!BAD.test(JSON.stringify(t.log.slice(-1))), `${name}: reads "${JSON.stringify(t.log.slice(-1)).slice(0, 120)}"`); played++; continue; }
       ok(!BAD.test(pp.text + pp.title), `${name}: reads "${pp.text}"`);
       for (let k = 0; k < pp.choices.length; k++) {
-        const u = clone(t), q = u.pending.find((x) => x.handler === 'event'), e0 = errors;
+        const u = clone(t), q = u.pending.find((x) => x.handler === 'event'), e0 = errors, n0 = u.log.length;
         try { ctx.resolvePopup(u, q.id, k); played++; } catch (e) { ok(false, `${name}: choice ${k} threw ${e.message}`); }
         ok(errors === e0, `${name}: choice ${k} logged an error`);
+        ok(!/moment passed/.test(u.log.slice(n0).flatMap((e) => e.lines.map((l) => l.t)).join(' ')), `${name}: choice ${k} said the moment passed`);
         for (let n = 0; n < 8 && u.pending.length; n++) { const r = u.pending[0]; try { ctx.resolvePopup(u, r.id, Math.max(0, r.choices.findIndex((c) => !c.disabled)), r.input ? 'X' : undefined); } catch (e) { ok(false, `${name}: follow-up threw ${e.message}`); break; } }
         const bad = []; walk(u, 's', bad); ok(!bad.length, `${name}: choice ${k}: ${bad.join('; ')}`);
       }
@@ -503,7 +504,7 @@ function walk(o, path, out) {
   const rich = (s) => { s.player.money = 50000; };
   // The player can step through any one choice of an event.
   const play = (s, id, k) => { const t = clone(s); ok(ctx.fireEvent(t, EVENTS[id]), `${id}: fires`); const pp = t.pending.find((q) => q.handler === 'event'); ctx.resolvePopup(t, pp.id, k); return t; };
-  const every = (name, s) => { const ev = EVENTS[name]; ok(ctx.eventEligible(s, ev), `${name}: eligible in the state built for it`); const t = clone(s); ok(ctx.fireEvent(t, ev), `${name}: fires`); const pp = t.pending.find((q) => q.handler === 'event'); if (!pp) return; ok(!BAD.test(pp.text), `${name}: reads "${pp.text}"`); for (let k = 0; k < pp.choices.length; k++) { const u = clone(t), q = u.pending.find((x) => x.handler === 'event'), e0 = errors; try { ctx.resolvePopup(u, q.id, k); } catch (e) { ok(false, `${name}: choice ${k} threw ${e.message}`); } ok(errors === e0, `${name}: choice ${k} logged an error`); for (let n = 0; n < 6 && u.pending.length; n++) { const r = u.pending[0]; ctx.resolvePopup(u, r.id, Math.max(0, r.choices.findIndex((c) => !c.disabled)), r.input ? 'X' : undefined); } const bad = []; walk(u, 's', bad); ok(!bad.length, `${name}: choice ${k}: ${bad.join('; ')}`); } };
+  const every = (name, s) => { const ev = EVENTS[name]; ok(ctx.eventEligible(s, ev), `${name}: eligible in the state built for it`); const t = clone(s); ok(ctx.fireEvent(t, ev), `${name}: fires`); const pp = t.pending.find((q) => q.handler === 'event'); if (!pp) return; ok(!BAD.test(pp.text), `${name}: reads "${pp.text}"`); for (let k = 0; k < pp.choices.length; k++) { const u = clone(t), q = u.pending.find((x) => x.handler === 'event'), e0 = errors, n0 = u.log.length; try { ctx.resolvePopup(u, q.id, k); } catch (e) { ok(false, `${name}: choice ${k} threw ${e.message}`); } ok(errors === e0, `${name}: choice ${k} logged an error`); ok(!/moment passed/.test(u.log.slice(n0).flatMap((e) => e.lines.map((l) => l.t)).join(' ')), `${name}: choice ${k} said the moment passed`); for (let n = 0; n < 6 && u.pending.length; n++) { const r = u.pending[0]; ctx.resolvePopup(u, r.id, Math.max(0, r.choices.findIndex((c) => !c.disabled)), r.input ? 'X' : undefined); } const bad = []; walk(u, 's', bad); ok(!bad.length, `${name}: choice ${k}: ${bad.join('; ')}`); } };
   const mortgaged = (st) => { st.player.assets.push({ id: 'h9', kind: 'house', name: 'house', value: 200000, cond: 80, loanId: 'l9' }); st.player.loans.push({ id: 'l9', kind: 'house', assetId: 'h9', name: 'Mortgage', balance: 150000, rate: 0.06, years: 20, pay: 12000 }); };
 
   // Every personal event of the country rows, in the state built for it.
@@ -569,7 +570,7 @@ function walk(o, path, out) {
 
   // South Korea: the IMF crisis.
   ok(ctx.marketYear(lifeAt('kr', 1997, 30)).ret < -0.3 && ctx.marketYear(lifeAt('kr', 1998, 30)).ret > 0.3, 'the Korean market falls in 1997 and rebounds in 1998');
-  ok(play(lifeAt('kr', 1998, 30, rich), 'wd_gold_drive', 0).player.karma > lifeAt('kr', 1998, 30, rich).player.karma, 'donating gold earns karma');
+  { const gd = lifeAt('kr', 1998, 30, (st) => { rich(st); st.player.karma = 50; }); ok(play(gd, 'wd_gold_drive', 0).player.karma > 50, 'donating gold earns karma'); }
 
   // Germany: the great inflation and the new money.
   const weimar = (year) => { const st = lifeAt('de', year, 35, (x) => { x.player.money = 50000; x.player.invest.savings = 50000; alone(x); }); ctx.worldYear(st); return st.player.money + st.player.invest.savings; };
@@ -590,6 +591,85 @@ function walk(o, path, out) {
   const lived = (cc, born, until, id, n = 16) => { let k = 0; for (let i = 0; i < n; i++) { const st = ctx.createLife({ country: cc, year: born }); st.pending = []; let guard = 0; while (!st.dead && st.year < until && guard++ < 900) { if (st.pending.length) { const pp = st.pending[0]; if (!ctx.resolvePopup(st, pp.id, 0, pp.input ? 'X' : undefined)) st.pending.shift(); continue; } ctx.ageUp(st); } if ((st.player.evHist || {})[id]) k++; } return k / n; };
   ok(lived('uk', 1981, 2017, 'wd_brexit_vote') >= 0.7, 'a Briton of 35 in 2016 usually meets the vote');
   ok(lived('us', 1990, 2022, 'wd_lockdown') >= 0.7, 'a lifetime through 2020 meets the lockdown');
+}
+
+/* 9. local moments (phase 6) -------------------------------------------------------- */
+{
+  const rate = (n, f) => { let k = 0; for (let i = 0; i < n; i++) if (f(i)) k++; return k / n; };
+  const rich = (s) => { s.player.money = 50000; };
+  const inCity = (cc, year, age, city, setup) => lifeAt(cc, year, age, (st) => { P(st).city = city; if (setup) setup(st); });
+  // A choice by its words (some choices are hidden when they do not apply), and the text it gave.
+  const play = (s, id, label) => { const t = clone(s); ok(ctx.fireEvent(t, EVENTS[id]), `${id}: fires`); const pp = t.pending.find((q) => q.handler === 'event'); const k = pp.choices.findIndex((c) => label.test(c.label)); ok(k >= 0, `${id}: has a choice "${label}"`); const n0 = t.log.length; ctx.resolvePopup(t, pp.id, Math.max(0, k)); const last = t.log.slice(n0).flatMap((e) => e.lines.map((l) => l.t)).join(' '); ok(!/moment passed/.test(last), `${id}: "${label}" answers "${last.slice(0, 60)}"`); return t; };
+  const every = (name, s) => { const ev = EVENTS[name]; ok(ctx.eventEligible(s, ev), `${name}: eligible in the state built for it`); const t = clone(s); ok(ctx.fireEvent(t, ev), `${name}: fires`); const pp = t.pending.find((q) => q.handler === 'event'); if (!pp) return; ok(!BAD.test(pp.text), `${name}: reads "${pp.text}"`); for (let k = 0; k < pp.choices.length; k++) { const u = clone(t), q = u.pending.find((x) => x.handler === 'event'), e0 = errors, n0 = u.log.length; try { ctx.resolvePopup(u, q.id, k); } catch (e) { ok(false, `${name}: choice ${k} threw ${e.message}`); } ok(errors === e0, `${name}: choice ${k} logged an error`); ok(!/moment passed/.test(u.log.slice(n0).flatMap((e) => e.lines.map((l) => l.t)).join(' ')), `${name}: choice ${k} said the moment passed`); for (let n = 0; n < 6 && u.pending.length; n++) { const r = u.pending[0]; ctx.resolvePopup(u, r.id, Math.max(0, r.choices.findIndex((c) => !c.disabled)), r.input ? 'X' : undefined); } const bad = []; walk(u, 's', bad); ok(!bad.length, `${name}: choice ${k}: ${bad.join('; ')}`); } };
+  const owner = (st) => { st.player.assets.push({ id: 'h1', kind: 'house', name: 'house', value: 200000, cond: 90, city: P(st).city, cc: P(st).country }); st.player.housing = { type: 'own', assetId: 'h1', rent: 0, name: 'house' }; };
+  const renter = (st) => { st.player.housing = { type: 'rent', assetId: null, rent: 12000, name: 'flat', ll: { name: 'x', style: 'kind', mood: 50, stars: 4 } }; };
+  const games = HIST_IDS.filter((id) => HIST[id].games);
+  const disasters = HIST_IDS.filter((id) => HIST[id].kind === 'disaster');
+  ok(games.length === 24 && disasters.length >= 40, `the table has the Games and the disasters (${games.length}, ${disasters.length})`);
+
+  // The Games: a city, two years before through the year of; nowhere else.
+  const london12 = (year, city = 'London') => inCity('uk', year, 30, city);
+  ok(ctx.worldHas(london12(2010), 'games_london_2012') && ctx.worldHas(london12(2012), 'games_london_2012') && !ctx.worldHas(london12(2009), 'games_london_2012') && !ctx.worldHas(london12(2013), 'games_london_2012'), 'the Games run for three years in the host city');
+  ok(!ctx.worldHas(london12(2011, 'Manchester'), 'games_london_2012'), 'and not in another city');
+  const jobs = (year, city) => avg(Array.from({ length: 30 }, () => ctx.jobOpenOdds(london12(year, city), 'accountant')));
+  ok(jobs(2012, 'London') > jobs(2008, 'London') + 0.05, 'work is easier to find in the host city');
+  ok(avg(Array.from({ length: 30 }, () => ctx.cityMarketYear(london12(2012), 'uk', 'London').g)) > avg(Array.from({ length: 30 }, () => ctx.cityMarketYear(london12(2008), 'uk', 'London').g)) + 0.02, 'and rents rise');
+  // The year of the Games, the event. (Tokyo in 2021 was held with the stands empty.)
+  every('wd_games', inCity('uk', 2012, 30, 'London', rich));
+  every('wd_games', inCity('jp', 2021, 30, 'Tokyo', rich));
+  every('wd_games', inCity('ca', 2010, 30, 'Vancouver', (st) => { rich(st); owner(st); }));
+  every('wd_games', inCity('au', 2000, 30, 'Sydney', (st) => { rich(st); renter(st); }));
+  const tokyo = inCity('jp', 2021, 30, 'Tokyo', rich), ticketsHidden = clone(tokyo); ctx.fireEvent(ticketsHidden, EVENTS.wd_games);
+  ok(!ticketsHidden.pending.find((q) => q.handler === 'event').choices.some((c) => /tickets/.test(c.label)), 'no tickets for the empty stands');
+  ok(!ctx.eventEligible(inCity('uk', 2012, 30, 'Leeds'), EVENTS.wd_games) && !ctx.eventEligible(inCity('uk', 2013, 30, 'London'), EVENTS.wd_games), 'the Games event is for the host city in the year');
+  const own = inCity('uk', 2012, 30, 'London', owner); own.player.housing.type = 'own';
+  ok(play(own, 'wd_games', /Rent your place/).player.money > own.player.money, 'renting out a home earns money');
+  const volunteers = rate(40, () => { const u = play(inCity('uk', 2012, 30, 'London'), 'wd_games', /Volunteer/); return u.player.karma > 0 && Object.keys(u.people).length > Object.keys(inCity('uk', 2012, 30, 'London').people).length - 3; });
+  ok(volunteers > 0.5, 'volunteering earns karma, and sometimes a friend');
+
+  // Disasters: homes, bodies, the people near you, and then the rebuilding.
+  const quake = (cc, year, city, setup) => inCity(cc, year, 30, city, setup);
+  const lostRent = rate(60, () => { const st = quake('jp', 1995, 'Kobe', renter); ctx.worldYear(st); return st.player.housing.type === 'homeless'; });
+  ok(lostRent > 0.35 && lostRent < 0.75, `a rented home in Kobe is often lost (${lostRent.toFixed(2)})`);
+  const lostOutside = rate(60, () => { const st = quake('jp', 1995, 'Tokyo', renter); ctx.worldYear(st); return st.player.housing.type === 'homeless'; });
+  ok(lostOutside < 0.1, `but not in Tokyo (${lostOutside.toFixed(2)})`);
+  const dmg = rate(60, () => { const st = quake('us', 1992, 'Miami', owner); ctx.worldYear(st); return st.player.assets[0].cond < 90 && st.player.assets[0].value < 200000; });
+  ok(dmg > 0.3, `an owned home in Miami is damaged by Andrew (${dmg.toFixed(2)})`);
+  const darwin = rate(60, () => { const st = quake('au', 1974, 'Darwin', renter); ctx.worldYear(st); return st.player.housing.type === 'homeless'; });
+  ok(darwin > 0.6, `Cyclone Tracy took most homes (${darwin.toFixed(2)})`);
+  // The year after: housing dips and rebounds, and the trades hire.
+  const growth = (year) => avg(Array.from({ length: 30 }, () => ctx.cityMarketYear(quake('jp', year, 'Kobe'), 'jp', 'Kobe').g));
+  ok(growth(1995) < growth(1993) - 0.05 && growth(1996) > growth(1993) + 0.0, `home prices dip in the year and come back after (${growth(1993).toFixed(3)}, ${growth(1995).toFixed(3)}, ${growth(1996).toFixed(3)})`);
+  const tradesJobs = (year) => avg(Array.from({ length: 30 }, () => ctx.jobOpenOdds(quake('jp', year, 'Kobe'), 'carpenter')));
+  const officeJobs = (year) => avg(Array.from({ length: 30 }, () => ctx.jobOpenOdds(quake('jp', year, 'Kobe'), 'accountant')));
+  ok(tradesJobs(1996) > tradesJobs(1993) + 0.04 && tradesJobs(1996) - tradesJobs(1993) > officeJobs(1996) - officeJobs(1993), 'the building trades hire the year after');
+  // Somebody who lives in the city is lost, now and then.
+  const lostFriend = rate(500, () => { const st = quake('jp', 1995, 'Kobe'); const f = ctx.makeAdultNear(st, { minAge: 25, maxAge: 40 }); ctx.setRel(st, f.id, 'friend', 60); f.city = 'Kobe'; f.country = 'jp'; ctx.worldYear(st); return !f.alive; });
+  ok(lostFriend > 0.004 && lostFriend < 0.2, `somebody you know in the city is lost (${lostFriend.toFixed(2)})`);
+  // The heat wave: the old, in a country (not a city).
+  const heatNpc = rate(800, () => { const st = lifeAt('fr', 2003, 30); const g = ctx.relPeople(st, ['parent'])[0]; g.city = P(st).city; g.country = P(st).country; ctx.worldYear(st); return !g.alive; });
+  ok(heatNpc > 0.002 && heatNpc < 0.12, `the heat wave takes a parent now and then (${heatNpc.toFixed(3)})`);
+  ok(!ctx.worldHas(lifeAt('us', 2003, 30), 'heat_2003') && ctx.worldHas(lifeAt('es', 2003, 30), 'heat_2003'), 'and only in Europe');
+  // Moving to the city after is not living through it.
+  const late = quake('jp', 1996, 'Kobe'); late.world = { seen: {} }; ctx.worldYear(late);
+  ok(!late.world.seen.kobe_1995 && !(late.player.worldLived || []).includes('kobe_1995'), 'a move to Kobe the year after is not the earthquake');
+  const there = quake('jp', 1995, 'Kobe'); there.world = { seen: {} }; ctx.worldYear(there);
+  ok(there.world.seen.kobe_1995 === 1995 && there.player.worldLived.includes('kobe_1995'), 'living there is');
+  // The morning after.
+  every('wd_aftermath', quake('jp', 1995, 'Kobe', (st) => { rich(st); owner(st); st.player.assets[0].cond = 40; }));
+  every('wd_aftermath', quake('us', 1992, 'Miami', (st) => { rich(st); renter(st); st.player.housing = { type: 'homeless', assetId: null, rent: 0, name: '' }; }));
+  const mud = quake('au', 2011, 'Brisbane', (st) => { rich(st); owner(st); st.player.assets[0].cond = 40; st.player.karma = 50; });
+  ok(play(mud, 'wd_aftermath', /Repair/).player.assets[0].cond === 95 && play(mud, 'wd_aftermath', /Repair/).player.money < mud.player.money, 'the repair bill is paid and the home is mended');
+  ok(play(mud, 'wd_aftermath', /neighbors/).player.karma > mud.player.karma, 'helping the neighbors earns karma');
+  const gone = play(quake('au', 2011, 'Brisbane', rich), 'wd_aftermath', /Leave the city/);
+  ok(P(gone).city !== 'Brisbane' && P(gone).country === 'au', 'leaving the city moves you in the country');
+  ok(!ctx.eventEligible(quake('au', 2012, 'Brisbane'), EVENTS.wd_aftermath), 'the aftermath comes in the year of the disaster');
+
+  // Firsts: the date each reached a country.
+  ok(ctx.worldHas(lifeAt('us', 1948, 30), 'first_tv') && !ctx.worldHas(lifeAt('us', 1953, 30), 'first_tv') && ctx.worldHas(lifeAt('za', 1976, 30), 'first_tv') && !ctx.worldHas(lifeAt('za', 1948, 30), 'first_tv'), 'television reached each country in its own year');
+  ok(ctx.worldHas(lifeAt('de', 2007, 30), 'first_smartphone') === false && ctx.worldHas(lifeAt('us', 2007, 30), 'first_smartphone') && ctx.worldHas(lifeAt('ng', 2012, 30), 'first_smartphone'), 'and so did the smartphone');
+  const firstLine = (cc, year, id) => { const st = lifeAt(cc, year, 30); st.world = { seen: {} }; st.log = []; ctx.worldYear(st); return !!(st.player.worldLived || []).includes(id) && st.world.seen[id] === year; };
+  ok(firstLine('uk', 1953, 'first_tv') && firstLine('jp', 1982, 'first_home_computer') && firstLine('in', 1998, 'first_web'), 'you live through the first of each, and the log says so');
 }
 
 console.log(failures ? `World checks: ${failures} failure(s)` : `World checks passed (${HIST_IDS.length} events).`);

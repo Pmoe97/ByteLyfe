@@ -162,6 +162,7 @@ function worldYear(s) {
   for (const x of act) {
     const ev = x.ev;
     if (ev.quiet) { if (chance(0.5)) worldPost(s, ev); continue; } // a background row: its numbers apply, and it is never announced
+    if (x.k <= 0 && !w.seen[x.id]) continue; // the aftermath years of a one-year event (a disaster): moving in after it is not living through it
     if (!m.worldLived.includes(x.id)) m.worldLived.push(x.id);
     if (!w.seen[x.id]) {
       w.seen[x.id] = s.year;
