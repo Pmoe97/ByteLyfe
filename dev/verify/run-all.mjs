@@ -74,6 +74,7 @@ const tasks = [
   { label: 'house checks', args: ['dev/verify/house.mjs'] },
   { label: 'zoo checks', args: ['dev/verify/zoo.mjs'] },
   { label: 'youth checks', args: ['dev/verify/youth.mjs'] },
+  { label: 'looks checks', args: ['dev/verify/looks.mjs'] },
   { label: 'military checks', args: ['dev/verify/military.mjs'] },
   { label: 'spy checks', args: ['dev/verify/spy.mjs'] },
   { label: 'web checks', args: ['dev/verify/web.mjs'] },

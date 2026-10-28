@@ -132,6 +132,10 @@
 .lk-sw { display: flex; gap: 10px; overflow-x: auto; padding: 4px 4px 8px; margin: 0 -4px; scrollbar-width: none; }
 .lk-sw button { width: 34px; height: 34px; flex: none; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.14); }
 .lk-sw button.on { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent-hi); }
+.lk-sw .lk-custom { position: relative; width: 34px; height: 34px; flex: none; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.14); background: conic-gradient(#F2545B, #F7B955, #5ED37F, #4FA8FF, #9B6BE0, #F2545B); cursor: pointer; }
+.lk-sw .lk-custom.on { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent-hi); }
+.lk-sw .lk-custom:focus-within { outline: 2px solid var(--accent-hi); outline-offset: 3px; }
+.lk-sw .lk-custom input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; }
 .lk-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .lk-opt { position: relative; height: 82px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
 .lk-opt.on { background: var(--accent-soft); border: 2px solid var(--accent-hi); }

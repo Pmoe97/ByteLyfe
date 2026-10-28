@@ -4,7 +4,12 @@
  * p.look = { skin (0-7), face, hair, hairColor, eyes, eyeColor, brows, nose,
  *            mouth, facial, glasses, headwear, headwearColor, earrings,
  *            outfit, outfitColor, bottom, bottomColor, shoeColor, build,
- *            freckles, blush, lashes, balding, bg, smoothUntil }
+ *            freckles, blush, lashes, balding, bg, smoothUntil,
+ *            hairFlip, skinHex, adj }
+ *          hairColor, eyeColor and the colour fields may be any #rrggbb as well as a name.
+ *          skinHex is a custom skin colour drawn in place of the preset tone; skin still
+ *          holds the nearest preset, which is what children inherit. adj holds the
+ *          appearance editor's feature adjustments (see AVLIB.ADJ in 1007-ui-art.js).
  * p.body = { height (cm), fat, muscle, chest, hips, glutes, fatBase, muscleBase }
  *          (0-100 except height). Adults only.
  *
@@ -126,7 +131,8 @@ function inheritLook(kid, a, b, age) {
   L.skin = clamp(Math.round(sum(skins) / skins.length + randFloat(-0.6, 0.6)), 0, 7);
   const dark = [A, B].filter(Boolean).find((x) => DARK_HAIR.includes(x.hairColor));
   L.hairColor = dark && chance(0.65) ? dark.hairColor : either().hairColor;
-  if (['grey', 'white', 'rose', 'teal', 'violet', 'platinum'].includes(L.hairColor)) L.hairColor = pick(['brown', 'espresso', 'blonde']);
+  // Dyed or custom-picked colours aren't passed down.
+  if (['grey', 'white', 'rose', 'teal', 'violet', 'platinum'].includes(L.hairColor) || String(L.hairColor).startsWith('#')) L.hairColor = pick(['brown', 'espresso', 'blonde']);
   const brown = [A, B].filter(Boolean).find((x) => !LIGHT_EYES.includes(x.eyeColor));
   L.eyeColor = brown && chance(0.7) ? brown.eyeColor : either().eyeColor;
   for (const k of ['face', 'eyes', 'nose', 'brows']) L[k] = either()[k];
