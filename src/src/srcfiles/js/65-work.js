@@ -29,6 +29,11 @@
  *           and meet again; text uses [who], [first] and [amt]
  *   learn   a web secret kind ('npc_debt', 'npc_habit', 'npc_crime'): the person confides it
  *   risk    scales injuries and, with `die`, the chance the job kills you
+ *   twist   a card id in the same deck: after a card ends well, there is a `twistChance` (0.35) that this one lands on
+ *           your desk and opens at once, with 'Not now' as a way out. A card with `only: true` is never dealt on its own,
+ *           it is somebody's twist (86-careers-plus.js)
+ *   deck    yearStart(s, c, st) runs before each year's deal (a farm's season, a class); place(s) -> { key, kind, name } makes
+ *           the people a card brings the regulars of a place (81-web2.js); kv(s, st) adds rows to the desk
  *
  * M(s).work[jobId] = { m, ok, meh, bad, hand: [{ hid, cid, c }], seq, flags }
  *   m      the career's meter, 0-100 (patient trust, squad trust, credibility...)
@@ -117,13 +122,14 @@ function wkYear(s, c) {
   c.perf = clamp100(c.perf + (st.m - 50) * 0.1);
   if (def.gate && !def.gate(s, c, st)) c.levelYears = 0; // not ready for the next rung
   if (st.m <= 8 && chance(0.4)) { fire(s, def.fired || 'Your record stopped speaking for itself, and so did your employer.'); return; }
+  if (def.yearStart) def.yearStart(s, c, st);
   wkDeal(s, c, def, st);
 }
 // A deck behind content tags deals only while they are on, and only to adults.
 function wkLive(s, def) { return !def.tags || (tagsOn(def.tags) && A(s) >= 18); }
 function wkDeal(s, c, def, st) {
   const lvl = c.level;
-  let pool = def.cards.filter((k) => (k.min || 0) <= lvl && (k.max === undefined || lvl <= k.max) && (!k.when || k.when(s, c, st)));
+  let pool = def.cards.filter((k) => !k.only && (k.min || 0) <= lvl && (k.max === undefined || lvl <= k.max) && (!k.when || k.when(s, c, st)));
   const n = def.deal ? def.deal(lvl) : 2 + (lvl >= 2 ? 1 : 0);
   for (let i = 0; i < n && pool.length; i++) {
     const k = weighted(pool, (x) => (typeof x.w === 'function' ? x.w(s, c, st) : x.w ?? 1));
@@ -222,6 +228,7 @@ function wkConclude(s, id, k, c, res, auto, say) {
     if (k.die && chance(0.025 * k.risk) && !s.dead) die(s, k.die);
   }
   if (k.after && !s.dead) k.after(s, out, c, S);
+  if (!auto && out === 'ok' && k.twist && !s.dead && chance(k.twistChance ?? 0.35)) wkTwist(s, id, k.twist);
   tally(s, 'workCards');
   if (out === 'ok') tally(s, 'workWins');
   webFact(s, 'work_done', { job: id, card: k.id, out });
@@ -229,6 +236,15 @@ function wkConclude(s, id, k, c, res, auto, say) {
   const text = wkFmt((say && say[out]) || k[out], c) + (money ? ` You earned ${fmtMoney(money)}.` : '');
   if (auto) { log(s, `📋 ${k.name}: ${text}`, out === 'bad' ? 'bad' : ''); return out; }
   return { text, title: k.name, emoji: k.emoji, tone: out === 'ok' ? 'good' : out === 'bad' ? 'bad' : '' };
+}
+// A good result can bring a twist: a follow-up card that opens at once (and stays on your desk if you say not now).
+function wkTwist(s, id, cid) {
+  const k = wkCard(id, cid), S = wkState(s, id);
+  if (!k || S.hand.length >= 6 || s.pending.length > 3) return;
+  const h = { hid: 'h' + (++S.seq).toString(36), cid, c: wkCtx(s, k) };
+  S.hand.push(h);
+  tally(s, 'workTwists');
+  wkStagePopup(s, id, k, h, 0, [], true);
 }
 // A contact confides something. What you do with it is the web's business (62-web.js).
 function wkLearn(s, k, person) {

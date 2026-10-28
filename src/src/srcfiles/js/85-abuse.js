@@ -294,7 +294,7 @@ function abAbuserYear(s, a, p) {
 function abSelfPopup(s, a, p) {
   const cost = price(s, 400);
   popup(s, {
-    emoji: '🪞', title: 'What you are doing', person: p.id, handler: 'abSelf', ctx: { cost },
+    emoji: '💭', title: 'What you are doing', person: p.id, handler: 'abSelf', ctx: { cost },
     text: `${p.first} flinches when you walk in, now. You watched ${pr(p).him} do it today, and something went cold in you. You are not the person you thought you were being. ${a.change >= 40 ? 'You have been working on it. It is working, slowly.' : 'Nobody has said it to you yet. You know what it is.'}`,
     choices: [
       { label: 'Get real help: counseling, a program', value: 'help', sub: `${fmtMoney(cost)} · it takes years, and it works if you do`, disabled: M(s).money < cost },
@@ -345,7 +345,7 @@ function abChanged(s, a, p) {
   log(s, keep ? `🕊️ It has been years of work. ${p.first} says ${pr(p).he} feels safe, and means it. You do not take that for granted.` : `🕊️ You have done the work, for years. ${p.first} does not owe you a second chance, and ${pr(p).he} is not giving one. You are not the same person, and you have to live with the one you were.`, 'good');
 }
 EV('ab_you_lose_it', {
-  ages: [20, 80], emoji: '🪞', title: 'The way you spoke', tags: AB_TAGS, cooldown: 6, w: (s) => 0.6 + (trait(s, 'hotheaded') ? 1.2 : 0),
+  ages: [20, 80], emoji: '💭', title: 'The way you spoke', tags: AB_TAGS, cooldown: 6, w: (s) => 0.6 + (trait(s, 'hotheaded') ? 1.2 : 0),
   when: (s) => free(s) && !abOf(s) && s.year - (M(s).abuseQuiet || -99) >= 4 && !!romanticId(s) && AB_PARTNER.includes(relKind(s, romanticId(s))) && (trait(s, 'hotheaded') || trait(s, 'addictive') || P(s).stats.happy < 35),
   ctx: (s) => ({ pid: romanticId(s) }),
   text: (s, c) => `It was a small thing, and you said something to ${nm(s, c.pid)} that you would not say to a stranger. You watched ${pr(s.people[c.pid]).him} take it, without a word, the way ${pr(s.people[c.pid]).he} has been taking things. You heard yourself.`,

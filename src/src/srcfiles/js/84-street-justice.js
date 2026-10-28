@@ -101,6 +101,7 @@ onChoice('webGroup', (s, ctx, v) => {
   if (v === 'pay') { if (!pay(s, ctx.cost)) return cantAfford(ctx.cost); add(s, { karma: 6, happy: 1 }); return 'A cashier\'s check, a plain envelope and no return address. It does not fix anything. It is not nothing.'; }
   if (v === 'in') {
     add(s, { karma: 10, happy: 2 });
+    tally(s, 'turnedIn');
     c.status = 'solved'; c.solved = s.year;
     webRepAdd(P(s), { name: 2 });
     const r = arrest(s, CRIMES[c.crime] ? c.crime : 'burglary');

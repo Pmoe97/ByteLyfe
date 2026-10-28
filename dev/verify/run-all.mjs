@@ -19,6 +19,8 @@
 //   - the operation: the drug business, its crew, rivals, raids, deaths, and a prison gang's ranks (83-operation.js)
 //   - street justice: victims and fallout, witnesses, the vigilante (84-street-justice.js)
 //   - toxic and abusive relationships, from both sides, with a way out at every stage (85-abuse.js)
+//   - careers part two: forensics and profiler tracks, patrol, paramedic/teacher/lawyer systems, cook-offs, farm and fishing seasons, twists (86-careers-plus.js)
+//   - rare events and actions the simulator almost never reaches: secret lovers, a morning of regret, spy trouble, a veteran's appeal, a detective's offer
 //   - investigations: case files, detectives, series, arrests, police casework (63-cases.js, 64-detective.js)
 //   - career cards: the decks, dealing, playing every card, outcomes, autopilot, people (65-work.js, 66-work-decks.js)
 //   - language dial and intimacy: the dial, gating, adults only, nights, consequences, spark, friends with benefits (67-language.js, 68-intimacy.js)
@@ -80,6 +82,8 @@ const tasks = [
   { label: 'operation checks', args: ['dev/verify/operation.mjs'] },
   { label: 'street justice checks', args: ['dev/verify/justice.mjs'] },
   { label: 'abuse checks', args: ['dev/verify/abuse.mjs'] },
+  { label: 'career part two checks', args: ['dev/verify/careers2.mjs'] },
+  { label: 'rare event checks', args: ['dev/verify/rare.mjs'] },
   { label: 'investigation checks', args: ['dev/verify/inv.mjs'] },
   { label: 'career-card checks', args: ['dev/verify/work.mjs'] },
   { label: 'language and intimacy checks', args: ['dev/verify/intim.mjs'] },

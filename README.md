@@ -41,6 +41,8 @@ node dev/verify/sim-business.mjs     # business balance report: every industry, 
 
 `dev/verify/ui-smoke.js` is a browser-side smoke test: paste it into the console of the
 running game to play 60 years through the real UI and report any errors.
+Or run it headless: `node dev/verify/ui-smoke-run.mjs [years] [runs]` (needs Playwright).
+Before committing, `python3 dev/bump-versions.py` bumps the `?v=N` cache-buster for every file you changed.
 
 ## Where things are
 

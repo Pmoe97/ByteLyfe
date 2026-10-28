@@ -103,7 +103,7 @@ outlast you across generations.
 - **Extras:** 5 new company events and 4 new achievements (Hostile Takeover, Franchise King,
   Market Leader, Stock Picker).
 
-**Meta.** 145 achievements kept across lives, three bucket-list goals per life, legacy titles
+**Meta.** 223 achievements kept across lives, three bucket-list goals per life, legacy titles
 and epitaphs, the Hall of Lives, multiple save slots, export/import codes. God Mode (stats,
 money, skills, traits, instant careers and degrees) and a 10-year Time Machine, both free.
 Light/dark themes, text size, reduced motion.
@@ -851,6 +851,69 @@ or graphic, and always a way out.
   and breed mothers with a male or a stud, with a litter every other year and a home that holds 12.
 - **Money:** pay any amount toward a loan, and help a relative with their mortgage or loans.
 
+**The web, part two (finishing Phase 1).** The connected world is complete: a good name as well as a bad one,
+more systems on the bus, and places with regulars.
+- **A good name.** Charity, volunteering, a medal, and organizing a cleanup, a food drive, a block party or a
+  fundraiser all raise it, with diminishing returns (the tenth shift is not a first). Enough deeds and a good
+  name make you a pillar of the community. A good name softens a scandal (up to a quarter off), helps at the ballot
+  box and on a first date, and brings help when you are down (neighbors, a civic honor, a good word put in for you).
+- **The press listens.** Business events and failures, verdicts, a diplomat expelled and a tell-all memoir are
+  announced on the fact bus, and your name and the paper pick them up. A secret that gets out about you makes the paper.
+- **Three more secrets.** A deserter in hiding (the family that hid you knows, and every person who knows is another
+  chance the military police are told), an informant wearing a wire (a risk of its own every year), and a spy who told
+  someone the truth. When one gets out, the system it belongs to reacts. A victim's secret getting out is never a
+  scandal for them.
+- **Places with regulars.** Nightlife, gambling venues and your workplace's break room are places with a mood and
+  regulars who talk to each other. Trouble sours a place, an uneasy city drags it down, a bad year closes it and a new one
+  opens. The club a dancer or manager works at is the city's real club, and its mood moves the pay. Listed under
+  "Places you know" on the Reputation sheet.
+- **For future systems:** `onYear()` (a yearly turn without editing the phase list) and `defSecretKind()` (a new kind of secret).
+
+**Crime that runs for years (finishing Phase 2).** Three schemes you start, tend and one day have to end.
+- **A Ponzi scheme:** an investment club, a private fund or a "yield" platform. The people you know put money in. Each
+  year you decide: pay and skim a little, skim big, recruit hard, wind it down honestly (paying everyone back from
+  your own pocket), or take the money and run. It ends with a case, the paper, investors who lost real money and a
+  conviction that takes some of it back, unless you wind it down in time.
+- **A long con:** a romance, a business partner or a fake charity, worked over years on one mark. Trust and suspicion move
+  with each choice, the mark's family starts asking questions, and it can end clean, in a confession, or in a police report.
+- **A blackmail ring (Mature):** dig for dirt on the people you know, squeeze what you hold (the web's secrets), run a
+  crew. Every squeeze is a chance someone goes to the police.
+- **The operation (Mature + Substances):** a drug business with turf, a product (harder ones pay more and cost others
+  more), a supply (buy it, or make it at a site that can be found), a crew of real people with a role and a loyalty, a
+  rival, raids, a customer who dies of what you sold, and a climb from a corner crew to a cartel. Everything is odds,
+  money and consequences, never how-to.
+- **Behind bars (Violence):** a prison gang has ranks, orders, wars and a way out that is not easy.
+- **Community fallout:** a victim is a real person in the web. Their circle turns on you, a victims' group keeps the case
+  from going cold, and you can go, send money anonymously, or turn yourself in.
+- **Witnesses (Mature):** pay one, move one, or (Violence) frighten one, each a crime of its own. And the other side: you
+  saw something, and somebody would like you not to have.
+- **The vigilante (Mature + Violence):** a street name, a lead, three ways to act, the wrong person, a detective on your heels.
+- A **Ventures & rackets** sheet on the profile lists what you run.
+
+**Toxic and abusive relationships (Mature + Dark themes).** Told from both sides, with a way out at every stage.
+Nothing graphic, nothing sexual, nobody dies, and it is never the victim's fault.
+- **Being affected:** it starts small (a partner who tests where you were), then controlling, frightening, dangerous.
+  Every year offers the same ways out: tell someone, call a helpline (a safety plan), document and report (a protective
+  order), say it has to change, leave (safest with a plan), or stay for now. A night in hospital, leaving, and a scar
+  afterward that fades with help.
+- **Doing it:** a moment where you hear yourself, and a choice. Real help takes years and works if you do the work, you can let
+  them go and stay away, or you can blame them and lose them, with a report and an order at the end.
+- **Toxic, short of abuse:** a friend who drains you and a parent who keeps score, with boundaries as an answer.
+
+**Careers, part two (finishing Phase 3).**
+- **Forensic science and behavioral analysis** are tracks of their own. They work real case files: a good year moves a case
+  and can close it, a bad one sets it back, and promotion needs the cases you moved.
+- **Beat cops** play a patrol deck (a traffic stop, a domestic call, a chase, the shopkeeper who knows things, a use-of-force
+  review); from Detective up it is the detective's desk, as before.
+- **Paramedic, teacher and lawyer** are full systems: a certification, tenure or a partner track that gates the ladder, a
+  yearly strain or a yearly class, showpiece cards with several decisions (a mass casualty incident, a trial, a student who is
+  slipping) and twists.
+- **The chef's cook-off circuit:** regional, national, world, in order.
+- **Farming and fishing seasons:** the weather, prices and a quota set the year and what each card pays. Storms, a rescue at
+  sea, a bad harvest and the bank.
+- **Twists:** a good result can bring a follow-up card nobody saw coming (the patient who came back, a commendation, a
+  nomination), for the doctor, surgeon, firefighter, bartender, journalist, pilot and the new full systems.
+
 ## The big push: a connected, adult world
 
 The next arc is two things at once: a **connected world**, where the systems above stop being
@@ -870,11 +933,9 @@ people who talk to each other, places with regulars.
 
 ### Phase 1: The web (foundation)
 
-**Status: first slice built** (see "The web" under Built: secrets and leaks, ties, hearsay, reputation,
-the fact bus, neighborhood unease, and the first payoffs). Still to do in this phase: workplaces and
-venues as shared places with regulars, a favors-and-obligations ledger, more systems announcing and
-listening (spies and double lives, business scandals, the military, the underworld, courts and the
-press), and positive reputation sources like charity and good deeds.
+**Status: built** (see "The web" and "The web, part two" under Built: secrets and leaks, ties, hearsay, reputation,
+the fact bus, neighborhood unease, favors, workplace venues, places with regulars, a good name, and the business,
+military, underworld, courts, spy and press systems announcing and listening).
 
 Built first, because it is what makes lives feel like a social web instead of a stack of menus.
 - **Secrets and reputation ledger.** Every secret has a subject, who knows it, how strong the
@@ -897,11 +958,10 @@ Built first, because it is what makes lives feel like a social web instead of a 
 
 ### Phase 2: Case files and investigation
 
-**Status: built** (see "Case files and investigation" under Built): the shared engine, series, the
-detective's side, strangers' crimes, arson, a romance scam and insider trading. Still to do from this
-phase: forensics and profiler careers as tracks of their own (they arrive with the career-cards engine),
-Ponzi schemes and long cons that run for years, drug manufacturing empires, blackmail rings,
-vigilantism and witness intimidation, and more cases that touch the player's circle.
+**Status: built** (see "Case files and investigation" and "Crime that runs for years" under Built): the shared
+engine, series, the detective's side, strangers' crimes, arson, a romance scam and insider trading, Ponzi schemes and long
+cons, a drug operation, blackmail rings, vigilantism, witness intimidation, community fallout, and the forensics and profiler
+careers.
 
 One shared engine for every crime, replacing the single "caught" roll.
 - **A case per crime:** evidence (trace, witnesses, digital), a named detective, linked cases,
@@ -915,10 +975,9 @@ One shared engine for every crime, replacing the single "caught" roll.
 
 ### Phase 3: Interactive careers
 
-**Status: built.** The engine, the first eight careers, the rest of the ordinary ladder as decks, and the adult careers (see
-"Career cards" and "Content and tuning" under Built). To do: forensics and profiler tracks, more full systems
-(paramedic, teacher, lawyer, pro cook-offs, farm and fishing seasons), twists that follow a good result like the spy's,
-and patrol cards for beat cops.
+**Status: built.** The engine, the first eight careers, the rest of the ordinary ladder as decks, the adult careers, and part
+two: forensics and profiler tracks, patrol cards, the paramedic, teacher and lawyer full systems, cook-offs, farm and fishing
+seasons, and twists (see "Career cards", "Content and tuning" and "Careers, part two" under Built).
 
 Retire the "work harder / ask for a raise" loop for nearly every job.
 - **A career-cards engine,** generalized from the spy missions: each year a career deals work
@@ -933,11 +992,11 @@ Retire the "work harder / ask for a raise" loop for nearly every job.
 
 ### Phase 4: Mature mode
 
-**Status: language dial, intimacy, nightlife, the substance ladder, the adult careers and grittier crime built** (see
-"Mature mode, part one" to "part four" under Built). The Intimacy, Substances, Adult careers and Violence sub-switches
-exist, with a Dark themes switch for part five. The serial kidnapper is built as the secret spaces, taking someone, care and the paper (part six).
-
-Content and tuning (every ordinary career as a deck, favors, venues, the moral-option rebalance) is built; see "Content and tuning" under Built. Still to do from Phase 3: forensics and profiler tracks, more full systems (paramedic, teacher, lawyer, pro cook-offs, farm and fishing seasons), twists that follow a good result, and patrol cards for beat cops.
+**Status: built.** The language dial, intimacy, nightlife, the substance ladder, the adult careers and grittier crime (see
+"Mature mode, part one" to "part six" under Built); the Intimacy, Substances, Adult careers, Violence and Dark themes switches
+all exist. The serial kidnapper is the secret spaces, taking someone, care and the paper (part six). What the first pass left is
+built too: dealing as a lifestyle with a crew, cartels and prison gangs (the operation), toxic and abusive relationships, and the
+adult-career places (see "Crime that runs for years" and "Toxic and abusive relationships" under Built).
 
 - **Intimacy and relationship depth.** Hooking up becomes a scene with choices (how it went,
   protection, regret) instead of one line. Chemistry and compatibility, jealousy, make-ups,
@@ -974,13 +1033,15 @@ Content and tuning (every ordinary career as a deck, favors, venues, the moral-o
 
 ### Order of work
 
-1. Web layer (Phase 1), with its first payoffs.
-2. Case files and investigation (Phase 2).
-3. Career-cards engine and the first eight careers (Phase 3).
+Phases 1 to 4 are all built, in this order:
+
+1. Web layer (Phase 1), with its first payoffs, then its second half.
+2. Case files and investigation (Phase 2), then crime that runs for years.
+3. Career-cards engine and the first eight careers (Phase 3), then careers part two.
 4. Intimacy, nightlife and vice, and the language dial (Phase 4, part one).
 5. Adult careers and grittier crime (Phase 4, part two).
-6. Serial offenders and adult dark themes (Phase 4, part three).
-7. Then the rest of the Next up list below, each of which now plugs into the web.
+6. Serial offenders, adult dark themes, abduction and toxic relationships (Phase 4, parts three to six).
+7. **Next:** the rest of the Next up list below, each of which now plugs into the web.
 
 ## Next up
 
