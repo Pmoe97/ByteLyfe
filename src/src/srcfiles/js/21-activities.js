@@ -280,7 +280,7 @@ defAction({
   run: (s) => {
     popup(s, {
       emoji: '📈', title: 'Investments', text: `Cash on hand: ${fmtMoney(M(s).money)}. Returns arrive each year.`, handler: 'investPick',
-      choices: INVEST_IDS.map((k) => ({ label: INVESTMENTS[k].emoji + ' ' + INVESTMENTS[k].name, value: k, sub: `Balance ${fmtMoney(M(s).invest[k] || 0)} · ${riskLabel(INVESTMENTS[k])}` })).concat([{ label: 'Done', value: null }]),
+      choices: INVEST_IDS.filter((k) => eraHas(s, k) || M(s).invest[k]).map((k) => ({ label: INVESTMENTS[k].emoji + ' ' + INVESTMENTS[k].name, value: k, sub: `Balance ${fmtMoney(M(s).invest[k] || 0)} · ${riskLabel(INVESTMENTS[k])}` })).concat([{ label: 'Done', value: null }]),
     });
   },
 });
@@ -613,7 +613,7 @@ onChoice('will', (s, ctx, v) => { M(s).will = v; return { text: 'You updated you
 /* ---- fame & social media ------------------------------------------- */
 function followersToFame(f) { return f <= 0 ? 0 : clamp(Math.round(Math.log10(f) * 13 - 30), 0, 100); }
 defAction({
-  id: 'social_join', cat: 'fame', label: 'Create a social media account', emoji: '📱', desc: 'Post, grow, go viral.',
+  id: 'social_join', era: 'social', cat: 'fame', label: 'Create a social media account', emoji: '📱', desc: 'Post, grow, go viral.',
   when: (s) => !s.dead && A(s) >= 13 && !M(s).socials,
   run: (s) => { M(s).socials = { followers: randInt(5, 120), posts: 0, verified: false, handle: '@' + P(s).first.toLowerCase().replace(/[^a-z]/g, '') + randInt(10, 999) }; return `You created ${M(s).socials.handle}. You have ${M(s).socials.followers} followers (mostly relatives).`; },
 });
@@ -625,7 +625,7 @@ const POST_TYPES = [
   { id: 'hottake', name: 'Post a hot take', emoji: '🌶️', risky: true },
 ];
 defAction({
-  id: 'social_post', cat: 'fame', label: 'Post something', emoji: '✨', desc: 'Grow your following.',
+  id: 'social_post', era: 'social', cat: 'fame', label: 'Post something', emoji: '✨', desc: 'Grow your following.',
   when: (s) => !s.dead && !!M(s).socials && !inPrison(s),
   sub: (s) => fmtNum(M(s).socials.followers) + ' followers' + (M(s).socials.verified ? ' ✔️' : ''),
   run: (s) => {
@@ -666,7 +666,7 @@ onChoice('post', (s, ctx, id) => {
   return { text, emoji: t.emoji };
 });
 defAction({
-  id: 'social_delete', cat: 'fame', label: 'Delete your account', emoji: '🗑️',
+  id: 'social_delete', era: 'social', cat: 'fame', label: 'Delete your account', emoji: '🗑️',
   when: (s) => !s.dead && !!M(s).socials,
   run: (s) => { const h = M(s).socials.handle; M(s).socials = null; add(s, { happy: 3 }); return `You deleted ${h}. Peace and quiet.`; },
 });

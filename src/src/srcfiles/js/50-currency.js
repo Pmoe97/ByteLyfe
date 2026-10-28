@@ -38,9 +38,22 @@ const MOVE_FEE = 0.02; // the bank's cut when you emigrate with your cash
 function curOf(cc) { return COUNTRY_CURRENCY[cc] || 'USD'; }
 function homeCur(s) { return curOf(P(s).country); }
 function curFmt(code) { const C = CURRENCIES[code] || CURRENCIES.USD; return { sym: C.sym, rate: C.rate, post: !!C.post, indian: !!C.indian }; }
+// Before the euro (2002), five countries counted in their own money. It is only how sums are shown: the euro's rate, times the
+// fixed conversion the euro was born with ([until the year, symbol, per US$, after the number]). Needs the history setting on.
+const OLD_MONEY = {
+  fr: [[2002, 'F', 6.035, true]],
+  de: [[1948, 'RM', 1.799, true], [2002, 'DM', 1.799, true]],
+  it: [[2002, 'L.', 1781, false]],
+  es: [[2002, 'Pts', 153.1, true]],
+  ie: [[2002, 'IR£', 0.7246, false]],
+};
+function oldMoney(s) {
+  const l = OLD_MONEY[P(s).country], row = l && histOn() && l.find((r) => s.year < r[0]);
+  return row ? { sym: row[1], rate: row[2], post: row[3], indian: false } : null;
+}
 // Show this life's money in its country's currency (or dollars, if the player prefers).
 function useCurrency(s) {
-  MONEY_FMT = s && s.player && s.people && s.people[s.playerId] && META.settings.currency !== 'usd' ? curFmt(homeCur(s)) : null;
+  MONEY_FMT = s && s.player && s.people && s.people[s.playerId] && META.settings.currency !== 'usd' ? (oldMoney(s) || curFmt(homeCur(s))) : null;
 }
 // A sum in a particular currency, whatever the player's own is (exchange messages).
 // The dollar reads "US$" when it's foreign to you.

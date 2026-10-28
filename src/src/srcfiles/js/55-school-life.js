@@ -695,6 +695,7 @@ EV('cl_coach', {
   auto: (s) => { add(s, { happy: 5 }); addSkill(s, 'athletics', 1); return 'You started an extra workout the next morning.'; },
 });
 EV('cl_rivals', {
+  era: 'web',
   ages: [10, 17], emoji: '🏫', when: (s) => { const cur = schoolCur(s); return !!cur && (cur.clubs || []).length > 0 && free(s); }, text: (s) => `A rival school’s ${SCHOOL_CLUBS[pick(schoolCur(s).clubs)].name.toLowerCase()} is trash-talking yours online.`,
   choices: [
     ['Clap back', (s) => (chance(0.5 + skill(s, 'writing') / 200) ? (addPop(s, 4), 'Your reply got more likes than their post. Victory.') : (addPop(s, -2), 'They had a better comeback. Ouch.'))],

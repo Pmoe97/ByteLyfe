@@ -10,7 +10,7 @@
 //   6. every personal event can fire and every choice plays
 import { loadGame } from './loadgame.mjs';
 
-const ctx = loadGame({ quiet: true });
+const ctx = loadGame({ quiet: true, history: true });
 const g = (name) => ctx.run(name);
 ctx.seedRng(7733);
 let errors = 0;
@@ -51,6 +51,7 @@ function walk(o, path, out) {
   if (o && typeof o === 'object') for (const k in o) walk(o[k], path + '.' + k, out);
 }
 
+let validateRow; // (also used on the generated years, section 10)
 /* 1. the table ------------------------------------------------------------ */
 {
   const FX = ['jobs', 'layoff', 'cut', 'pay', 'housing', 'living', 'rates', 'tax', 'mood'];
@@ -60,10 +61,10 @@ function walk(o, path, out) {
   const span = (e) => e.years[1] - e.years[0] + 1;
   const walkText = (v, name) => { if (typeof v === 'string') { ok(!v.includes('$'), `${name}: a dollar sign in "${v.slice(0, 50)}"`); ok(!/undefined|NaN/.test(v), `${name}: bad text "${v.slice(0, 50)}"`); } else if (v && typeof v === 'object') for (const k in v) walkText(v[k], name); };
   ok(HIST_IDS.length >= 3, `the table has events (${HIST_IDS.length})`);
-  for (const id of HIST_IDS) {
+  validateRow = (id) => {
     const e = HIST[id], n = id;
     ok(e.id === id && e.name && e.emoji && KINDS.includes(e.kind), `${n}: name, emoji and a known kind`);
-    ok(Array.isArray(e.years) && e.years[0] <= e.years[1] && e.years[0] >= g('HIST_FROM') && e.years[1] <= g('HIST_TO'), `${n}: years inside the window`);
+    ok(Array.isArray(e.years) && e.years[0] <= e.years[1] && e.years[0] >= g('HIST_FROM') && e.years[1] <= (e.future ? g('HIST_END') : g('HIST_TO')), `${n}: years inside the window`);
     if (e.where && e.where !== 'all') for (const cc of e.where) ok(COUNTRIES[cc], `${n}: unknown country ${cc}`);
     for (const k of Object.keys(e.sev || {})) ok(k === '_' || COUNTRIES[k], `${n}: sev names an unknown country ${k}`);
     for (const k of Object.keys(e.yearsBy || {})) ok(COUNTRIES[k] && e.yearsBy[k][0] <= e.yearsBy[k][1], `${n}: bad yearsBy for ${k}`);
@@ -99,7 +100,8 @@ function walk(o, path, out) {
     }
     for (const cc of Object.keys(e.openBy || {})) ok(COUNTRIES[cc] && e.openBy[cc].title && e.openBy[cc].text, `${n}: openBy ${cc}`);
     walkText(e, n);
-  }
+  };
+  for (const id of HIST_IDS) validateRow(id);
 }
 
 /* 2. every knob, with an event made up for it ------------------------------ */
@@ -670,6 +672,105 @@ function walk(o, path, out) {
   ok(ctx.worldHas(lifeAt('de', 2007, 30), 'first_smartphone') === false && ctx.worldHas(lifeAt('us', 2007, 30), 'first_smartphone') && ctx.worldHas(lifeAt('ng', 2012, 30), 'first_smartphone'), 'and so did the smartphone');
   const firstLine = (cc, year, id) => { const st = lifeAt(cc, year, 30); st.world = { seen: {} }; st.log = []; ctx.worldYear(st); return !!(st.player.worldLived || []).includes(id) && st.world.seen[id] === year; };
   ok(firstLine('uk', 1953, 'first_tv') && firstLine('jp', 1982, 'first_home_computer') && firstLine('in', 1998, 'first_web'), 'you live through the first of each, and the log says so');
+}
+
+/* 10. the years after the table, and the era (phase 7) ------------------------------ */
+{
+  const rate = (n, f) => { let k = 0; for (let i = 0; i < n; i++) if (f(i)) k++; return k / n; };
+  const lineWith = (seed, year = 2026, age = 30) => { const s = ctx.createLife({ country: 'us', year: year - age }); s.year = year; s.pending = []; s.player.edu.current = null; s.world = { seen: {}, seed }; return s; };
+  const rowsOf = (seed) => ctx.worldFutureUse(lineWith(seed)).ids.map((id) => HIST[id]);
+
+  // The same seed is the same future, and another is another.
+  const A1 = rowsOf(4242), A2 = rowsOf(4242), B1 = rowsOf(9001);
+  ok(A1.length === A2.length && A1.every((r, i) => r.name === A2[i].name && r.years[0] === A2[i].years[0]), 'the same seed gives the same future');
+  ok(A1.map((r) => r.name).join() !== B1.map((r) => r.name).join(), 'and a different seed another');
+  ok(!HIST_IDS.some((id) => HIST[id].future), 'the generated rows are not in the table (HIST_IDS)');
+
+  // What is generated, over many futures.
+  let slumps = 0, gapsOk = true, pans = 0, panGapOk = true, disasters = 0, years = 0, minStart = 9999, badRows = 0, e0 = errors;
+  for (let seed = 1; seed <= 30; seed++) {
+    const rows = rowsOf(seed * 7919), slump = rows.filter((r) => r.kind === 'econ' && r.tone !== 'good' && r.chip === 'Recession'), pan = rows.filter((r) => r.pandemic);
+    slumps += slump.length; for (let i = 1; i < slump.length; i++) { const gap = slump[i].years[0] - slump[i - 1].years[0]; if (gap < 8 || gap > 12) gapsOk = false; }
+    minStart = Math.min(minStart, slump[0].years[0]);
+    pans += pan.length; for (let i = 1; i < pan.length; i++) if (pan[i].years[0] - pan[i - 1].years[0] < 25) panGapOk = false;
+    disasters += rows.filter((r) => r.kind === 'disaster').length; years += 174;
+    for (const r of rows) { const before = failures; validateRow(r.id); if (failures !== before) badRows++; }
+  }
+  ok(badRows === 0, `every generated row is well formed (${badRows} were not)`);
+  ok(gapsOk && slumps / 30 > 12 && slumps / 30 < 22, `a recession every 8 to 12 years (${(slumps / 30).toFixed(1)} per future)`);
+  ok(minStart >= 2026 && minStart <= 2034, `the first one comes soon enough (${minStart})`);
+  ok(panGapOk && pans / 30 > 1.2 && pans / 30 < 5, `about one pandemic in sixty years, never within 25 of the last (${(pans / 30).toFixed(1)} per future)`);
+  ok(disasters / years > 0.9 && disasters / years < 1.6, `a disaster or so a year somewhere (${(disasters / years).toFixed(2)})`);
+  ok(errors === e0, 'making the futures logged no errors');
+
+  // A recession does what the table's do, and a pandemic its illness.
+  const sl = lineWith(555), rec = ctx.worldFutureUse(sl).ids.map((id) => HIST[id]).find((r) => r.chip === 'Recession');
+  const inRec = (year) => lineWith(555, year);
+  ctx.worldReset();
+  const y = rec.years[0], calm = rec.years[0] - 1;
+  ok(ctx.worldHas(inRec(y), rec.id) && !ctx.worldHas(inRec(y), 'covid'), 'a recession is active in its years');
+  ok(avg(Array.from({ length: 20 }, () => ctx.jobOpenOdds(inRec(y), 'accountant'))) < avg(Array.from({ length: 20 }, () => ctx.jobOpenOdds(inRec(calm), 'accountant'))) * 0.95, 'the job board thins');
+  ok(avg(Array.from({ length: 20 }, () => ctx.marketYear(inRec(y)).ret)) < -0.1, 'and the market falls in its first year');
+  ok(rate(500, () => { const st = employed(inRec(y), 'retail'); st.player.career.perf = 60; ctx.careerTick(st); return !st.player.career; }) > 0.02, 'and people lose their jobs');
+  const pr = (() => { for (let seed = 1; seed < 200; seed++) { const r = rowsOf(seed).find((q) => q.pandemic); if (r) return { seed, row: r }; } })();
+  ok(pr && DISEASES_OK(pr.row), 'a generated pandemic has its illness');
+  function DISEASES_OK(r) { return !!g('DISEASES')[r.disease.id]; }
+  const sick = lineWith(pr.seed, pr.row.years[0]); sick.world.seed = pr.seed;
+  ok(rate(200, () => { const st = clone(sick); ctx.worldYear(st); return ctx.hasDisease(st, pr.row.disease.id); }) > 0.04, 'many catch it');
+  ok(!ctx.actionAvailable(ACTIONS.vacation, sick) && ctx.worldClosed(sick, 'travel'), 'and travel stops');
+
+  // A whole life in the future plays, meets its events, and a saved life comes back to the same world.
+  const e1 = errors;
+  const fl = ctx.createLife({ country: 'uk', year: 2026 }); fl.pending = []; let guard = 0;
+  while (!fl.dead && fl.year < 2125 && guard++ < 500) { if (fl.pending.length) { const pp = fl.pending[0]; if (!ctx.resolvePopup(fl, pp.id, 0, pp.input ? 'X' : undefined)) fl.pending.shift(); continue; } ctx.ageUp(fl); }
+  ok(errors === e1, 'a life from 2026 to old age plays without errors');
+  ok((fl.player.worldLived || []).length >= 4, `and lives through some of it (${(fl.player.worldLived || []).length})`);
+  ok(fl.world.seed > 0, 'the future is named by a seed saved with the life');
+  const copy = ctx.importLife(ctx.exportLife(fl));
+  ok(copy && ctx.worldFutureUse(copy).ids.join() === ctx.worldFutureUse(fl).ids.join(), 'a saved life has the same future');
+  // A line does not see another line's future, and history off has none.
+  const l1 = lineWith(111), l2 = lineWith(222); l1.year = l2.year = 2040;
+  const names = (st) => ctx.worldAt(2040, 'us', P(st).city, st).map((a) => a.id).join();
+  ok(names(l1) !== names(l2) || !names(l1), 'another line has another world');
+  META.settings.history = false; ctx.worldReset();
+  ok(ctx.worldAt(2040, 'us', 'New York', l1).length === 0 && ctx.eraHas(lifeAt('us', 1900, 30), 'social'), 'history off: no generated events, and nothing is gated');
+  META.settings.history = true; ctx.worldReset();
+
+  // The era.
+  const era = (cc, year) => lifeAt(cc, year, 30);
+  ok(ctx.eraHas(era('us', 2005), 'social') && !ctx.eraHas(era('us', 2004), 'social') && !ctx.eraHas(era('ng', 2008), 'social') && ctx.eraHas(era('ng', 2010), 'social'), 'social media reaches each country in its year');
+  ok(!ctx.eraHas(era('uk', 1975), 'index') && ctx.eraHas(era('uk', 1976), 'index') && !ctx.eraHas(era('us', 2009), 'crypto') && ctx.eraHas(era('us', 2010), 'crypto') && !ctx.eraHas(era('us', 1971), 'games') && ctx.eraHas(era('us', 1972), 'games'), 'index funds, crypto and games have worldwide dates');
+  ok(!ctx.eraHas(era('us', 1994), 'dating') && ctx.eraHas(era('us', 1995), 'dating'), 'online dating comes a year after the web');
+  ok(!ctx.actionAvailable(ACTIONS.social_join, era('us', 1990)) && ctx.actionAvailable(ACTIONS.social_join, era('us', 2012)), 'no social media account in 1990');
+  ok(!ctx.actionAvailable(ACTIONS.dating_app, era('us', 1990)) && ctx.actionAvailable(ACTIONS.dating_app, era('us', 2015)), 'and no dating app');
+  const menu = (year) => { const st = era('us', year); st.player.money = 10000; ACTIONS.investments.run(st); return st.pending[st.pending.length - 1].choices.map((c) => c.label).join('|'); };
+  ok(!/Crypto/.test(menu(1990)) && /Crypto/.test(menu(2015)) && !/Index fund/.test(menu(1950)) && /Index fund/.test(menu(1990)), 'the investment menu has only what existed');
+  ok(ctx.jobOpenOdds(era('us', 1940), 'software') === 0 && ctx.jobOpenOdds(era('us', 1940), 'data') === 0 && ctx.jobOpenOdds(era('us', 2000), 'software') > 0 && ctx.jobOpenOdds(era('us', 1940), 'accountant') > 0, 'jobs that did not exist are not on the board');
+  let anachronism = 0;
+  for (let i = 0; i < 40; i++) { const st = ctx.createLife({ country: 'us', year: 1925 }); for (const p of Object.values(st.people)) if (p.job && p.job.id && ['software', 'it', 'data', 'creator', 'callcenter', 'astronaut', 'profiler'].includes(p.job.id)) anachronism++; }
+  ok(anachronism === 0, `nobody has a job that does not exist yet (${anachronism} did)`);
+  ok(ctx.eraMedicine(era('us', 1930)) === 0.75 && ctx.eraMedicine(era('us', 1960)) === 0.9 && ctx.eraMedicine(era('us', 2000)) === 1, 'the doctors of 1930 cure less');
+  ok(!ctx.eventEligible(lifeAt('us', 1960, 15), EVENTS.kid_gaming) && !ctx.eventEligible(lifeAt('us', 1960, 15), EVENTS.teen_group_chat) && ctx.eventEligible(lifeAt('us', 2010, 15), EVENTS.teen_group_chat), 'events wait for their invention');
+  const hol = lifeAt('us', 1960, 8); hol.pending = [];
+  META.settings.history = false; ok(ctx.eventEligible(lifeAt('us', 1960, 15), EVENTS.teen_group_chat), 'history off: any event, any year'); META.settings.history = true;
+  // Money in the old currencies.
+  const shown = (cc, year) => { const st = lifeAt(cc, year, 30); ctx.useCurrency(st); return ctx.fmtMoney(1000); };
+  ok(/F$/.test(shown('fr', 1990)) && /DM$/.test(shown('de', 1990)) && /RM$/.test(shown('de', 1940)) && /^L\./.test(shown('it', 1990)) && /Pts$/.test(shown('es', 1990)) && /^IR£/.test(shown('ie', 1990)), `before the euro: ${shown('fr', 1990)}, ${shown('de', 1990)}, ${shown('it', 1990)}, ${shown('es', 1990)}, ${shown('ie', 1990)}`);
+  ok(/€/.test(shown('fr', 2005)) && /€/.test(shown('de', 2002)) && /£/.test(shown('uk', 1990)) && !/IR/.test(shown('uk', 1990)), 'and the euro, and the pound, after');
+  META.settings.history = false; ok(/€/.test(shown('fr', 1990)), 'history off: euros'); META.settings.history = true;
+  ctx.useCurrency(lifeAt('us', 2000, 30));
+
+  // The events of the generated years: every choice plays, and none says the moment passed.
+  const every = (name, s) => { const ev = EVENTS[name]; ok(ctx.eventEligible(s, ev), `${name}: eligible in the state built for it`); const t = clone(s); ok(ctx.fireEvent(t, ev), `${name}: fires`); const pp = t.pending.find((q) => q.handler === 'event'); if (!pp) return; ok(!BAD.test(pp.text), `${name}: reads "${pp.text}"`); for (let k = 0; k < pp.choices.length; k++) { const u = clone(t), q = u.pending.find((x) => x.handler === 'event'), e0 = errors, n0 = u.log.length; try { ctx.resolvePopup(u, q.id, k); } catch (e) { ok(false, `${name}: choice ${k} threw ${e.message}`); } ok(errors === e0, `${name}: choice ${k} logged an error`); ok(!/moment passed/.test(u.log.slice(n0).flatMap((e) => e.lines.map((l) => l.t)).join(' ')), `${name}: choice ${k} said the moment passed`); for (let n = 0; n < 6 && u.pending.length; n++) { const r = u.pending[0]; ctx.resolvePopup(u, r.id, Math.max(0, r.choices.findIndex((c) => !c.disabled)), r.input ? 'X' : undefined); } const bad = []; walk(u, 's', bad); ok(!bad.length, `${name}: choice ${k}: ${bad.join('; ')}`); } };
+  every('wd_gen_lockdown', lineWith(pr.seed, pr.row.years[0]));
+  every('wd_gen_vaccine', lineWith(pr.seed, pr.row.years[0] + 1));
+  ok(!ctx.eventEligible(lineWith(pr.seed, pr.row.years[0] + 2), EVENTS.wd_gen_vaccine) && !ctx.eventEligible(lineWith(pr.seed, pr.row.years[0] - 1), EVENTS.wd_gen_lockdown), 'they come in the right year of the pandemic');
+  const workSlump = lineWith(555, rec.years[0]); employed(workSlump, 'accountant');
+  every('wd_gen_layoffs', workSlump);
+  const keepJob = clone(workSlump); ctx.fireEvent(keepJob, EVENTS.wd_gen_layoffs); ctx.resolvePopup(keepJob, keepJob.pending.find((q) => q.handler === 'event').id, 0);
+  ok(keepJob.player.career && keepJob.player.career.safe === rec.years[1] && rate(100, () => { const st = clone(keepJob); st.year = rec.years[0] + 1; if (!st.player.career) return false; ctx.careerTick(st); return !st.player.career; }) === 0, 'a pay cut keeps the job through the downturn');
+  const sev = clone(workSlump); ctx.fireEvent(sev, EVENTS.wd_gen_layoffs); const m0 = sev.player.money; ctx.resolvePopup(sev, sev.pending.find((q) => q.handler === 'event').id, 1);
+  ok(!sev.player.career && sev.player.money > m0, 'and the severance pays and ends it');
 }
 
 console.log(failures ? `World checks: ${failures} failure(s)` : `World checks passed (${HIST_IDS.length} events).`);

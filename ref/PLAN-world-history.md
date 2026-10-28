@@ -530,6 +530,12 @@ when you choose), so `wd_games` and `wd_aftermath` store the year.
 
 ## Phase 7: the future and the era (history, part five; optional)
 
+**Status: built** (`92-world-future.js`, `91-era.js`, `89-world-events-5.js`). `worldAt(year, cc, city, s)` now takes the state, and for a year
+past `HIST_TO` asks `worldFutureUse(s)` for the generated ids (`HIST_END` is 2200). Seeds are made the first time a life asks for
+a future year, kept in `s.world.seed`, and `migrate` (29-save.js) remakes the future on load so a saved illness has its entry in
+`DISEASES`. The era gates are `eraHas`, `eraJobOk` and `eraMedicine`, with an `era` field on events, choices and actions. D2's
+default (random births in "this year") is unchanged; flipping it is left to the owner.
+
 ### 7a. Generated world events after 2025
 
 `worldFuture(s)` in `88-world.js`, under the same `history` toggle (D11). Each future year rolls,

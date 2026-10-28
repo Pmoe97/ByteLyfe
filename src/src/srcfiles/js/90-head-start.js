@@ -199,7 +199,7 @@ function hsSave(s) {
   const keep = Math.max(price(s, 20000), spend);
   if (m.money > keep * 2 && A(s) >= 21 && !m.loans.length) {
     const put = Math.round((m.money - keep * 2) * 0.3);
-    if (put > 0) { m.money -= put; m.invest.index = (m.invest.index || 0) + put; }
+    if (put > 0) { const k = eraHas(s, 'index') ? 'index' : 'savings'; m.money -= put; m.invest[k] = (m.invest[k] || 0) + put; } // (no index funds before 1976)
   }
 }
 function hsDirector(s, hs) {

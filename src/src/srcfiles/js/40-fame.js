@@ -328,6 +328,7 @@ EV('sb_paparazzi', {
   ],
 });
 EV('sb_feud', {
+  era: 'social',
   ages: [16, 120], when: famous(35), emoji: '🥊', text: () => `${pick(STARS)} took a shot at you in an interview.`,
   choices: [
     ['Clap back', (s) => { add(s, { fame: 5, karma: -2 }); if (chance(0.3)) { add(s, { fame: -4 }); return 'Your reply aged badly. The internet sided with them.'; } return 'Your reply was perfect. You won the week.'; }],
@@ -336,6 +337,7 @@ EV('sb_feud', {
   ],
 });
 EV('sb_romance_rumor', {
+  era: 'social',
   ages: [18, 120], when: famous(45), emoji: '💋', text: () => `The tabloids say you're secretly dating ${pick(STARS)}.`,
   choices: [
     ['Deny it', (s) => { add(s, { fame: 1 }); return 'Nobody believed the denial, which only helped.'; }],
@@ -344,6 +346,7 @@ EV('sb_romance_rumor', {
   ],
 });
 EV('sb_leak', {
+  era: 'web',
   ages: [16, 120], when: (s) => famous(30)(s) && ['album', 'film', 'record', 'book'].includes(workKind(s)), emoji: '💾', text: 'Your next project leaked online months early.',
   choices: [
     ['Embrace it', (s) => { add(s, { fame: 3 }); sb(s).boost = 1; return 'You called it a gift to the fans. The buzz has never been bigger.'; }],

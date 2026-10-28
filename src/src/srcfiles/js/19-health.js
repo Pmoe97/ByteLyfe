@@ -217,7 +217,7 @@ onChoice('treat', (s, ctx, tid) => {
   const cost = medBill(s, t);
   if (!pay(s, cost)) return cantAfford(cost);
   if (t.risk && chance(t.risk)) { die(s, 'complications from experimental treatment'); return 'The experimental treatment went terribly wrong.'; }
-  const odds = clamp(D.cure * t.mult * (trait(s, 'resilient') ? 1.1 : 1), 0, 0.97);
+  const odds = clamp(D.cure * t.mult * eraMedicine(s) * (trait(s, 'resilient') ? 1.1 : 1), 0, 0.97);
   if (chance(odds)) {
     cureDisease(s, ctx.id);
     add(s, { health: randInt(4, 10), happy: 4 });

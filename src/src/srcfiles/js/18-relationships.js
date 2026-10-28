@@ -877,7 +877,7 @@ defAction({
   },
 });
 defAction({
-  id: 'dating_app', cat: 'love', label: 'Dating app', emoji: '📱', desc: 'Swipe through local singles.',
+  id: 'dating_app', era: 'dating', cat: 'love', label: 'Dating app', emoji: '📱', desc: 'Swipe through local singles.',
   when: (s) => free(s) && A(s) >= 18,
   run: (s) => {
     if (bump(s, 'datingapp') > 3) return { text: 'You swiped until your thumb hurt. Try again next year.', nolog: true };

@@ -143,7 +143,7 @@ function jobOpenOdds(s, id) {
   if (info.hubs.includes(j.cat)) p += 0.18;
   else if (info.size === 'small' && BIG_CITY_CATS.includes(j.cat)) p -= 0.3;
   else if (info.size === 'mid' && BIG_CITY_CATS.includes(j.cat)) p -= 0.08;
-  if (worldJobBanned(s, id)) return 0; // shut by law for now (88-world.js)
+  if (worldJobBanned(s, id) || !eraJobOk(s, id)) return 0; // shut by law for now (88-world.js), or not invented yet (91-era.js)
   p = clamp(p, 0.15, 0.97);
   const world = wfxCat(s, 'jobs', j.cat); // a boom fills the board, a slump empties it (88-world.js)
   return world ? clamp(p * (1 + Math.max(-0.9, world)), 0.05, 0.97) : p;
@@ -1112,6 +1112,7 @@ EV('cty_short_term', {
   ],
 });
 EV('cty_startup', {
+  era: 'web',
   ages: [21, 60], emoji: '🚀', when: (s) => hereInfo(s).hubs.includes('tech') && free(s) && (skill(s, 'coding') >= 30 || (!!M(s).career && ['tech', 'business'].includes(JOBS[M(s).career.id].cat))), text: (s) => `A startup recruiter cornered you at a party in ${P(s).city}.`,
   choices: [
     ['Hear them out', (s) => {

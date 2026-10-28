@@ -56,7 +56,7 @@
  * ethnicity or religion.
  * ===================================================================== */
 
-const HIST_FROM = 1900, HIST_TO = 2025;
+const HIST_FROM = 1900, HIST_TO = 2025, HIST_END = 2200; // the table runs to HIST_TO, and 92-world-future.js generates the years to HIST_END
 const HIST = {};
 const HIST_IDS = [];
 function H(id, def) {

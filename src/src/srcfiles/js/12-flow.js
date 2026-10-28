@@ -137,6 +137,7 @@ function defAction(a) {
 }
 function actionAvailable(a, s, t) {
   if (!tagsOn(a.tags)) return false;
+  if (a.era && !eraHas(s, a.era)) return false; // not invented yet (91-era.js)
   try { return !a.when || !!a.when(s, t); } catch (e) { console.error('[ByteLyfe] when() failed for', a.id, e); return false; }
 }
 function actionList(s, cat, t) {

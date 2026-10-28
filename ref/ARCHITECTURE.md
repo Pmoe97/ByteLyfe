@@ -85,8 +85,10 @@ load order, and `index.html`'s `<script>` tags are the source of truth.
 | `86` | Careers, part two (`86-careers-plus.js`): forensics and profiler tracks, patrol, paramedic/teacher/lawyer full systems, cook-offs, farm and fishing seasons, twists | Pure data on the career-cards engine plus a few case-file hooks (`caseAid`). Adds two jobs to `JOBS` and `JOB_IDS`, replaces the decks of a few existing ones, wraps `CAREER_YEAR.police`. |
 | `87` | Honors (`87-honors.js`): achievements and legacy titles for 81 to 86 | No DOM. Pure data. |
 | `88` | The world (`88-world.js`): what is going on in a year and place, the knobs the rest of the game reads, the yearly world hook, historical wars | No DOM. `onYearStart('world', worldYear)` runs first in every year (25-ageup.js). Read through `wfx`/`wfxCat` by `jobOpenOdds`, `livingCost`, `cityMarketYear` (49), `careerTick` (15), `financeTick`, `financeTerms` (16, 17), `fxTick` (50), `marketYear` (37), `industryMods` (34), `warYear`/`draftYear` (59), `bodyTick` (19), `canGamble` (53). |
-| `89` | World events (`89-world-events.js`, `-2`, `-3`, `-4`): personal events (`wd_*`) and achievements for living through them | Event content. Each is gated on `worldHas(s, id)`. `wd_` events weigh 10 against 1 for the rest (`eventWeight`), and a dated one sets `sure: true` to come the year it can, ahead of the random draws. |
+| `89` | World events (`89-world-events.js`, `-2` to `-5`): personal events (`wd_*`) and achievements for living through them | Event content. Each is gated on `worldHas(s, id)`. `wd_` events weigh 10 against 1 for the rest (`eventWeight`), and a dated one sets `sure: true` to come the year it can, ahead of the random draws. |
 | `90` | Head start (`90-head-start.js`): start a custom life at any age (0 to 60), the years before lived on autopilot | No DOM. Called by the custom-life sheet (`1004-ui-title.js`) through `createLifeWithHeadStart`. `pushRewind` and `checkAchievements` read `s.headStart`; `tagsOn` (12-flow.js) is false while it runs. |
+| `91` | Era (`91-era.js`): what had been invented yet, per country: `eraHas(s, 'social')`, `eraJobOk`, `eraMedicine` | No DOM. Needs the history setting on. An event or choice says `era: 'social'`, an action `era: 'dating'`; `JOB_ERA` lists the jobs that did not always exist. The years come from the `first_*` rows of `09-data-history-6.js`. |
+| `92` | The future (`92-world-future.js`): from 2026 to 2200 each family line gets its own made-up recessions, booms, pandemic and disasters, from `s.world.seed` | No DOM. `worldAt` calls `worldFutureUse(s)` for years past the table; the rows live in `HIST` but not in `HIST_IDS`. `29-save.js` remakes it on load. |
 | `88–89`, `91–999` | Free for future engine files and expansions | No DOM. Must run in Node. |
 | `1000+` | UI (`1000-ui-kit.js` … `1033-ui-world.js`, then `1999-boot.js`, which must stay last) | DOM. Reads the engine, never the other way round. `1007-ui-art.js` draws people and icons as SVG strings (the "Night Market" part libraries); `1008-ui-look.js` is the appearance editor. |
 
@@ -226,6 +228,21 @@ make the description a function (achievement `desc` and goal `text` may be funct
 - **Foreign savings:** `M(s).fxSave[code]` is a holding's value in your own money; `fxTick` moves it
   with the two currencies, `fxUnits` gives the foreign amount (which stays put), and `netWorth`
   includes it.
+
+**The world.** `09-data-history*.js`, `88-world.js`, `89-world-events*.js`, `91-era.js`, `92-world-future.js`, `1033-ui-world.js`.
+The real years 1900 to 2025 are data: each event is a row (`H(id, {...})`, format at the top of `09-data-history.js`) with
+knobs that the rest of the game reads, not code that rewrites it. `worldAt(year, cc, city, s)` lists what is going on (memoized),
+and `wfx`/`wfxCat` add up one knob over it: `jobOpenOdds` and `careerTick` read `jobs`, `layoff`, `cut`, `pay`;
+`cityMarketYear` reads `housing`; `financeTick` reads `rates`, `tax`, `cash`; `marketYear` reads `market`; `bodyTick` reads a
+disease's `ageMult`; `warYear` reads `war` (59-military.js). `worldYear` is the first thing in every year (`onYearStart`): the
+opening, the mood, payments, savings lost, illness, a disaster's `blast`, and the paper. Personal events (`wd_*`) are gated on
+`worldHas(s, id)`; they weigh 10 by default (`eventWeight`) and a dated one says `sure: true`. An event that sets a flag in its
+`ctx` must not make its own `when` false, because 23-events.js asks `when` again when you choose: store the year (see `wd_games`).
+Past 2025 the years are generated for each family line from `s.world.seed` (`92-world-future.js`) as ordinary rows kept out of
+`HIST_IDS`; `29-save.js` makes them again on load. `91-era.js` is the other half of "a life feels like its time": `eraHas`,
+`eraJobOk` and `eraMedicine`, read through an `era` field on events, choices and actions. All of it is behind
+`META.settings.history`. In the Node harnesses, `loadGame` turns history off unless asked (`{ history: true }`), so a test of
+another rule is never in the middle of a recession; `world.mjs` and `sim-lives.mjs` ask for it.
 
 **Head start.** `90-head-start.js`. A custom life can begin at any age up to `HEAD_START_MAX` (60).
 `createLifeWithHeadStart(opts, age)` is `createLife` plus `headStart(s, age)`: age up year by year, answer every

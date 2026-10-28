@@ -45,7 +45,9 @@ histGames('winter_turin_2006', { city: 'it:Turin', year: 2006, winter: true, not
 histGames('winter_vancouver_2010', { city: 'ca:Vancouver', year: 2010, winter: true, note: 'A new line to the airport and a village on the waterfront are being built.' });
 
 /* ---- disasters in one place --------------------------------------------------------------------------------------------------- */
-function histDisaster(id, o) {
+function histDisaster(id, o) { H(id, histDisasterRow(o)); }
+// (the row itself, for the generated disasters of 92-world-future.js)
+function histDisasterRow(o) {
   const y0 = o.years ? o.years[0] : o.year, y1 = o.years ? o.years[1] : o.year + 2, span = y1 - y0 + 1;
   const dip = o.dip === undefined ? 0.08 : o.dip, mood = o.mood === undefined ? 1.5 : o.mood;
   const tail = (a, b, c) => Array.from({ length: span }, (_, i) => (i === 0 ? a : i === 1 ? b : i === 2 ? c : 0));
@@ -58,7 +60,7 @@ function histDisaster(id, o) {
   if (o.blast) { row.blast = o.blast; row.cause = o.cause; }
   if (o.places) { row.cities = Object.keys(o.places); row.citySev = o.places; } else { row.where = o.where; row.sev = o.sev; }
   if (o.popup !== undefined) row.popup = o.popup;
-  H(id, row);
+  return row;
 }
 histDisaster('paris_flood_1910', { name: 'the Paris flood', chip: 'Flood', emoji: '🌊', year: 1910, places: { 'fr:Paris': 1 }, blast: { home: 0.08, hurt: 0.01, dead: 0, npc: 0.002 }, cause: 'the flood', dip: 0.04, mood: 1,
   text: 'The river has risen over its banks and into the streets, the metro tunnels and the cellars. People are crossing the city by boat and walking on planks, and the water will not go down for weeks.',

@@ -33,5 +33,8 @@ export function loadGame(opts = {}) {
     vm.runInContext(fs.readFileSync(file, 'utf8'), ctx, { filename: rel });
   }
   ctx.run = (code) => vm.runInContext(code, ctx);
+  // The checks of the game's own rules run in a world without history (88-world.js): the real years and the made-up ones past 2025
+  // would put a recession or a pandemic in the middle of a test of something else. world.mjs, sim-lives.mjs and the like ask for it.
+  if (opts.history !== true) ctx.run('META.settings.history = false');
   return ctx;
 }

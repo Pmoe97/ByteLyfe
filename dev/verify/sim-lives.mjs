@@ -22,7 +22,7 @@ for (let i = 2; i < process.argv.length; i++) {
 }
 const N = Number(opts.pos[0]) || 200;
 const SEED = Number(opts.pos[1]) || 1;
-const ctx = loadGame({ quiet: true });
+const ctx = loadGame({ quiet: true, history: true });
 const g = (name) => ctx.run(name);
 ctx.seedRng(SEED + opts.shard[0] * 7919);
 const rand = ctx.rand, pick = ctx.pick, chance = ctx.chance, randInt = ctx.randInt;

@@ -955,7 +955,18 @@ disasters strike one city or one region, from the Halifax explosion and the Grea
 Hurricane Andrew to the Porto Alegre floods and the 2025 Los Angeles fires: homes damaged or lost, people hurt, people you know
 lost, home prices dipping and coming back, the building trades hiring the year after. The morning after, you help dig out, mend your
 home, give to the relief fund, or leave the city. And the arrival of radio, television, color television, the home computer, the
-mobile phone, the web, the smartphone and social media, in each country's own year (Phase 7 turns these into era gates).
+mobile phone, the web, the smartphone and social media, in each country's own year.
+
+**The real world (part five): the future, and the era.** Lives past 2025 get a world of their own, made up for each family line (the
+same seed always gives the same one, and it is saved): a recession every eight to twelve years, sometimes a boom after it, a
+pandemic about once in sixty years with an illness of its own, and a disaster or two a year somewhere in the world, by the kind of
+city. They have invented names ("the Slump of 2041", "the 2058 flu") and the same effects as the real ones, and a few events: a
+lockdown, a vaccine, and the news that your employer is cutting jobs (take a pay cut, take the severance, or keep your head down).
+With history on, a life also feels like its time: no social media before 2004 to 2010 (by country), no dating app before the web, no
+index fund before 1976, no crypto before 2010, no video games before 1972, jobs that did not exist (software, IT, data science,
+content creator, call center, astronaut) are not on the board or among your family's jobs, the doctors of 1930 cure less, a few
+events wait for their invention, and in France, Germany, Italy, Spain and Ireland the money is francs, marks, lire, pesetas and Irish
+pounds until the euro in 2002.
 
 **Careers, part two (finishing Phase 3).**
 - **Forensic science and behavioral analysis** are tracks of their own. They work real case files: a good year moves a case

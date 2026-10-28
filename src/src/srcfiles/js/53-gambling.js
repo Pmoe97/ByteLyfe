@@ -752,6 +752,7 @@ function gamblingTick(s) {
 /* ---- events ---------------------------------------------------------------------------------- */
 const gambler = (s) => canGamble(s) && LC(s, 'gambled') > 0;
 EV('gb_free_bet', {
+  era: 'web',
   ages: [18, 90], emoji: '📱', when: (s) => gambler(s) && (excluded(s) || (M(s).addictions.gambling || 0) >= 20), text: (s) => `${appVenue(s).name} sent you a notification: "We miss you! Here’s a free ${fmtMoney(price(s, 50))} bet."`,
   choices: [
     ['Use it', (s) => { habit(s, 'gambling', 5); tally(s, 'relapse'); return chance(0.4) ? `It won. Of course it won. You deposited ${fmtMoney(price(s, 500))} that night.` : 'It lost. You deposited more to "get it back."'; }],

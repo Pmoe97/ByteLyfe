@@ -14,6 +14,7 @@
  *   tags: ['chaos'],              content tags (see CONTENT_TAGS in 12-flow.js);
  *                                 on a choice, hides just that choice
  *   once: true, cooldown: years (default 3), prison: true (only in prison)
+ *   era: 'social',                not before it was invented (91-era.js); a choice can say it too
  *   sure: true,                   fires the year it is eligible, before the random draws (history's dated events)
  *   w: history events (id wd_) default to 10, everything else to 1
  * })
@@ -33,6 +34,7 @@ function eventEligible(s, ev) {
   if (!!ev.prison !== inPrison(s)) return false;
   if (!tagsOn(ev.tags)) return false;
   if (ev.lang && langLevel() < ev.lang) return false; // only at this setting of the language dial or above
+  if (ev.era && !eraHas(s, ev.era)) return false; // not invented yet (91-era.js)
   const hist = M(s).evHist || (M(s).evHist = {});
   if (ev.once && hist[ev.id]) return false;
   if (hist[ev.id] && s.year - hist[ev.id] < (ev.cooldown ?? 3)) return false;
@@ -94,6 +96,7 @@ function fireEvent(s, ev) {
     const o = Array.isArray(raw) ? { label: raw[0], fx: raw[1] } : raw;
     if (!tagsOn(o.tags)) return;
     if (o.lang && langLevel() < o.lang) return;
+    if (o.era && !eraHas(s, o.era)) return;
     if (o.when && !o.when(s, c)) return;
     map.push(i);
     choices.push({
@@ -116,7 +119,7 @@ onChoice('event', (s, ctx, idx) => {
   if (!o || !o.fx) return;
   // Things may have changed since the event fired (a firing, a breakup, prison...).
   if (ctx.c && ctx.c.pid && (!s.people[ctx.c.pid] || !s.people[ctx.c.pid].alive)) return { text: 'The moment passed.', quiet: true, nolog: true };
-  if (!!ev.prison !== inPrison(s) || !tagsOn(ev.tags) || !tagsOn(o.tags) || (ev.lang && langLevel() < ev.lang) || (o.lang && langLevel() < o.lang) || (ev.when && !ev.when(s))) return { text: 'The moment passed.', quiet: true, nolog: true };
+  if (!!ev.prison !== inPrison(s) || !tagsOn(ev.tags) || !tagsOn(o.tags) || (ev.era && !eraHas(s, ev.era)) || (o.era && !eraHas(s, o.era)) || (ev.lang && langLevel() < ev.lang) || (o.lang && langLevel() < o.lang) || (ev.when && !ev.when(s))) return { text: 'The moment passed.', quiet: true, nolog: true };
   const r = o.fx(s, ctx.c || {});
   if (typeof r === 'string') return vary(r);
   if (r && r.text) r.text = vary(r.text);

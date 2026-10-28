@@ -9,7 +9,7 @@
 //   5. the life carries on afterwards: ten more years, answered at random, leave a state with nothing broken in it
 import { loadGame } from './loadgame.mjs';
 
-const ctx = loadGame({ quiet: true });
+const ctx = loadGame({ quiet: true, history: true });
 const g = (name) => ctx.run(name);
 ctx.seedRng(9051);
 let errors = 0;

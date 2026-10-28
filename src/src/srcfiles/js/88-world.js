@@ -13,7 +13,7 @@
  * worldYear runs first in every year (onYearStart, 25-ageup.js): it tells you about an event the first time you live
  * through it, and does what happens once a year (mood, payments, illness, a disaster, people you know losing work or
  * dying, the paper). All of it is behind META.settings.history (on by default), and nothing in it runs outside
- * HIST_FROM..HIST_TO unless a later file generates events for those years.
+ * HIST_FROM..HIST_TO; the years after that (to HIST_END) are generated for each family line by 92-world-future.js.
  *
  * s.world = { seen: { id: year first lived through } }   one per family line
  * M(s).worldLived = [id]   what this character lived through (the Hall of Lives and the World sheet read it)
@@ -39,13 +39,14 @@ function evKnob(ev, v, i) {
   return typeof v === 'number' ? v * evCurve(ev, i) : 0;
 }
 // Everything active in a place in a year: [{ id, ev, i (year of the event), sev, k (strength) }].
-function worldAt(year, cc, city) {
-  if (!histOn()) return [];
-  const key = year + ':' + cc + ':' + city;
+function worldAt(year, cc, city, s) {
+  if (!histOn() || year > HIST_END) return [];
+  const fut = year > HIST_TO && s ? worldFutureUse(s) : null; // the years after the table are generated for this family line (92-world-future.js)
+  const key = year + ':' + cc + ':' + city + (fut ? ':' + fut.seed : '');
   let l = WORLD_MEMO[key];
   if (l) return l;
   l = [];
-  for (const id of HIST_IDS) {
+  for (const id of fut ? fut.ids : year > HIST_TO ? [] : HIST_IDS) {
     const ev = HIST[id], r = evRange(ev, cc);
     if (year < r[0] || year > r[1] || !evApplies(ev, cc, city)) continue;
     const sev = evSev(ev, cc) * (ev.citySev ? (ev.citySev[cityKey(cc, city)] !== undefined ? ev.citySev[cityKey(cc, city)] : 1) : 1);
@@ -55,12 +56,12 @@ function worldAt(year, cc, city) {
   }
   return (WORLD_MEMO[key] = l);
 }
-function worldActive(s) { return s.player && s.playerId && P(s) ? worldAt(s.year, P(s).country, P(s).city) : []; }
+function worldActive(s) { return s.player && s.playerId && P(s) ? worldAt(s.year, P(s).country, P(s).city, s) : []; }
 function worldHas(s, id) { return worldActive(s).some((a) => a.id === id); }
 // One number added up over everything active (for a place other than yours, pass cc and city).
 function wfx(s, knob, cc, city) {
   let t = 0;
-  for (const a of worldAt(s.year, cc || P(s).country, city || P(s).city)) t += evKnob(a.ev, a.ev.fx && a.ev.fx[knob], a.i) * a.sev;
+  for (const a of worldAt(s.year, cc || P(s).country, city || P(s).city, s)) t += evKnob(a.ev, a.ev.fx && a.ev.fx[knob], a.i) * a.sev;
   return t;
 }
 // How much of a knob one kind of job takes: its own number in the row's cats, else the row's `_`, else all of it.
@@ -72,7 +73,7 @@ function evCat(ev, knob, cat) {
 // The same, for one kind of job (04-data-careers.js JOB_CATS): an event can hit some of them harder.
 function wfxCat(s, knob, cat, cc, city) {
   let t = 0;
-  for (const a of worldAt(s.year, cc || P(s).country, city || P(s).city)) t += evKnob(a.ev, a.ev.fx && a.ev.fx[knob], a.i) * a.sev * evCat(a.ev, knob, cat);
+  for (const a of worldAt(s.year, cc || P(s).country, city || P(s).city, s)) t += evKnob(a.ev, a.ev.fx && a.ev.fx[knob], a.i) * a.sev * evCat(a.ev, knob, cat);
   return t;
 }
 // The event doing most of one knob (for naming it in a sentence).
@@ -98,8 +99,8 @@ function worldFxShock(s, cur) {
 }
 // The stock market: null when history does not govern this year; { ret, ev } when it does (ret null when nothing in it moved the market).
 function worldMarket(s) {
-  if (!histOn() || s.year < HIST_FROM || s.year > HIST_TO) return null;
-  const cc = P(s).country, list = worldAt(s.year, cc, P(s).city);
+  if (!histOn() || s.year < HIST_FROM || s.year > HIST_END) return null;
+  const cc = P(s).country, list = worldAt(s.year, cc, P(s).city, s);
   for (const a of list) { const m = a.ev.marketCc && a.ev.marketCc[cc]; if (m && m[s.year] !== undefined) return { ret: m[s.year], ev: a.ev }; }
   for (const a of list) { const m = a.ev.market; if (m && m[s.year] !== undefined) return { ret: m[s.year], ev: a.ev }; }
   return { ret: null, ev: null };
@@ -130,7 +131,7 @@ function worldCareerYear(s, c, j) {
   if (c.furlough && c.furlough.year < s.year) { c.salary = c.furlough.was; delete c.furlough; }
   if (worldJobBanned(s, c.id)) { worldLayOff(s, (worldActive(s).find((a) => a.ev.jobBan && a.ev.jobBan.includes(c.id)) || {}).ev); return true; }
   const ceo = (M(s).companies || []).some((co) => co.ceo === 'you' && !co.closed);
-  const odds = ceo ? 0 : wfxCat(s, 'layoff', j.cat);
+  const odds = ceo || (c.safe && c.safe >= s.year) ? 0 : wfxCat(s, 'layoff', j.cat); // c.safe: kept on, for a pay cut, until a year (wd_gen_layoffs)
   if (odds > 0 && chance(clamp(odds * (1.4 - c.perf / 100), 0, 0.6))) {
     const a = worldCause(s, 'layoff', j.cat);
     if (a && a.ev.furlough && a.ev.furlough.includes(P(s).country)) {
@@ -338,7 +339,7 @@ function worldSiblingBonus(s) {
   if (!histOn()) return 0;
   const me = s.playerId && s.people[s.playerId];
   let t = 0;
-  for (const a of worldAt(s.year, me ? me.country : 'us', me ? me.city : '')) t += (a.ev.siblings || 0) * a.sev;
+  for (const a of worldAt(s.year, me ? me.country : 'us', me ? me.city : '', s)) t += (a.ev.siblings || 0) * a.sev;
   return clamp(t, 0, 0.6);
 }
 // Whether the call-up reaches you: men in the age band, and (when a war says so) unmarried women of 20 to 30.
