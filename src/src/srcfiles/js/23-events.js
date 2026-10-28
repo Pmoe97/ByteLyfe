@@ -14,6 +14,8 @@
  *   tags: ['chaos'],              content tags (see CONTENT_TAGS in 12-flow.js);
  *                                 on a choice, hides just that choice
  *   once: true, cooldown: years (default 3), prison: true (only in prison)
+ *   sure: true,                   fires the year it is eligible, before the random draws (history's dated events)
+ *   w: history events (id wd_) default to 10, everything else to 1
  * })
  * ===================================================================== */
 
@@ -42,14 +44,21 @@ function eventEligible(s, ev) {
   }
   return true;
 }
-function eventWeight(s, ev) { return typeof ev.w === 'function' ? ev.w(s) : (ev.w ?? 1); }
+// The events of history (wd_, 89-world-events*.js) weigh more than the everyday ones, or a life would seldom meet them.
+function eventWeight(s, ev) { return typeof ev.w === 'function' ? ev.w(s) : (ev.w ?? (ev.id.startsWith('wd_') ? 10 : 1)); }
 
 function rollYearEvents(s) {
   const a = A(s);
   const n = a < 3 ? (chance(0.6) ? 1 : 0) : 1 + (chance(0.6) ? 1 : 0) + (chance(0.25) ? 1 : 0);
   const pool = EVENT_IDS.map((id) => EVENTS[id]).filter((ev) => eventEligible(s, ev));
   const used = new Set();
-  for (let i = 0; i < n; i++) {
+  // A `sure` event (a date in history) comes the year it can, ahead of the draws. At most two, so a crowded year stays readable.
+  let sure = 0;
+  for (const ev of pool) {
+    if (!ev.sure || sure >= 2 || s.dead) continue;
+    if (fireEvent(s, ev)) { used.add(ev.id); sure++; }
+  }
+  for (let i = 0; i < n - sure; i++) {
     const avail = pool.filter((e) => !used.has(e.id));
     if (!avail.length) break;
     const ev = weighted(avail, (e) => eventWeight(s, e));

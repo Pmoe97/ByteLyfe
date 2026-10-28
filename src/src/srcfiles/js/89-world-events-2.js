@@ -30,7 +30,7 @@ EV('wd_ww1_letter', {
   ],
 });
 EV('wd_armistice', {
-  ages: [4, 95], once: true, emoji: '🔔', text: 'The war is over.',
+  ages: [4, 95], sure: true, once: true, emoji: '🔔', text: 'The war is over.',
   when: (s) => s.year === 1918 && worldHas(s, 'ww1') && wdWar(s, 'ww1'),
   auto: (s) => {
     if (P(s).country === 'de') { add(s, { happy: -1 }); return 'The fighting stopped, and there was no cheering. The winter was cold, the shelves were bare, and the men who came back looked at the floor.'; }
@@ -106,12 +106,12 @@ EV('wd_korea_kid', {
 
 /* ---- the Cold War ------------------------------------------------------------------------------------- */
 EV('wd_sputnik', {
-  ages: [6, 17], once: true, emoji: '🛰️', text: 'A small silver sphere is going across the sky.',
+  ages: [6, 17], sure: true, once: true, emoji: '🛰️', text: 'A small silver sphere is going across the sky.',
   when: (s) => s.year === 1957 && worldHas(s, 'sputnik'),
   auto: (s) => { add(s, { smarts: 1 }); return 'Your school added science classes after that, and everyone was suddenly supposed to be good at mathematics. You stood outside at dusk with half the street and watched a moving star.'; },
 });
 EV('wd_missile_crisis', {
-  ages: [8, 95], once: true, emoji: '☢️',
+  ages: [8, 95], sure: true, once: true, emoji: '☢️',
   when: (s) => s.year === 1962 && worldHas(s, 'missile_crisis'),
   text: 'Everyone is listening to the radio. The grown-ups are talking in low voices, and nobody is quite sure what they should be doing.',
   choices: [
@@ -121,7 +121,7 @@ EV('wd_missile_crisis', {
   ],
 });
 EV('wd_chernobyl', {
-  ages: [6, 95], once: true, emoji: '☢️',
+  ages: [6, 95], sure: true, once: true, emoji: '☢️',
   when: (s) => s.year === 1986 && worldHas(s, 'chernobyl'),
   text: 'It rained this week, and the radio says the rain was not like other rain. Nobody is certain what is safe to eat.',
   choices: [
@@ -145,7 +145,7 @@ EV('wd_draft_protest', {
 
 /* ---- the Moon --------------------------------------------------------------------------------------------------- */
 EV('wd_moon', {
-  ages: [5, 95], once: true, emoji: '🚀',
+  ages: [5, 95], sure: true, once: true, emoji: '🚀',
   when: (s) => s.year === 1969 && worldHas(s, 'moon_landing'),
   text: 'Men are about to walk on the Moon, and it is on television. It is very late.',
   choices: [
@@ -169,7 +169,7 @@ EV('wd_gas_lines', {
 
 /* ---- Black Monday ------------------------------------------------------------------------------------------------------- */
 EV('wd_black_monday', {
-  ages: [18, 100], once: true, emoji: '📉',
+  ages: [18, 100], sure: true, once: true, emoji: '📉',
   when: (s) => s.year === 1987 && worldHas(s, 'black_monday') && wdMine(s) >= price(s, 2500),
   text: 'The market fell by a fifth today, the biggest drop in its history. Your broker is on the line, and the phones are going off all over the office.',
   choices: [
@@ -299,7 +299,7 @@ EV('wd_rent_hike', {
   ],
 });
 EV('wd_energy_bill', {
-  ages: [18, 95], once: true, emoji: '🔌',
+  ages: [18, 95], sure: true, once: true, emoji: '🔌',
   when: (s) => s.year === 2022 && ['uk', 'de', 'fr', 'it', 'es', 'ie', 'se'].includes(P(s).country) && worldHas(s, 'inflation_2022'),
   text: 'The energy bill has come, and it is three times what it was last winter. There is a long article in the paper about how to stay warm.',
   choices: [

@@ -933,6 +933,20 @@ and the euro crisis (austerity, leaving for Australia), the inflation surge (a 1
 years as they really went. The Second World War now covers every country: Italy, Japan, France, Canada, Australia, the
 Philippines, India, South Africa and the neutral ones (Sweden, Spain, Ireland) too.
 
+**The real world (part three): country events.** What each country went through, on its own. The United States: Prohibition
+(bartending is not a job, breweries fail, a night in a speakeasy or running bottles, which can end in a cell), the early-1980s
+rate squeeze. Canada: the conscription crisis, the 1998 ice storm, the oil bust. The United Kingdom: the Blitz (London hardest,
+other cities less), rationing, National Service (the brown envelope for men of 18 to 20), the Great Smog, the Winter of
+Discontent, the Falklands, Black Wednesday, the Troubles in Belfast, and the Brexit vote (leave, remain or stay home: the same
+cost either way, and a row with someone you love). Ireland: the War of Independence, the Civil War, the boat to England, the
+Celtic Tiger. Australia, Mexico, Brazil (hyperinflation melts the cash you keep, the Collor plan freezes your savings), France
+(occupation, Indochina, Algeria, May 1968), Germany (the 1923 inflation, the bombing of cities, the hard years, the new
+currency, the economic miracle), Italy, Spain (civil war, hunger years, the miracle), Sweden (the 500 percent week), Japan
+(bombing, occupation, the bubble and the lost decade), South Korea (liberation, the IMF crisis and the gold-collecting drive),
+India (the wars, liberalization, demonetisation), Nigeria, the Philippines (People Power) and South Africa (load-shedding: a
+generator or solar panels). Dated events now come the year they happen, and history's events are weighted up so a life meets
+them (`sure: true`, and a default weight of 10 for `wd_` events).
+
 **Careers, part two (finishing Phase 3).**
 - **Forensic science and behavioral analysis** are tracks of their own. They work real case files: a good year moves a case
   and can close it, a bad one sets it back, and promotion needs the cases you moved.

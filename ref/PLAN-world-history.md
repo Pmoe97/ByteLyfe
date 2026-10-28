@@ -453,6 +453,13 @@ milestones and `cooldown` for repeatable ones. Each event's choices must have a 
 
 Mostly data rows (knobs and texts), with one personal event where it's marked ★. Keep each small.
 
+**Status: built** (`09-data-history-3.js`, `-4`, `-5`; `89-world-events-3.js`). Engine additions: `citySev` (a different severity per
+city for one row), `jobBan` (a job that does not exist in the years, and a person in it is let go), `cashBuffer` and `cashKeep` (a
+float of cash that is safe, and savings that are indexed), and `peace: true` on a war entry (a peacetime call-up, with no
+fighting). The events were found to fire too seldom in a real life, so `wd_` events now weigh 10, and a dated one can be `sure`.
+`emigrateNow(s, cc, city)` is the move itself, shared with the Emigrate action. The city disasters (Cyclone Tracy, Mexico City 1985, the
+Brisbane floods, and the rest) are Phase 6.
+
 | Country | Events |
 | --- | --- |
 | United States | Prohibition 1920 to 1933 (bartending not on the job board; a "bootlegging" option in the underworld; ★ a speakeasy night), the Dust Bowl 1931 to 1939 (part of #3), the Volcker rates 1980 to 1982 (`rates +0.08`), the 2008 foreclosure wave (part of #15) |

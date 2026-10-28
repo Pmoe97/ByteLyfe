@@ -34,9 +34,12 @@
  *   closed: ['travel', 'nightlife', 'gambling', 'gym', 'school']   what shuts down while the strength is 0.5 or more
  *   furlough: ['uk', ...]          where a layoff is a pay cut to 80% instead
  *   support: { cc: usd | [usd, ...] }   a payment to every adult
- *   cash: { year: share }          a share of cash and savings lost that year
+ *   cash: { year: share }          a share of cash and savings lost that year (cashBuffer: usd that is safe; cashKeep: true if savings are indexed and safe)
+ *   cities + citySev: { 'cc:City': n }   a local row: only there, and how hard each place is hit
+ *   jobBan: [jobId]                a job the law shuts for now (the bartender, in Prohibition)
  *   war: { cc: { name, foe, foeAdj, theater, years, intensity, draft: [from, to], draftAges, draftWomen: [from, to],
- *               civil, result: 'victory' | 'defeat' | 'ceasefire', end, open } }   the war a country fights (59-military.js)
+ *               civil, peace, result: 'victory' | 'defeat' | 'ceasefire', end, open } }   the war a country fights (59-military.js);
+ *                                  peace: a call-up in peacetime (National Service); civil: no side is ever taken
  *   open / openBy: { cc: ... }: { title, text, kid }   what you are told the first time you live through it
  *   popup: true | false            force or suppress the popup (default: econ, war, pandemic and unrest pop up; a moment is a line in the log)
  *   tone: 'good'                   for a happy event (default: bad, except a moment)

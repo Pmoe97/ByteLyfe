@@ -122,7 +122,7 @@ function endWar(s, st, w) {
   st.war = null;
   st.quiet = 0;
   const text = w.endText || { victory: `${cap(w.name)} ended in victory after ${nOf(s.year - w.start, 'year')}. There were parades in the capital.`, defeat: `${cap(w.name)} ended in defeat after ${nOf(s.year - w.start, 'year')}. The country is in mourning.`, ceasefire: `${cap(w.name)} ended in a ceasefire after ${nOf(s.year - w.start, 'year')}. Nobody quite won.` }[result];
-  announce(s, { emoji: result === 'defeat' ? '🏳️' : '🕊️', title: 'The war is over', tone: result === 'defeat' ? 'bad' : 'good', text, log: '🕊️ ' + text });
+  announce(s, { emoji: result === 'defeat' ? '🏳️' : '🕊️', title: w.peace ? 'The call-up ends' : 'The war is over', tone: result === 'defeat' ? 'bad' : 'good', text, log: '🕊️ ' + text });
   add(s, { happy: result === 'defeat' ? -3 : 3 });
   const m = M(s);
   if (m.warBonds) {
@@ -479,9 +479,9 @@ function draftYear(s, w) {
 // The letter, and the five things anyone can do about it. `lead` opens it ("Your number in the lottery was 73. ").
 function draftNotice(s, w, lead) {
   popup(s, {
-    emoji: '📜', title: 'Draft notice', text: `${lead}A letter from the ministry of defense: you have been selected for service in ${w.name}. You must report in thirty days.`, handler: 'milDraft', ctx: { wid: w.id },
+    emoji: '📜', title: 'Draft notice', text: `${lead}${w.peace ? 'The brown envelope has come. ' : ''}A letter from the ministry of defense: you have been selected for service in ${w.name}. You must report in thirty days.`, handler: 'milDraft', ctx: { wid: w.id },
     choices: [
-      { label: 'Report for duty', value: 'report', sub: 'Two years, or until the war ends' },
+      { label: 'Report for duty', value: 'report', sub: w.peace ? 'Two years of service' : 'Two years, or until the war ends' },
       { label: 'Claim a deferment', value: 'defer', sub: deferEligible(s) ? 'You qualify' : 'You probably will not qualify' },
       { label: 'Apply as a conscientious objector', value: 'co', sub: 'A board decides whether you are sincere' },
       { label: 'Flee the country', value: 'flee', tone: 'bad', sub: 'Your family will not forgive you easily' },

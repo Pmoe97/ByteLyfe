@@ -472,11 +472,15 @@ onChoice('emigrate', (s, ctx, c) => {
   if (!pay(s, cost)) return cantAfford(cost);
   const odds = 0.35 + P(s).stats.smarts / 300 + (M(s).career ? 0.15 : 0) + (eduRank(s) >= 3 ? 0.15 : 0) + (netWorth(s) > price(s, 100000) ? 0.15 : 0) - (hasFelony(s) ? 0.35 : 0);
   if (!chance(clamp(odds, 0.05, 0.95))) return { text: `Your visa to ${COUNTRIES[c].name} was denied.`, tone: 'bad', emoji: '🛂' };
+  return emigrateNow(s, c);
+});
+// The move itself, once the visa is settled. The history events (89-world-events-3.js) use it too, with a city.
+function emigrateNow(s, c, city) {
   const me = P(s), from = me.country;
   const dep = leaveRental(s, 'moved');
   const oldHomeId = M(s).housing.type === 'own' ? M(s).housing.assetId : null;
   me.country = c;
-  me.city = pick(COUNTRIES[c].cities);
+  me.city = city || pick(COUNTRIES[c].cities);
   cityArrive(s);
   const fx = exchangeOnEmigrate(s, from, c);
   useCurrency(s);
@@ -502,7 +506,7 @@ onChoice('emigrate', (s, ctx, c) => {
   tally(s, 'countries');
   add(s, { happy: 6 });
   return { text: `You moved to ${me.city}, ${COUNTRIES[c].name}! ${COUNTRIES[c].flag} Find a place to live and a new job.${dep ? ' ' + dep : ''}${fx ? ' ' + fx : ''}${vacateNote}`, tone: 'good', emoji: '🛂' };
-});
+}
 
 /* ---- crime menu ---------------------------------------------------- */
 for (const id of SOLO_CRIMES) {

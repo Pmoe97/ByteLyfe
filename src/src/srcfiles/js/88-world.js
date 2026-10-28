@@ -48,7 +48,7 @@ function worldAt(year, cc, city) {
   for (const id of HIST_IDS) {
     const ev = HIST[id], r = evRange(ev, cc);
     if (year < r[0] || year > r[1] || !evApplies(ev, cc, city)) continue;
-    const sev = evSev(ev, cc);
+    const sev = evSev(ev, cc) * (ev.citySev ? (ev.citySev[cityKey(cc, city)] !== undefined ? ev.citySev[cityKey(cc, city)] : 1) : 1);
     if (sev <= 0) continue;
     const i = Math.max(0, year - ev.years[0]);
     l.push({ id, ev, i, sev, k: sev * evCurve(ev, i) });
@@ -110,6 +110,8 @@ function worldCrypto(s) {
   return null;
 }
 // Things that shut while an event is at full strength.
+// A job the law has shut for now (Prohibition and the bartender): not on the board, and the ones who held it lose it.
+function worldJobBanned(s, id) { return worldActive(s).some((a) => a.ev.jobBan && a.ev.jobBan.includes(id)); }
 function worldClosed(s, what) { return worldActive(s).some((a) => a.ev.closed && a.ev.closed.includes(what) && a.k >= 0.5); }
 const WORLD_CLOSED = { travel: ['vacation', 'emigrate'], nightlife: ['nightlife'], gym: ['gym'] };
 for (const what in WORLD_CLOSED) for (const id of WORLD_CLOSED[what]) { const a = ACTIONS[id]; if (!a) continue; const w = a.when; a.when = (s, t) => !worldClosed(s, what) && (!w || w(s, t)); }
@@ -126,6 +128,7 @@ function worldLayOff(s, ev) {
 function worldCareerYear(s, c, j) {
   if (!histOn()) return false;
   if (c.furlough && c.furlough.year < s.year) { c.salary = c.furlough.was; delete c.furlough; }
+  if (worldJobBanned(s, c.id)) { worldLayOff(s, (worldActive(s).find((a) => a.ev.jobBan && a.ev.jobBan.includes(c.id)) || {}).ev); return true; }
   const ceo = (M(s).companies || []).some((co) => co.ceo === 'you' && !co.closed);
   const odds = ceo ? 0 : wfxCat(s, 'layoff', j.cat);
   if (odds > 0 && chance(clamp(odds * (1.4 - c.perf / 100), 0, 0.6))) {
@@ -200,8 +203,10 @@ function worldOneOff(s, x) {
   // Money lost to a collapse (a share of cash and savings).
   const share = ev.cash && ev.cash[s.year];
   if (share && a >= 12) {
-    const lost = Math.round(Math.max(0, m.money) * share), sv = Math.round(((m.invest.savings || 0) + (m.invest.bonds || 0)) * share);
-    m.money -= lost; m.invest.savings = Math.round((m.invest.savings || 0) * (1 - share)); m.invest.bonds = Math.round((m.invest.bonds || 0) * (1 - share));
+    const safe = ev.cashBuffer ? price(s, ev.cashBuffer) : 0, keep = !!ev.cashKeep; // a small float is safe, and in some countries savings were indexed
+    const lost = Math.round(Math.max(0, m.money - safe) * share), sv = keep ? 0 : Math.round(((m.invest.savings || 0) + (m.invest.bonds || 0)) * share);
+    m.money -= lost;
+    if (!keep) { m.invest.savings = Math.round((m.invest.savings || 0) * (1 - share)); m.invest.bonds = Math.round((m.invest.bonds || 0) * (1 - share)); }
     if (lost + sv > 0) announce(s, { emoji: '💸', title: 'Your savings', tone: 'bad', text: `With ${ev.name}, money lost most of its value. Your savings are worth a fraction of what they were: ${fmtMoney(lost + sv)} gone.` });
   }
   if (ev.disease) worldIllness(s, x);
@@ -290,7 +295,7 @@ function makeHistWar(s, cc, def) {
   return {
     id: uid(s, 'w'), cc, name: e.name, foe: e.foe, foeAdj: e.foeAdj || e.foe, theater: e.theater || 'the front', start: def.years[0], intensity: e.intensity || 3, momentum: 0, draft: false,
     dead: randInt(20, 120) * (e.intensity || 3), hid: def.ev.id, endYear: def.years[1], draftYears: e.draft || null, draftAges: e.draftAges || null, draftWomen: e.draftWomen || null,
-    result: e.result || 'ceasefire', endText: e.end || null, civil: !!e.civil, lottery: e.lottery || null,
+    result: e.result || 'ceasefire', endText: e.end || null, civil: !!e.civil, lottery: e.lottery || null, peace: !!e.peace,
   };
 }
 // true: history governs wars here this year, so the random ones stay out of it.
@@ -305,7 +310,7 @@ function historyWarYear(s) {
   if (!w) {
     if (!def) { st.quiet++; return true; }
     w = st.war = makeHistWar(s, cc, def);
-    log(s, def.years[0] < s.year ? `🚨 ${warLine(w)} is still going on.` : `🚨 ${warLine(w)} began.`, 'bad');
+    log(s, w.peace ? `📜 ${cap(w.name)} began: ${w.draftAges ? `men aged ${w.draftAges[0]} to ${w.draftAges[1]}` : 'men'} are called up.` : def.years[0] < s.year ? `🚨 ${warLine(w)} is still going on.` : `🚨 ${warLine(w)} began.`, 'bad');
   } else {
     w.dead += randInt(40, 260) * w.intensity;
   }

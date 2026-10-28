@@ -108,7 +108,7 @@ EV('wd_enlist_pearl', {
   ],
 });
 EV('wd_end_of_war', {
-  ages: [3, 95], once: true, emoji: '🎉',
+  ages: [3, 95], sure: true, once: true, emoji: '🎉',
   when: (s) => s.year === 1945 && ['uk', 'us', 'ca', 'au'].includes(P(s).country) && worldHas(s, 'ww2'),
   auto: (s) => {
     add(s, { happy: 5 });
@@ -120,7 +120,7 @@ EV('wd_end_of_war', {
 
 /* ---- COVID-19 -------------------------------------------------------------------------------- */
 EV('wd_lockdown', {
-  ages: [7, 95], once: true, emoji: '🏠',
+  ages: [7, 95], sure: true, once: true, emoji: '🏠',
   when: (s) => s.year === 2020 && worldHas(s, 'covid'),
   text: (s) => (A(s) < 13 ? 'School is closed and nobody can go out. You are home all day, every day, with nothing to do.' : 'The streets are empty and everything is shut. You are home, and it looks like you will be for a long time.'),
   choices: [
@@ -147,7 +147,7 @@ EV('wd_covid_wedding', {
   ],
 });
 EV('wd_window_visit', {
-  ages: [8, 95], once: true, emoji: '👵',
+  ages: [8, 95], sure: true, once: true, emoji: '👵',
   when: (s) => s.year === 2020 && worldHas(s, 'covid') && relPeople(s, ['parent', 'grandparent']).some((p) => p.alive && ageOf(s, p) >= 65),
   ctx: (s) => someone(s, ['parent', 'grandparent'], (p) => ageOf(s, p) >= 65),
   text: (s, c) => `${nm(s, c.pid)} is in a home, or living alone, and nobody is allowed in. You can see ${genderWord(s.people[c.pid], 'him', 'her', 'them')} through a window.`,
@@ -157,7 +157,7 @@ EV('wd_window_visit', {
   ],
 });
 EV('wd_covid_vaccine', {
-  ages: [12, 100], once: true, emoji: '💉',
+  ages: [12, 100], sure: true, once: true, emoji: '💉',
   when: (s) => s.year === 2021 && worldHas(s, 'covid'),
   text: 'A vaccine is available, and people are lining up for it. It is your decision.',
   choices: [
@@ -167,7 +167,7 @@ EV('wd_covid_vaccine', {
   ],
 });
 EV('wd_covid_crash', {
-  ages: [18, 100], once: true, emoji: '📉',
+  ages: [18, 100], sure: true, once: true, emoji: '📉',
   when: (s) => s.year === 2020 && worldHas(s, 'covid') && wdMine(s) >= price(s, 3000),
   text: 'In a few weeks the markets have fallen by a third. Your investments have too, and the news says it will be worse.',
   choices: [

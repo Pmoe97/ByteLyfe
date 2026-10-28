@@ -44,7 +44,7 @@ function hsDefault(pp) {
 }
 // What an event choice does is in its code: a choice that commits a crime, joins the mob, builds a habit,
 // gambles or cheats is never the one a head start picks while another is on the table.
-const HS_RISKY = /commitCrime|\buw\(s\)|mobJoin|habit\(|affairBegins|makeFling|arrest\(|gamble|bookie|assault|murder/;
+const HS_RISKY = /emigrateNow|bootleg|commitCrime|\buw\(s\)|mobJoin|habit\(|affairBegins|makeFling|arrest\(|gamble|bookie|assault|murder/;
 function hsSafeEvent(s, pp) {
   const ev = EVENTS[pp.ctx && pp.ctx.ev];
   if (!ev || !ev.choices || !pp.ctx.map) return -1;
