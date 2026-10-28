@@ -79,6 +79,7 @@ const tasks = [
   { label: 'Chaos checks', args: ['dev/verify/chaos.mjs'] },
   { label: 'challenge checks', args: ['dev/verify/challenges.mjs'] },
   { label: 'gambling checks', args: ['dev/verify/gambling.mjs'] },
+  { label: 'wealth checks', args: ['dev/verify/wealth.mjs'] },
   { label: 'house checks', args: ['dev/verify/house.mjs'] },
   { label: 'zoo checks', args: ['dev/verify/zoo.mjs'] },
   { label: 'youth checks', args: ['dev/verify/youth.mjs'] },

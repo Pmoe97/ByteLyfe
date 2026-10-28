@@ -13,7 +13,7 @@
  * ===================================================================== */
 
 const ERA_FIRST = { radio: 'first_radio', tv: 'first_tv', color: 'first_color_tv', computer: 'first_home_computer', mobile: 'first_mobile', web: 'first_web', smartphone: 'first_smartphone', social: 'first_social' };
-const ERA_WORLD = { games: 1972, index: 1976, crypto: 2010 }; // video games (the first arcade hit), the first index fund for everyone, Bitcoin
+const ERA_WORLD = { lottery: 1964, games: 1972, index: 1976, crypto: 2010 }; // the first modern state lottery, video games (the first arcade hit), the first index fund for everyone, Bitcoin
 const ERA_AFTER = { dating: ['web', 1] }; // online dating: a year after the web reaches you
 // Jobs that did not exist before a year (anything not listed always has).
 const JOB_ERA = { trainer: 1960, software: 1960, astronaut: 1960, paramedic: 1970, profiler: 1972, callcenter: 1975, it: 1980, data: 1995, creator: 2005 };

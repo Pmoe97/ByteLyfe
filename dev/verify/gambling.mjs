@@ -12,6 +12,8 @@
 //      family is only threatened with Mature on; unpaid casino markers end up in court
 //   7. limits — the self-exclusion list shuts casinos, tracks and the app (not bookies);
 //      counting cards gets you banned across the chain; the main event is in Silver Mesa
+//   8. the lottery — one visible jackpot a year from 20 million to 1.6 billion (and a new one when it is won), no ticket
+//      limit, packs of tickets, and the odds of each prize
 import { loadGame } from './loadgame.mjs';
 
 const ctx = loadGame({ quiet: true });
@@ -177,6 +179,49 @@ const answer = (s, value) => { const pp = asking(s); const i = pp.choices.findIn
   chicago.pending = [];
   ctx.pokerMenu(chicago, cr);
   ok(!chicago.pending[0].choices.some((c) => c.value === 'main'), 'the main event is only in Silver Mesa');
+}
+
+/* 8. the lottery -------------------------------------------------------------- */
+{
+  const LOTTO = g('LOTTO');
+  const life = (id, year) => { const s = adult('us', 'Chicago', 1e12); s.id = id; s.year = year; s.people[s.playerId].birthYear = year - 40; return s; };
+  // The jackpot: seen before you buy, fixed for the year, a new one each year, always between 20 million and 1.6 billion (2026 dollars).
+  const s = life('life_a', 2026);
+  ok(ctx.lottoJackpot(s) === ctx.lottoJackpot(s) && /Jackpot/.test(g('ACTIONS').lottery.sub(s)), 'the jackpot is the same every time you look, and the menu shows it');
+  const seen = [];
+  for (let k = 0; k < 4000; k++) { const x = life('life_' + (k % 40), 2026 + Math.floor(k / 40)); seen.push(ctx.lottoJackpot(x)); }
+  seen.sort((a, b) => a - b);
+  ok(seen[0] >= 19.5e6 && seen[seen.length - 1] <= 1.61e9, `jackpots run from ${(seen[0] / 1e6).toFixed(0)} million to ${(seen[seen.length - 1] / 1e9).toFixed(2)} billion`);
+  const share = (lo) => seen.filter((x) => x >= lo).length / seen.length;
+  ok(seen[2000] > 55e6 && seen[2000] < 110e6, `the usual jackpot is modest (median ${(seen[2000] / 1e6).toFixed(0)} million)`);
+  ok(share(1e9) > 0.03 && share(1e9) < 0.1 && share(1.4e9) > 0.002, `but a billion is not out of reach (${(share(1e9) * 100).toFixed(1)}% of years reach it, ${(share(1.4e9) * 100).toFixed(2)}% 1.4 billion)`);
+  ok(Array.from({ length: 29 }, (_, k) => ctx.lottoJackpot(life('life_a', 2026 + k)) !== ctx.lottoJackpot(life('life_a', 2027 + k))).filter(Boolean).length >= 27, 'it is a different number almost every year');
+  ok(ctx.lottoJackpot(life('life_a', 2026)) !== ctx.lottoJackpot(life('life_b', 2026)), 'and another family line has its own');
+  // No limit, and packs: the old cap was fifteen a year.
+  const t = life('life_c', 2026);
+  for (let k = 0; k < 40; k++) { t.pending = []; ctx.doAction(t, 'lottery'); const pp = asking(t); ctx.resolvePopup(t, pp.id, pp.choices.findIndex((c) => c.value === 10)); }
+  ok(!t.log.some((e) => e.lines.some((l) => /refuses to sell/.test(l.t))), 'the clerk never refuses');
+  ok(t.player.counters.lottery === undefined, 'there is no yearly count to run out');
+  const menu = life('life_d', 2026); menu.player.money = 120; menu.pending = []; ctx.doAction(menu, 'lottery');
+  const mp = asking(menu);
+  ok(mp.choices.map((c) => c.value).join() === '1,10,100,1000,10000,0' && mp.choices.find((c) => c.value === 10).disabled === false && mp.choices.find((c) => c.value === 100).disabled === true, 'packs of 1 to 10,000 tickets, the ones you can not pay for greyed out');
+  ok(/1 in 250,000/.test(mp.text) && mp.text.includes(ctx.fmtMoney(ctx.lottoJackpot(menu))), 'and the popup says the jackpot and its odds');
+  // One ticket at a time: a prize about one time in ten.
+  const v = life('life_f', 2026); v.player.money = 1e12; ctx.seedRng(321);
+  let n1 = 0, wonAny = 0;
+  for (let k = 0; k < 20000; k++) { const before = v.player.money; v.pending = []; ctx.doAction(v, 'lottery'); const pq = asking(v); ctx.resolvePopup(v, pq.id, pq.choices.findIndex((c) => c.value === 1)); n1++; if (v.player.money > before - ctx.price(v, 5)) wonAny++; }
+  ok(Math.abs(wonAny / n1 - 0.1) < 0.012, `about one ticket in ten wins something (${(100 * wonAny / n1).toFixed(1)}%)`);
+  // A win draws a new jackpot, and pays the one you saw.
+  const w = life('life_g', 2026); w.player.money = 1e13; const first = ctx.lottoJackpot(w); let hit = 0, paid = false;
+  for (let k = 0; k < 4000 && !hit; k++) { const m0 = w.player.money; w.pending = []; ctx.doAction(w, 'lottery'); const pp = asking(w); ctx.resolvePopup(w, pp.id, pp.choices.findIndex((c) => c.value === 1000)); if (w.lotto && w.lotto.wins > 0) { hit = k + 1; paid = w.player.money - m0 > first * 0.9; } }
+  ok(hit > 0 && paid, `a win pays the jackpot you saw (${hit} packs of a thousand)`);
+  ok(w.lotto.wins === 1 && ctx.lottoJackpot(w) !== first, `and the jackpot is drawn again straight away (${w.lotto.wins} wins, ${first} then ${ctx.lottoJackpot(w)})`);
+  ok(ctx.lottoJackpot(life('life_g', 2027)) !== ctx.lottoJackpot(w), 'while next year starts over');
+  ok(w.player.life.jackpots >= 1, 'the win is counted for the Jackpot! achievement');
+  // History: no state lottery before 1964 (with history on).
+  g('META').settings.history = true;
+  ok(!ctx.actionAvailable(g('ACTIONS').lottery, life('life_h', 1950)) && ctx.actionAvailable(g('ACTIONS').lottery, life('life_h', 1970)), 'there is no lottery before 1964');
+  g('META').settings.history = false;
 }
 
 if (failures) { console.log(`\n❌ ${failures} gambling check failures.`); process.exit(1); }

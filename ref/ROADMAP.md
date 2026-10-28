@@ -982,6 +982,16 @@ pounds until the euro in 2002.
 - **Twists:** a good result can bring a follow-up card nobody saw coming (the patient who came back, a commendation, a
   nomination), for the doctor, surgeon, firefighter, bartender, journalist, pilot and the new full systems.
 
+**The lottery and the top of the wealth ladder.** The lottery has no ticket limit, and tickets come in packs of 1, 10, 100, 1,000
+and 10,000. There is one visible jackpot a year (and a fresh one each time it is won), drawn from 20 million to 1.6 billion with
+the small ones most likely: the usual jackpot is around 78 million, one year in sixteen is over a billion, and about one in a
+hundred is over 1.5 billion. It is worked out from the save id, the year and the number of wins (`lottoJackpot`), so a menu never
+spends the random numbers. The odds are 1 in 250,000 for the jackpot, 1 in 5,000 for five numbers (1,000 to 50,000), and 1 in 10
+for a small prize (1 to 6 tickets' worth); the constants are in `LOTTO` in `21-activities.js`. There is no state lottery before
+1964 (with history on). Companies no longer hit a wall: the drop in sales as you add locations is now a gentle curve, so a hundred
+locations sell far more than ten and a thousand far more than a hundred (the best tech company can be worth hundreds of billions
+at a thousand locations and a trillion at several thousand), and "Open another" can open 1, 5, 25 or 100 at once.
+
 ## The big push: a connected, adult world
 
 The next arc is two things at once: a **connected world**, where the systems above stop being
