@@ -238,7 +238,6 @@ defAction({
   sub: (s) => fmtMoney(price(s, 5)),
   run: (s) => {
     const cost = price(s, 5);
-    if (bump(s, 'lottery') > 15) return { text: 'The clerk refuses to sell you any more tickets this year.', nolog: true };
     if (!pay(s, cost)) return cantAfford(cost);
     habit(s, 'gambling', 0.5);
     const luck = trait(s, 'lucky') ? 2 : 1;
