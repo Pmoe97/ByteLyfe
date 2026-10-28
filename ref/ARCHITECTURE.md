@@ -111,7 +111,10 @@ on `ctx` (ids, numbers), never closures.
 
 **Actions.** Every menu entry is `defAction({ id, cat, label, emoji, target, when, run, sub })`.
 The UI builds menus from `actionList(s, cat, target)` and the bot in `sim-lives.mjs` uses
-the same registry, so a new action is tested for free.
+the same registry, so a new action is tested for free. An action can carry
+`confirm: (s, t) => null | { title, text, yes, no }`: an object makes `doAction` ask "are you sure?"
+first (a `confirmAction` popup) and run the action only on yes, so backing out costs nothing.
+Asking out or rekindling with a relative uses it (`familyAskConfirm`, 18-relationships.js).
 
 **Results.** Actions and handlers return outcome text (or `{ text, title, emoji, tone,
 quiet, nolog, person }`). `runWithResult` logs it, measures what changed (the chips under
@@ -164,7 +167,11 @@ be on, and both partners must be 18+. Teens are blocked everywhere (eligibility,
 dates, rekindles). `tabooTagFor` maps a person to their subtype from their stored `taboo`
 flag, their relationship kind, or the blood tree (`bloodKinshipInfo` reads
 `p.parents`/`p.children`, so a sibling who became a partner is still recognised); dual
-labels render as "Sister · Girlfriend" (`kinTitle`). Inbreeding is a real pedigree kinship
+labels render as "Sister · Girlfriend" (`kinTitle`). When it ends, a relative is still family:
+`endRomance` calls `tabooRestoreFamily`, which puts the family kind back (and the year the tie began,
+`famSince`) and keeps the breakup as `exRom` ("Sister · Ex", "Sister · Ex-wife"), so they stay under Family
+instead of Others. An in-law comes back only while your current partner is who they are an in-law through.
+`migrate` (29-save.js) restores saves made before. Charged abusers (85-abuse.js) stay family the same way. Inbreeding is a real pedigree kinship
 (`tabooKinship` recursion): unrelated 0, cousin 0.0625, sibling or parent-child 0.25, and
 repeat inbred matings climb fast. The result is stored as `p.inbred` (+ `p.tabooDepth`) on
 each child; births apply extra miscarriage odds and a defect chance that is low the first

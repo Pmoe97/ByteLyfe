@@ -145,6 +145,10 @@ function migrate(s) {
   if (!s.pets) s.pets = {};
   if (!s.lineage) s.lineage = [];
   ensureAllLooks(s);
+  // A relative who was dated and left used to become an "ex" under Others: back to the family list (48-taboo.js).
+  try {
+    if (typeof tabooRestoreFamily === 'function') for (const pid in s.player.rels) { const r = s.player.rels[pid]; if (r && r.wasFam && (r.kind === 'ex' || r.kind === 'exspouse')) tabooRestoreFamily(s, pid, r.kind); }
+  } catch (e) { console.warn('[ByteLyfe] family restore skipped', e); }
   s.v = SAVE_VERSION;
   return s;
 }

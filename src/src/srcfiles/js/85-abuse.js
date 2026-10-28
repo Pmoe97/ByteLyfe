@@ -229,11 +229,17 @@ onChoice('abNight', (s, ctx, v) => {
   a.level = clamp100(a.level + 10);
   return { text: 'You said it was an accident, and they believed you, because you said it well. You have been saying it well for a while. It is not a sign of anything except that you are tired.', tone: 'bad' };
 });
+// After the relationship ends the other person is an enemy, unless they are family: a relative stays on the family list, with nothing left of the bond.
+function abEstranged(s, pid) {
+  const r = relOf(s, pid);
+  if (!r) return;
+  if (isFamilyKind(r.kind)) r.rel = 0; else setRel(s, pid, 'enemy', 0);
+}
 // The partner is charged. What follows is the relationship ending, and whatever comes after.
 function abCharge(s, p, a) {
   const note = ['', ' The charge is on their record now.', ' They will not be allowed near the house.'][randInt(0, 2)];
   endRomance(s, p.id, 'ex');
-  if (relOf(s, p.id)) setRel(s, p.id, 'enemy', 0);
+  abEstranged(s, p.id);
   abEnd(s, 'reported');
   if (chance(0.3)) { const d = darkOf(s); if (!d.stalk && darkOn()) d.stalk = { by: p.id, kind: 'ex', since: s.year, level: 18, order: true, told: true, scared: false }; }
   return note.trim();
@@ -328,7 +334,7 @@ onChoice('abSelf', (s, ctx, v) => {
 });
 function abPartnerLeaves(s, a, p) {
   endRomance(s, p.id, 'ex');
-  if (relOf(s, p.id)) setRel(s, p.id, 'enemy', 0);
+  abEstranged(s, p.id);
   webFact(s, 'victim', { pid: p.id, harm: 'fear', by: s.playerId });
   abEnd(s, 'reported');
   webRepAdd(P(s), { scandal: 14, name: -10 });

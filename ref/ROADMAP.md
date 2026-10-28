@@ -900,6 +900,10 @@ Nothing graphic, nothing sexual, nobody dies, and it is never the victim's fault
   them go and stay away, or you can blame them and lose them, with a report and an order at the end.
 - **Toxic, short of abuse:** a friend who drains you and a parent who keeps score, with boundaries as an answer.
 
+**Family romance fixes.** Asking out or rekindling with a relative asks "are you sure?" first (a general `confirm`
+on actions), and breaking up with one no longer drops them out of Family: they go back to being a sister, with "Sister · Ex"
+on the sheet. Saves made before are repaired when they load.
+
 **Careers, part two (finishing Phase 3).**
 - **Forensic science and behavioral analysis** are tracks of their own. They work real case files: a good year moves a case
   and can close it, a bad one sets it back, and promotion needs the cases you moved.

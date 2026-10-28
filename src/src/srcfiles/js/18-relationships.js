@@ -478,8 +478,20 @@ function askOutOdds(s, p) {
   if (relOf(s, p.id)) odds += (relOf(s, p.id).rel - 50) / 120;
   return clamp(odds, 0.05, 0.95);
 }
+// Asking out a relative is a big step, and one that is easy to do by accident from a long list of people:
+// say who they are first, and let the player back out.
+function familyAskConfirm(s, pid) {
+  const r = relOf(s, pid), p = tgt(s, pid);
+  if (!r || !p) return null;
+  const fam = (typeof isTabooFamily === 'function' && isTabooFamily(s, pid)) || !!r.wasFam;
+  if (!fam) return null;
+  const word = kinTitle(s, pid).split(' · ')[0].toLowerCase();
+  const him = pr(p);
+  return { emoji: '💘', title: `Ask out ${p.first}?`, text: `${p.first} is your ${word}. This is family. Are you sure you want to ask ${him.him} out?`, yes: `Yes, ask ${him.him} out`, no: 'No, never mind' };
+}
 defAction({
   id: 'p_askout', cat: 'person', group: 'romance', target: 'person', label: 'Ask out', emoji: '💘',
+  confirm: (s, pid) => familyAskConfirm(s, pid),
   when: (s, pid) => {
     if (!reachable(s, pid) || relKind(s, pid) === 'boss') return false;
     const p = tgt(s, pid);
@@ -506,17 +518,17 @@ function startRomance(s, pid) {
   // Family romance: still goes through affair/open rules, but only if opted in (48-taboo.js).
   if (typeof isTabooFamily === 'function' && isTabooFamily(s, pid)) {
     if (typeof tabooRomanceAllowed !== 'function' || !tabooRomanceAllowed(s, pid)) return { text: `That's not something you do in this life.`, nolog: true };
-    const origKind = relKind(s, pid);
+    const origKind = relKind(s, pid), origSince = relOf(s, pid) ? relOf(s, pid).since : 0;
     if (current && current !== pid) {
       const out = affairBegins(s, pid, current);
-      if (typeof tabooOnRomanceStart === 'function') tabooOnRomanceStart(s, pid, origKind);
+      if (typeof tabooOnRomanceStart === 'function') tabooOnRomanceStart(s, pid, origKind, origSince);
       return out;
     }
     setRel(s, pid, 'partner', Math.max(relOf(s, pid) ? relOf(s, pid).rel : 55, 60));
     p.partner = P(s).id;
     tally(s, 'partners');
     add(s, { happy: 8 });
-    if (typeof tabooOnRomanceStart === 'function') tabooOnRomanceStart(s, pid, origKind);
+    if (typeof tabooOnRomanceStart === 'function') tabooOnRomanceStart(s, pid, origKind, origSince);
     return { text: `${p.first} said yes! You're dating now. 💕`, tone: 'good', person: pid };
   }
   // Already with someone: an affair, or a second partner in an open relationship (47-romance.js).
@@ -585,10 +597,11 @@ function marry(s, pid) {
   const p = tgt(s, pid);
   const wasTaboo = (typeof isTabooFamily === 'function' && isTabooFamily(s, pid)) || (relOf(s, pid) && relOf(s, pid).taboo);
   const prevTaboo = relOf(s, pid) && relOf(s, pid).taboo;
-  const prevWasFam = relOf(s, pid) && relOf(s, pid).wasFam;
+  const prevWasFam = relOf(s, pid) && relOf(s, pid).wasFam, prevFamSince = relOf(s, pid) && relOf(s, pid).famSince;
   setRel(s, pid, 'spouse');
   if (prevTaboo) relOf(s, pid).taboo = prevTaboo;
   if (prevWasFam) relOf(s, pid).wasFam = prevWasFam;
+  if (prevFamSince) relOf(s, pid).famSince = prevFamSince;
   else if (wasTaboo && typeof tabooTagFor === 'function') {
     const t = tabooTagFor(s, pid);
     if (t) relOf(s, pid).taboo = t;
@@ -634,14 +647,17 @@ function endRomance(s, pid, kind) {
   if (!p) return;
   const prev = relOf(s, pid);
   const prevTaboo = prev && prev.taboo;
-  const prevWasFam = prev && prev.wasFam;
+  const prevWasFam = prev && prev.wasFam, prevFamSince = prev && prev.famSince;
   setRel(s, pid, kind, Math.max(5, relOf(s, pid).rel - 30));
   if (prevTaboo) relOf(s, pid).taboo = prevTaboo;
   if (prevWasFam) relOf(s, pid).wasFam = prevWasFam;
+  if (prevFamSince) relOf(s, pid).famSince = prevFamSince;
   if (p.partner === P(s).id) { p.partner = null; p.married = false; }
   if (P(s).partner === pid) { P(s).partner = null; P(s).married = false; }
   dropInlaws(s, pid); // their family goes with them (45-family.js)
   tally(s, 'breakups');
+  // A relative you dated is still a relative: back to the family list, not "Others" (48-taboo.js).
+  if (prevWasFam && typeof tabooRestoreFamily === 'function') tabooRestoreFamily(s, pid, kind);
 }
 defAction({
   id: 'p_breakup', cat: 'person', group: 'romance', target: 'person', label: 'Break up', emoji: '💔',
@@ -688,6 +704,7 @@ defAction({
 });
 defAction({
   id: 'p_rekindle', cat: 'person', group: 'romance', target: 'person', label: 'Rekindle romance', emoji: '🔥',
+  confirm: (s, pid) => familyAskConfirm(s, pid),
   when: (s, pid) => {
     if (!reachable(s, pid) || !isKind(s, pid, K_EXES) || hasRomance(s) || tgt(s, pid).partner) return false;
     if (typeof isTabooFamily === 'function' && (isTabooFamily(s, pid) || (relOf(s, pid) && relOf(s, pid).wasFam))) {

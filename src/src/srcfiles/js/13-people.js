@@ -177,6 +177,8 @@ function kinTitle(s, pid) {
   if (r.kind === 'teacher' && p.teaches && typeof SUBJECTS !== 'undefined' && SUBJECTS[p.teaches]) return SUBJECTS[p.teaches].name + ' teacher';
   if (r.kind === 'instructor' && p.lesson && typeof LESSON_TYPES !== 'undefined' && LESSON_TYPES[p.lesson]) return LESSON_TYPES[p.lesson].name + ' teacher';
   const base = r.kind === 'inlaw' ? inlawTitle(s, p) : kinLabel(r.kind, p);
+  // A relative you dated and left stays family: "Sister · Ex" (48-taboo.js tabooRestoreFamily).
+  if (r.exRom && isFamilyKind(r.kind)) return base + ' · ' + kinLabel(r.exRom, p);
   // Taboo dual role: "Sister · Girlfriend" instead of losing the blood label.
   try {
     if (r.taboo && typeof bloodKinshipInfo === 'function') {
