@@ -10,21 +10,25 @@
  * While M(G).freeRestyle is set (just turned 18) normal play also unlocks
  * the face and the body once. Bodies only exist for adults (36-looks.js).
  * The draft lives on the sheet's stack entry, so reopening starts fresh.
+ *
+ * Face tabs also have an Adjust panel: move, space, resize and tilt the eyes, brows,
+ * nose, mouth and ears (look.adj, drawn by AVLIB in 1007-ui-art.js). Every colour row ends
+ * in a picker for any colour, and skin has one too (look.skinHex).
  * ===================================================================== */
 
 const LOOK_TABS = [
-  { id: 'hair', label: 'Hair', icon: 'part-hair', crop: 'hair', key: 'hair', colors: 'hairColor' },
+  { id: 'hair', label: 'Hair', icon: 'part-hair', crop: 'hair', key: 'hair', colors: 'hairColor', toggles: [['hairFlip', 'Flip the parting']] },
   { id: 'facial', label: 'Beard', icon: 'part-beard', crop: 'head', key: 'facial', minAge: 16 },
   { id: 'extras', label: 'Extras', icon: 'part-glasses', crop: 'head', extras: true },
   { id: 'outfit', label: 'Top', icon: 'part-shirt', crop: 'bust', key: 'outfit', colors: 'outfitColor' },
   { id: 'bottom', label: 'Bottoms', icon: 'part-pants', bottoms: true, adultOnly: true },
   { id: 'body', label: 'Body', icon: 'part-body', body: true, adultOnly: true },
   { id: 'skin', label: 'Skin', icon: 'part-skin', crop: 'head', key: 'skin', locked: true, toggles: [['freckles', 'Freckles'], ['blush', 'Rosy cheeks']] },
-  { id: 'face', label: 'Face', icon: 'part-face', crop: 'head', key: 'face', locked: true },
-  { id: 'eyes', label: 'Eyes', icon: 'part-eye', crop: 'eyes', key: 'eyes', colors: 'eyeColor', locked: true, toggles: [['lashes', 'Lashes']] },
-  { id: 'brows', label: 'Brows', icon: 'part-brow', crop: 'brows', key: 'brows', locked: true },
-  { id: 'nose', label: 'Nose', icon: 'part-nose', crop: 'nose', key: 'nose', locked: true },
-  { id: 'mouth', label: 'Mouth', icon: 'part-mouth', crop: 'mouth', key: 'mouth', locked: true },
+  { id: 'face', label: 'Face', icon: 'part-face', crop: 'head', key: 'face', locked: true, adj: 'ears' },
+  { id: 'eyes', label: 'Eyes', icon: 'part-eye', crop: 'eyes', key: 'eyes', colors: 'eyeColor', locked: true, toggles: [['lashes', 'Lashes']], adj: 'eyes' },
+  { id: 'brows', label: 'Brows', icon: 'part-brow', crop: 'brows', key: 'brows', locked: true, adj: 'brows' },
+  { id: 'nose', label: 'Nose', icon: 'part-nose', crop: 'nose', key: 'nose', locked: true, adj: 'nose' },
+  { id: 'mouth', label: 'Mouth', icon: 'part-mouth', crop: 'mouth', key: 'mouth', locked: true, adj: 'mouth' },
 ];
 const LOOK_NAMES = {
   crop: 'Short crop', sidepart: 'Side part', fade: 'High fade', curtains: 'Curtain bangs', slick: 'Slicked back', buzz: 'Buzz cut', curls: 'Curls', afro: 'Afro', locs: 'Locs', pixie: 'Pixie', bob: 'Bob', shoulder: 'Shoulder lob', wolf: 'Wolf cut', long: 'Long', wavy: 'Wavy', ponytail: 'Ponytail', twintails: 'Twin tails', bun: 'Top bun', spacebuns: 'Space buns', braids: 'Braids', receding: 'Receding', bald: 'Bald',
@@ -48,6 +52,29 @@ function lookName(key, v) {
 const HAIR_HEX = { black: '#1F1B1E', espresso: '#3B2519', brown: '#6A4129', chestnut: '#8A4A2B', auburn: '#9E3E22', ginger: '#CF6D33', honey: '#C8924A', blonde: '#E4C077', platinum: '#EFE4CB', grey: '#A9A6A4', white: '#ECEAE6', rose: '#E58FB2', teal: '#38ABA4', violet: '#7A5BD8' };
 const EYE_HEX = { brown: '#5B3920', dark: '#2E1E14', hazel: '#87662D', green: '#4B8A4D', blue: '#3B78C2', grey: '#7B8B98', amber: '#A9692A' };
 const SKIN_HEX = ['#FCE5D5', '#F5D0B5', '#E9BB94', '#D7A072', '#BD8253', '#9A6340', '#734629', '#4F2F1C'];
+// Adjust panel: slider names and steps. Ranges come from AVLIB.ADJ.
+const ADJ_TITLES = { eyes: 'Adjust the eyes', brows: 'Adjust the brows', nose: 'Adjust the nose', mouth: 'Adjust the mouth', ears: 'Adjust the ears' };
+const ADJ_LABELS = { y: 'Height', g: 'Spacing', s: 'Size', w: 'Width', r: 'Tilt' };
+const ADJ_STEP = { y: 0.5, g: 0.5, s: 0.01, w: 0.01, r: 0.1 };
+function adjText(f, k, v) {
+  if (k === 's' || k === 'w') return Math.round(v * 100) + '%';
+  if (k === 'r' && f === 'mouth') return (v > 0 ? '+' : '') + Math.round(v) + '°';
+  return (v > 0 ? '+' : '') + (Math.round(v * 10) / 10);
+}
+// A look with its own copy of the adjustments, so a draft never edits the saved look.
+function copyLook(L) {
+  const out = Object.assign({}, L);
+  if (L.adj) out.adj = JSON.parse(JSON.stringify(L.adj));
+  return out;
+}
+// The preset skin tone nearest a custom colour, which is what children inherit.
+function nearestSkin(hex) {
+  const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const c = rgb(hex);
+  let best = 0, bd = Infinity;
+  SKIN_HEX.forEach((s, i) => { const d = rgb(s).reduce((a, v, j) => a + (v - c[j]) ** 2, 0); if (d < bd) { bd = d; best = i; } });
+  return best;
+}
 const BODY_SLIDERS = [['height', 'Height', 140, 210], ['fat', 'Body fat', 2, 100], ['muscle', 'Muscle', 3, 100], ['chest', 'Chest', 4, 100], ['hips', 'Hips', 8, 100], ['glutes', 'Glutes', 8, 100]];
 
 function lookDraft(arg) {
@@ -56,13 +83,13 @@ function lookDraft(arg) {
   let d;
   if (arg === 'custom') {
     if (!CUSTOM.look) CUSTOM.look = randomLook({ gender: CUSTOM.gender, country: CUSTOM.country }, { age: 0 });
-    d = { target: 'custom', free: true, adult: false, age: null, look: Object.assign({}, CUSTOM.look), body: null, tab: 'hair', view: 'portrait', stage: 'adult' };
+    d = { target: 'custom', free: true, adult: false, age: null, look: copyLook(CUSTOM.look), body: null, tab: 'hair', view: 'portrait', stage: 'adult' };
   } else if (String(arg).startsWith('god:') && G.people[arg.slice(4)]) {
     const pid = arg.slice(4), p = G.people[pid], age = ageOf(G, p), adult = age >= ADULT_AGE;
-    d = { target: 'npc', pid, god: true, free: true, adult, age, look: Object.assign({}, ensureLook(G, p)), body: adult ? Object.assign({}, ensureBody(G, p)) : null, tab: 'hair', view: adult ? 'figure' : 'portrait', stage: null };
+    d = { target: 'npc', pid, god: true, free: true, adult, age, look: copyLook(ensureLook(G, p)), body: adult ? Object.assign({}, ensureBody(G, p)) : null, tab: 'hair', view: adult ? 'figure' : 'portrait', stage: null };
   } else {
     const p = P(G), age = A(G), adult = age >= ADULT_AGE;
-    d = { target: 'player', god: arg === 'god', free: arg === 'god' || !!M(G).freeRestyle, adult, age, look: Object.assign({}, ensureLook(G, p)), body: adult ? Object.assign({}, ensureBody(G, p)) : null, tab: 'hair', view: adult ? 'figure' : 'portrait', stage: null };
+    d = { target: 'player', god: arg === 'god', free: arg === 'god' || !!M(G).freeRestyle, adult, age, look: copyLook(ensureLook(G, p)), body: adult ? Object.assign({}, ensureBody(G, p)) : null, tab: 'hair', view: adult ? 'figure' : 'portrait', stage: null };
   }
   if (top) top.draft = d;
   return d;
@@ -109,7 +136,7 @@ SHEETS.look = (arg) => {
     html += `<div class="lk-head"><h3>Shoes</h3></div>${swatches('shoeColor', LOOK_COLORS.shoe.map((c) => [c, c]), L.shoeColor)}`;
   } else {
     const opts = lookOptions(d, tab);
-    const sel = opts.find(([k, v]) => L[k] === v);
+    const sel = tab.key === 'skin' && L.skinHex ? null : opts.find(([k, v]) => L[k] === v);
     html += `<div class="lk-head"><h3>${esc(tab.label)}</h3><span>${sel ? esc(lookName(sel[0], sel[1])) : ''}</span></div>`;
     if (tab.colors) {
       const map = tab.colors === 'hairColor' ? Object.entries(HAIR_HEX) : tab.colors === 'eyeColor' ? Object.entries(EYE_HEX) : LOOK_COLORS.outfit.map((c) => [c, c]);
@@ -117,19 +144,39 @@ SHEETS.look = (arg) => {
     }
     if (tab.toggles) html += `<div class="chips" style="margin-bottom:10px">${tab.toggles.map(([k, l]) => `<button class="chip ${L[k] ? 'on' : ''}" data-a="lkToggle" data-k="${k}" aria-pressed="${!!L[k]}">${l}</button>`).join('')}</div>`;
     if (tab.extras && L.headwear !== 'none') html += swatches('headwearColor', LOOK_COLORS.headwear.map((c) => [c, c]), L.headwearColor);
-    html += `<div class="lk-grid">${opts.map(([k, v]) => {
-      const on = L[k] === v;
-      const prev = Object.assign({}, L, { [k]: v });
-      return `<button class="lk-opt ${on ? 'on' : ''}" data-a="lkSet" data-k="${k}" data-v="${v}" aria-pressed="${on}" title="${esc(lookName(k, v))}">${avatarSVG(prev, { stage: 'adult', crop: tab.crop, frame: 'none', bg: 'transparent', size: 64, label: lookName(k, v) })}${on ? `<span class="ck">${icon('ui-check', 14)}</span>` : ''}</button>`;
-    }).join('')}</div>`;
+    html += `<div class="lk-grid" id="lk-grid">${lookGrid(d, tab)}</div>`;
+    if (tab.key === 'skin') html += `<div class="lk-head"><h3>Any tone</h3>${L.skinHex ? '<span>Custom</span>' : ''}</div>${swatches('skinHex', [], L.skinHex, SKIN_HEX[L.skin] || SKIN_HEX[2])}`;
+    if (tab.extras) html += `<div class="lk-head"><h3>Backdrop</h3></div>${swatches('bg', LOOK_COLORS.bg.map((c) => [c, c]), L.bg)}`;
+    if (tab.adj) html += lookAdjPanel(d, tab.adj);
   }
   if (!d.free && d.target === 'player') html += `<div class="lk-note">${icon('looks', 22)}<span>Face and skin are yours for life. Plastic surgery can change some of it (Activities → Health & Looks).</span></div>`;
   html += `<div class="lk-done"><div class="field-row">${d.free ? `<button class="btn" data-a="lkShuffle" aria-label="Shuffle look">${icon('dice', 26)}</button>` : ''}<button class="btn primary grow" data-a="lkSave">${icon('ui-check', 20)}${d.target === 'custom' ? 'Use this look' : 'Save look'}</button></div></div>`;
   const title = d.target === 'custom' ? 'Appearance' : d.target === 'npc' ? `${G.people[d.pid].first}'s look` : d.god ? 'Edit appearance' : d.free ? 'Your adult look' : 'Your look';
   return { title, html };
 };
-function swatches(key, entries, cur) {
-  return `<div class="lk-sw">${entries.map(([name, hex]) => `<button class="${cur === name ? 'on' : ''}" style="background:${hex}" data-a="lkSet" data-k="${key}" data-v="${esc(name)}" aria-label="${esc(key.endsWith('Color') && name.startsWith('#') ? 'Colour ' + name : cap(name))}" aria-pressed="${cur === name}"></button>`).join('')}</div>`;
+// A row of colour swatches ending in a picker for any other colour.
+function swatches(key, entries, cur, fallback) {
+  const known = entries.some(([name]) => name === cur);
+  const hexOf = known ? entries.find(([name]) => name === cur)[1] : /^#[0-9a-f]{6}$/i.test(cur || '') ? cur : fallback || '#888888';
+  const custom = !!cur && !known;
+  return `<div class="lk-sw">${entries.map(([name, hex]) => `<button class="${cur === name ? 'on' : ''}" style="background:${hex}" data-a="lkSet" data-k="${key}" data-v="${esc(name)}" aria-label="${esc(key.endsWith('Color') && name.startsWith('#') ? 'Colour ' + name : cap(name))}" aria-pressed="${cur === name}"></button>`).join('')}<label class="lk-custom ${custom ? 'on' : ''}" title="Pick any colour"${custom ? ` style="background:${hexOf}"` : ''}><input type="color" value="${hexOf}" data-in="lkColor" data-k="${key}" aria-label="Pick any colour"></label></div>`;
+}
+function lookGrid(d, tab) {
+  const L = d.look;
+  return lookOptions(d, tab).map(([k, v]) => {
+    const on = L[k] === v && !(k === 'skin' && L.skinHex);
+    const prev = Object.assign({}, L, { [k]: v }, k === 'skin' ? { skinHex: null } : {});
+    return `<button class="lk-opt ${on ? 'on' : ''}" data-a="lkSet" data-k="${k}" data-v="${v}" aria-pressed="${on}" title="${esc(lookName(k, v))}">${avatarSVG(prev, { stage: 'adult', crop: tab.crop, frame: 'none', bg: 'transparent', size: 64, label: lookName(k, v) })}${on ? `<span class="ck">${icon('ui-check', 14)}</span>` : ''}</button>`;
+  }).join('');
+}
+function lookAdjPanel(d, f) {
+  const cur = AVLIB.adjOf(d.look)[f], ranges = AVLIB.ADJ[f];
+  const changed = Object.keys(ranges).some((k) => cur[k] !== ranges[k][2]);
+  return `<div class="lk-head"><h3>${ADJ_TITLES[f]}</h3><button class="chip" data-a="lkAdjReset" data-f="${f}"${changed ? '' : ' disabled'}>Reset</button></div>
+    <div class="card" style="padding:8px 14px">${Object.keys(ranges).map((k) => {
+      const [lo, hi] = ranges[k], step = f === 'mouth' && k === 'r' ? 0.5 : ADJ_STEP[k];
+      return `<div class="lk-slider"><span>${ADJ_LABELS[k]}</span><input type="range" min="${lo}" max="${hi}" step="${step}" value="${cur[k]}" data-in="lkAdj" data-f="${f}" data-k="${k}" aria-label="${esc(ADJ_TITLES[f].replace('Adjust the ', '') + ' ' + ADJ_LABELS[k].toLowerCase())}"><b id="lka-${f}-${k}">${adjText(f, k, cur[k])}</b></div>`;
+    }).join('')}</div>`;
 }
 function lookBodyPanel(d) {
   const b = d.body;
@@ -154,6 +201,7 @@ CLICK.lkSet = (el, ds) => {
   const d = curDraft();
   if (!d) return;
   const v = ds.k === 'skin' ? Number(ds.v) : ds.v;
+  if (ds.k === 'skin') d.look.skinHex = null;
   // Headwear and earrings toggle off when tapped again.
   d.look[ds.k] = (ds.k === 'headwear' || ds.k === 'earrings') && d.look[ds.k] === v ? 'none' : v;
   if (ds.k === 'headwear' && v === 'beanie' && d.look.hair === 'bald') d.look.hair = 'crop';
@@ -167,6 +215,44 @@ CLICK.lkShuffle = () => {
   d.look = Object.assign(randomLook(who, { age: d.age ?? 0 }), { bg: d.look.bg });
   renderSheet();
 };
+// Redraw the preview at once; the option thumbnails catch up when the slider rests.
+let lookThumbTimer = 0;
+function lookLivePreview(d) {
+  const pv = $('#lk-preview');
+  if (pv) pv.innerHTML = lookPreview(d);
+  clearTimeout(lookThumbTimer);
+  lookThumbTimer = setTimeout(() => {
+    const g = $('#lk-grid'), tab = lookTabs(d).find((t) => t.id === d.tab);
+    if (g && tab && !tab.body && !tab.bottoms) g.innerHTML = lookGrid(d, tab);
+  }, 220);
+}
+INPUT.lkAdj = (el, ds) => {
+  const d = curDraft();
+  if (!d || !d.free) return;
+  const adj = d.look.adj || (d.look.adj = {});
+  adj[ds.f] = Object.assign({}, adj[ds.f], { [ds.k]: Number(el.value) });
+  const v = $(`#lka-${ds.f}-${ds.k}`);
+  if (v) v.textContent = adjText(ds.f, ds.k, Number(el.value));
+  const reset = $(`[data-a="lkAdjReset"][data-f="${ds.f}"]`);
+  if (reset) reset.disabled = false;
+  lookLivePreview(d);
+};
+CLICK.lkAdjReset = (el, ds) => {
+  const d = curDraft();
+  if (!d || !d.look.adj) return;
+  delete d.look.adj[ds.f];
+  if (!Object.keys(d.look.adj).length) delete d.look.adj;
+  renderSheet();
+};
+INPUT.lkColor = (el, ds) => {
+  const d = curDraft();
+  if (!d) return;
+  if (ds.k === 'skinHex') { if (!d.free) return; d.look.skinHex = el.value; d.look.skin = nearestSkin(el.value); }
+  else d.look[ds.k] = el.value;
+  const row = el.closest('.lk-sw');
+  if (row) { row.querySelectorAll('button.on').forEach((b) => { b.classList.remove('on'); b.setAttribute('aria-pressed', 'false'); }); el.parentElement.classList.add('on'); el.parentElement.style.background = el.value; }
+  lookLivePreview(d);
+};
 INPUT.lkBody = (el, ds) => {
   const d = curDraft();
   if (!d || !d.free || !d.body) return;
@@ -179,10 +265,10 @@ INPUT.lkBody = (el, ds) => {
 CLICK.lkSave = () => {
   const d = curDraft();
   if (!d) return;
-  if (d.target === 'custom') { CUSTOM.look = Object.assign({}, d.look); CUSTOM.lookSaved = true; backSheet(); return; }
+  if (d.target === 'custom') { CUSTOM.look = copyLook(d.look); CUSTOM.lookSaved = true; backSheet(); return; }
   const p = d.target === 'npc' ? G.people[d.pid] : P(G);
   if (!p) return;
-  p.look = Object.assign({}, d.look);
+  p.look = copyLook(d.look);
   if (d.free && d.body && p.body) {
     for (const [k] of BODY_SLIDERS) p.body[k] = Math.round(d.body[k]);
     // A designed body becomes your baseline, so the yearly drift doesn't undo it.

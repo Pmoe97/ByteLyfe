@@ -67,6 +67,38 @@ const AVLIB = (() => {
   const VIEWS = { bust: '0 0 200 200', head: '34 22 132 132', hair: '18 8 164 164', eyes: '66 64 68 68', brows: '66 58 68 68', nose: '74 86 52 52', mouth: '76 104 48 48' };
   const DEFAULT = { skin: 2, face: 'oval', hair: 'crop', hairColor: 'brown', eyes: 'almond', eyeColor: 'brown', brows: 'natural', nose: 'soft', mouth: 'smile', facial: 'none', glasses: 'none', headwear: 'none', earrings: 'none', outfit: 'tee', outfitColor: '#6C8CFF', build: 'regular', freckles: false, blush: false, lashes: false, bg: '#DCD6F7' };
 
+  // Feature adjustments from the appearance editor (look.adj): move, space, resize and tilt.
+  // y is "up" as the player sees it; g spreads a pair apart; s and w scale; r tilts (eyes: outer
+  // corners up, brows: inner ends down, mouth: degrees). Clamped on every draw so an old or
+  // hand-edited save can't pull a face apart.
+  const ADJ = {
+    eyes: { y: [-8, 8, 0], g: [-4, 5, 0], s: [0.8, 1.25, 1], r: [-3, 3, 0] },
+    brows: { y: [-8, 8, 0], g: [-5, 5, 0], s: [0.75, 1.35, 1], r: [-4, 4, 0] },
+    nose: { y: [-8, 8, 0], s: [0.8, 1.3, 1], w: [0.8, 1.3, 1] },
+    mouth: { y: [-8, 8, 0], s: [0.8, 1.3, 1], w: [0.8, 1.3, 1], r: [-10, 10, 0] },
+    ears: { y: [-8, 8, 0], s: [0.8, 1.3, 1] },
+  };
+  const adjOf = (look) => {
+    const out = {};
+    for (const f in ADJ) {
+      const a = (look && look.adj && look.adj[f]) || {};
+      out[f] = {};
+      for (const k in ADJ[f]) {
+        const [lo, hi, d] = ADJ[f][k], v = a[k] == null ? d : +a[k];
+        out[f][k] = Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d;
+      }
+    }
+    return out;
+  };
+  // A transform that scales (sx, sy) and turns (deg) about (cx, cy), then moves up by `up`; '' when it does nothing.
+  const about = (cx, cy, up, sx, sy, deg) => {
+    const t = [];
+    if (up) t.push(`translate(0 ${n(-up)})`);
+    if (deg) t.push(`rotate(${n(deg)} ${cx} ${cy})`);
+    if (sx !== 1 || sy !== 1) t.push(`translate(${cx} ${cy}) scale(${n(sx)} ${n(sy)}) translate(${-cx} ${-cy})`);
+    return t.join(' ');
+  };
+
   const stageOf = (age) => (age == null || age === '' ? 'adult' : age < 3 ? 'baby' : age < 13 ? 'child' : age < 20 ? 'teen' : age < 60 ? 'adult' : 'senior');
 
   const eyeGeo = (k, cx, cy, s, sc) => {
@@ -148,8 +180,11 @@ const AVLIB = (() => {
       { d: 'M76 56 C82 42 92 35 100 34 M90 55 C96 41 104 35 112 36 M106 56 C114 43 122 39 128 42', s: c.shade, w: 1.4, o: 0.5 },
       { d: 'M80 43 C94 37 110 37 124 44', s: c.hi, w: 2.8, o: 0.58 },
     ] }),
+    // The cap and the curls are separate layers: they wind in opposite directions, so as one
+    // path their overlaps cancelled out and left holes showing the face and forehead.
     curls: (c) => ({ front: [
-      { d: 'M58.5 92 C58.5 68 76 50 100 50 C124 50 141.5 68 141.5 92 C138 82 131 76 123 73.5 C115 71 107 72 100 71.5 C93 72 85 71 77 73.5 C69 76 62 82 58.5 92 Z ' + curlBlobs.map(([x, y, r]) => circ(x, y, r)).join(' '), f: c.base },
+      { d: 'M58.5 92 C58.5 68 76 50 100 50 C124 50 141.5 68 141.5 92 C138 82 131 76 123 73.5 C115 71 107 72 100 71.5 C93 72 85 71 77 73.5 C69 76 62 82 58.5 92 Z', f: c.base },
+      { d: curlBlobs.map(([x, y, r]) => circ(x, y, r)).join(' '), f: c.base },
       { d: curlMarks(curlBlobs), s: c.shade, w: 1.6, o: 0.6 },
       { d: curlMarks([[74, 52, 12], [88, 43.5, 12.5], [100, 41, 13]]), s: c.hi, w: 1.8, o: 0.55, t2: 'translate(-1.5 -3)' },
     ] }),
@@ -373,9 +408,10 @@ const AVLIB = (() => {
 
   function build(look, stage, mood, ids, forFigure) {
     const L = Object.assign({}, DEFAULT, look || {});
+    const AJ = adjOf(L), hexOk = (h) => typeof h === 'string' && /^#[0-9a-f]{6}$/i.test(h);
     const st = STAGE[stage] || STAGE.adult;
     const baby = stage === 'baby', kid = baby || stage === 'child';
-    const base = typeof L.skin === 'string' ? L.skin : SKIN[Math.max(0, Math.min(7, L.skin | 0))];
+    const base = hexOk(L.skinHex) ? L.skinHex : typeof L.skin === 'string' ? L.skin : SKIN[Math.max(0, Math.min(7, L.skin | 0))];
     const sk = { base, shade: mix(base, '#6B2E1E', 0.22), deep: mix(base, '#3A140A', 0.45), blush: mix(base, '#F0506E', 0.42), lip: mix(base, '#B8405A', 0.42), lipDark: mix(base, '#4A1420', 0.6), hi: mix(base, '#FFFFFF', 0.32) };
     let hairBase = HAIR[L.hairColor] || L.hairColor || HAIR.brown;
     if (stage === 'senior' && !['grey', 'white', 'platinum'].includes(L.hairColor)) hairBase = mix(hairBase, '#B9B6B3', 0.72);
@@ -407,6 +443,7 @@ const AVLIB = (() => {
     const faceD = FACES[faceK];
     const hijab = headwear === 'hijab';
     const hair = hijab ? {} : HAIRSTYLES[hairK](hc, sk, !!forFigure);
+    if (L.hairFlip) for (const k of ['back', 'front']) if (hair[k]) hair[k] = hair[k].map((l) => Object.assign({}, l, { t2: ['translate(200 0) scale(-1 1)', l.t2].filter(Boolean).join(' ') }));
     const fclip = `url(#${ids.face})`, eclip = `url(#${ids.eyes})`;
 
     // back of head, body, clothes
@@ -422,8 +459,10 @@ const AVLIB = (() => {
 
     // head with subtle cheek highlight & jawline sculpting
     H('face', [
-      { d: both(EAR), f: sk.base, s: sk.shade, w: 0.9 },
-      { d: both(EAR_IN), s: sk.shade, w: 1.6 },
+      { d: EAR, f: sk.base, s: sk.shade, w: 0.9, t2: about(57, 102, AJ.ears.y, AJ.ears.s, AJ.ears.s, 0) },
+      { d: mirror(EAR), f: sk.base, s: sk.shade, w: 0.9, t2: about(143, 102, AJ.ears.y, AJ.ears.s, AJ.ears.s, 0) },
+      { d: EAR_IN, s: sk.shade, w: 1.6, t2: about(57, 102, AJ.ears.y, AJ.ears.s, AJ.ears.s, 0) },
+      { d: mirror(EAR_IN), s: sk.shade, w: 1.6, t2: about(143, 102, AJ.ears.y, AJ.ears.s, AJ.ears.s, 0) },
       { d: 'M86.5 134 C92 145 108 145 113.5 134 L113.5 149 C108 155 92 155 86.5 149 Z', f: sk.shade, o: 0.52 },
       { d: faceD, f: sk.base, s: sk.shade, w: 0.9 },
       { d: 'M128 50 C142 66 144 108 128 134 C120 146 110 152 100 153 L156 153 L156 50 Z', f: sk.shade, o: 0.15, c: fclip },
@@ -450,22 +489,28 @@ const AVLIB = (() => {
       { d: 'M70 118 C72 128 76 136 82 142', s: hc.hi, w: 1.8, o: 0.4 },
     ]);
     if (facialK === 'goatee') H('features', [{ d: 'M88 134 C88 144 94 150 100 150 C106 150 112 144 112 134 C108 137 104 138 100 138 C96 138 92 137 88 134 Z', f: fh, c: fclip }]);
-    H('features', MOUTHS[mouthK](sk));
-    if (['mustache', 'goatee', 'full', 'beard'].includes(facialK)) H('features', [{ d: 'M86 126.5 C89.5 120.5 96 119.5 100 122 C104 119.5 110.5 120.5 114 126.5 C110 125 105 124.6 100 125.2 C95 124.6 90 125 86 126.5 Z', f: fh }]);
-    H('features', NOSES[noseK](sk));
+    const moved = (arr, t2) => (t2 ? arr.map((l) => Object.assign({}, l, { t2: [t2, l.t2].filter(Boolean).join(' ') })) : arr);
+    const am = AJ.mouth, an = AJ.nose;
+    H('features', moved(MOUTHS[mouthK](sk), about(100, 129, am.y, am.w * am.s, am.s, am.r)));
+    if (['mustache', 'goatee', 'full', 'beard'].includes(facialK)) H('features', moved([{ d: 'M86 126.5 C89.5 120.5 96 119.5 100 122 C104 119.5 110.5 120.5 114 126.5 C110 125 105 124.6 100 125.2 C95 124.6 90 125 86 126.5 Z', f: fh }], about(100, 124, am.y * 0.7, 1, 1, 0)));
+    H('features', moved(NOSES[noseK](sk), about(100, 112, an.y, an.w * an.s, an.s, 0)));
 
     // eyes with upper sclera shadow & iris luminance
-    const sc = st.eye;
-    const eL = eyeGeo(EYES[eyeK], 84, 99, 1, sc), eR = eyeGeo(EYES[eyeK], 116, 99, -1, sc);
-    const ir = st.iris, line = '#2A1C17';
+    const ae = AJ.eyes, sc = st.eye * ae.s;
+    const exL = 84 - ae.g, exR = 116 + ae.g, ey = 99 - ae.y;
+    const ek = Object.assign({}, EYES[eyeK], { tilt: EYES[eyeK].tilt + ae.r });
+    const eL = eyeGeo(ek, exL, ey, 1, sc), eR = eyeGeo(ek, exR, ey, -1, sc);
+    const ir = st.iris * ae.s, line = '#2A1C17';
+    // irises sit a touch toward the nose (mirrored); glints are lit from the same side in both eyes
+    const two = (dx, dy, r, glint) => circ(exL + dx, ey + dy, r) + ' ' + circ(glint ? exR + dx - 0.6 : exR - dx, ey + dy, r);
     const eyes = [
       { d: eL.full + ' ' + eR.full, f: '#FBF7F2' },
-      { d: 'M68 92 H132 V97.5 H68 Z', f: '#E4DCD5', o: 0.65, c: eclip },
-      { d: circ(84.3, 99.3, ir) + ' ' + circ(115.7, 99.3, ir), f: eyeC, c: eclip },
-      { d: circ(84.3, 99.3, ir) + ' ' + circ(115.7, 99.3, ir), s: mix(eyeC, '#000000', 0.45), w: 0.85, c: eclip },
-      { d: circ(84.3, 99.3, ir * 0.46) + ' ' + circ(115.7, 99.3, ir * 0.46), f: '#17100E', c: eclip },
-      { d: circ(82.9, 97.6, ir * 0.28) + ' ' + circ(114.3, 97.6, ir * 0.28), f: '#FFFFFF', c: eclip },
-      { d: circ(85.8, 100.8, ir * 0.13) + ' ' + circ(117.2, 100.8, ir * 0.13), f: '#FFFFFF', o: 0.85, c: eclip },
+      { d: `M${n(exL - 16)} ${n(ey - 7 * ae.s)} H${n(exR + 16)} V${n(ey - 1.5 * ae.s)} H${n(exL - 16)} Z`, f: '#E4DCD5', o: 0.65, c: eclip },
+      { d: two(0.3, 0.3, ir), f: eyeC, c: eclip },
+      { d: two(0.3, 0.3, ir), s: mix(eyeC, '#000000', 0.45), w: 0.85, c: eclip },
+      { d: two(0.3, 0.3, ir * 0.46), f: '#17100E', c: eclip },
+      { d: two(-1.1, -1.4, ir * 0.28, true), f: '#FFFFFF', c: eclip },
+      { d: two(1.8, 1.8, ir * 0.13, true), f: '#FFFFFF', o: 0.85, c: eclip },
       { d: eL.upper + ' ' + eR.upper, s: line, w: 1.9 },
       { d: eL.lower + ' ' + eR.lower, s: sk.shade, w: 1.05, o: 0.65 },
     ];
@@ -475,42 +520,43 @@ const AVLIB = (() => {
     H('features', eyes);
 
     // brows
-    const bk = BROWS[L.brows] || BROWS.natural;
-    H('features', [{ d: browGeo(bk, 84, 87, 1, lift) + ' ' + browGeo(bk, 116, 87, -1, lift), f: browC, o: baby ? 0.3 : stage === 'child' ? 0.75 : 1 }]);
+    const ab = AJ.brows, b0 = BROWS[L.brows] || BROWS.natural;
+    const bk = Object.assign({}, b0, { len: b0.len * ab.s, arch: b0.arch * ab.s, th: b0.th * ab.s, tilt: b0.tilt + ab.r });
+    H('features', [{ d: browGeo(bk, 84 - ab.g, 87 - ab.y, 1, lift) + ' ' + browGeo(bk, 116 + ab.g, 87 - ab.y, -1, lift), f: browC, o: baby ? 0.3 : stage === 'child' ? 0.75 : 1 }]);
 
     // earrings & glasses
-    if (L.earrings === 'studs' && !hijab && !baby) H('extras', [{ d: circ(55.5, 113.5, 2.3) + ' ' + circ(144.5, 113.5, 2.3), f: GOLD }]);
-    if (L.earrings === 'hoops' && !hijab && !baby) H('extras', [{ d: circ(55.5, 118.5, 4.3) + ' ' + circ(144.5, 118.5, 4.3), s: GOLD, w: 1.8 }]);
-    if (L.earrings === 'drops' && !hijab && !baby) H('extras', [
+    if (L.earrings === 'studs' && !hijab && !baby) H('extras', moved([{ d: circ(55.5, 113.5, 2.3) + ' ' + circ(144.5, 113.5, 2.3), f: GOLD }], about(100, 0, AJ.ears.y - 11.5 * (AJ.ears.s - 1), 1, 1, 0)));
+    if (L.earrings === 'hoops' && !hijab && !baby) H('extras', moved([{ d: circ(55.5, 118.5, 4.3) + ' ' + circ(144.5, 118.5, 4.3), s: GOLD, w: 1.8 }], about(100, 0, AJ.ears.y - 11.5 * (AJ.ears.s - 1), 1, 1, 0)));
+    if (L.earrings === 'drops' && !hijab && !baby) H('extras', moved([
       { d: 'M55.5 113.5 V117 M144.5 113.5 V117', s: GOLD, w: 1.4 },
       { d: 'M55.5 116 C52.5 120 53 124 55.5 124.5 C58 124 58.5 120 55.5 116 Z M144.5 116 C141.5 120 142 124 144.5 124.5 C147 124 147.5 120 144.5 116 Z', f: '#E35D7A', s: GOLD, w: 1 },
-    ]);
-    if (L.earrings === 'pearls' && !hijab && !baby) H('extras', [
+    ], about(100, 0, AJ.ears.y - 11.5 * (AJ.ears.s - 1), 1, 1, 0)));
+    if (L.earrings === 'pearls' && !hijab && !baby) H('extras', moved([
       { d: circ(55.5, 114.5, 2.8) + ' ' + circ(144.5, 114.5, 2.8), f: '#FBF7F2', s: '#D8D2C5', w: 0.8 },
       { d: circ(54.8, 113.6, 0.9) + ' ' + circ(143.8, 113.6, 0.9), f: '#FFFFFF' },
-    ]);
+    ], about(100, 0, AJ.ears.y - 11.5 * (AJ.ears.s - 1), 1, 1, 0)));
     const gc = L.glassesColor || '#2A2140';
-    if (L.glasses === 'round' && !baby) H('extras', [
+    if (L.glasses === 'round' && !baby) H('extras', moved([
       { d: circ(84, 99, 10) + ' ' + circ(116, 99, 10), f: '#FFFFFF', o: 0.14 },
       { d: circ(84, 99, 10) + ' ' + circ(116, 99, 10) + ' M94 98 C97 95.5 103 95.5 106 98 M74 97 L62 94 M126 97 L138 94', s: gc, w: 2.2 },
-    ]);
-    if (L.glasses === 'square' && !baby) H('extras', [
+    ], about(100, 99, AJ.eyes.y, (16 + AJ.eyes.g) / 16, 1, 0)));
+    if (L.glasses === 'square' && !baby) H('extras', moved([
       { d: rr(72.5, 90.5, 23, 17, 4.5) + ' ' + rr(104.5, 90.5, 23, 17, 4.5), f: '#FFFFFF', o: 0.14 },
       { d: rr(72.5, 90.5, 23, 17, 4.5) + ' ' + rr(104.5, 90.5, 23, 17, 4.5) + ' M95.5 97 C98 95.5 102 95.5 104.5 97 M72.5 96 L62 94 M127.5 96 L138 94', s: gc, w: 2.4 },
-    ]);
-    if (L.glasses === 'aviator' && !baby) H('extras', [
+    ], about(100, 99, AJ.eyes.y, (16 + AJ.eyes.g) / 16, 1, 0)));
+    if (L.glasses === 'aviator' && !baby) H('extras', moved([
       { d: both('M72 91 H95 C96 98 93 108 84 109 C74 109 70 100 72 91 Z'), f: '#3B78C2', o: 0.22 },
       { d: both('M72 91 H95 C96 98 93 108 84 109 C74 109 70 100 72 91 Z') + ' M95 92 H105 M95 95.5 H105 M72 93 L62 94 M128 93 L138 94', s: '#D4A843', w: 1.9 },
-    ]);
-    if (L.glasses === 'cateye' && !baby) H('extras', [
+    ], about(100, 99, AJ.eyes.y, (16 + AJ.eyes.g) / 16, 1, 0)));
+    if (L.glasses === 'cateye' && !baby) H('extras', moved([
       { d: both('M70 91 C76 89 91 91 95 95 C95 103 89 107 82 107 C74 107 70 100 70 91 Z'), f: '#FFFFFF', o: 0.14 },
       { d: both('M70 91 C76 89 91 91 95 95 C95 103 89 107 82 107 C74 107 70 100 70 91 Z') + ' M95 96 Q100 94 105 96 M70 93 L62 95 M130 93 L138 95', s: '#7A2E3A', w: 2.4 },
-    ]);
-    if (L.glasses === 'sunglasses' && !baby) H('extras', [
+    ], about(100, 99, AJ.eyes.y, (16 + AJ.eyes.g) / 16, 1, 0)));
+    if (L.glasses === 'sunglasses' && !baby) H('extras', moved([
       { d: rr(71.5, 90, 24, 17.5, 4) + ' ' + rr(104.5, 90, 24, 17.5, 4), f: '#1E192B', o: 0.88 },
       { d: 'M76 93 L82 104 M109 93 L115 104', s: '#FFFFFF', w: 1.8, o: 0.35 },
       { d: rr(71.5, 90, 24, 17.5, 4) + ' ' + rr(104.5, 90, 24, 17.5, 4) + ' M95.5 95 H104.5 M71.5 94 L62 93 M128.5 94 L138 93', s: gc, w: 2.5 },
-    ]);
+    ], about(100, 99, AJ.eyes.y, (16 + AJ.eyes.g) / 16, 1, 0)));
 
     // hair & headwear
     if (hair.front) H('hair', hair.front);
@@ -560,7 +606,7 @@ const AVLIB = (() => {
     return { layers: out, faceD, eyeClip: eL.full + ' ' + eR.full, sk, hc, cc, stage };
   }
 
-  return { build, stageOf, VIEWS, DEFAULT, mix, circ, ell, rr, n, lum };
+  return { build, stageOf, VIEWS, DEFAULT, ADJ, adjOf, mix, circ, ell, rr, n, lum };
 })();
 
 const ICLIB = (() => {
