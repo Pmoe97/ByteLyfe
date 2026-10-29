@@ -94,6 +94,7 @@ function makeWar(s, cc) {
   return { id: uid(s, 'w'), cc, name: pick(WAR_NAMES)(foeAdj, noun), foe, foeAdj, theater, start: s.year, intensity, momentum: 0, draft: false, dead: randInt(20, 120) * intensity };
 }
 function warYear(s) {
+  if (historyWarYear(s)) return; // the real wars of 1900 to 2025 come from the history table (88-world.js)
   const cc = P(s).country, st = warSlot(s, cc), W = warBook(s);
   let w = st.war;
   if (!w) {
@@ -117,11 +118,11 @@ function endWar(s, st, w) {
   const result = w.momentum >= 2 ? 'victory' : w.momentum <= -2 ? 'defeat' : 'ceasefire';
   w.result = result;
   const W = warBook(s);
-  W.log.push({ name: w.name, cc: w.cc, foe: w.foe, foeAdj: w.foeAdj, start: w.start, end: s.year, result, intensity: w.intensity, dead: w.dead });
+  W.log.push({ name: w.name, cc: w.cc, foe: w.foe, foeAdj: w.foeAdj, start: w.start, end: s.year, result, intensity: w.intensity, dead: w.dead, hid: w.hid || null });
   st.war = null;
   st.quiet = 0;
-  const text = { victory: `${cap(w.name)} ended in victory after ${nOf(s.year - w.start, 'year')}. There were parades in the capital.`, defeat: `${cap(w.name)} ended in defeat after ${nOf(s.year - w.start, 'year')}. The country is in mourning.`, ceasefire: `${cap(w.name)} ended in a ceasefire after ${nOf(s.year - w.start, 'year')}. Nobody quite won.` }[result];
-  announce(s, { emoji: result === 'defeat' ? '🏳️' : '🕊️', title: 'The war is over', tone: result === 'defeat' ? 'bad' : 'good', text, log: '🕊️ ' + text });
+  const text = w.endText || { victory: `${cap(w.name)} ended in victory after ${nOf(s.year - w.start, 'year')}. There were parades in the capital.`, defeat: `${cap(w.name)} ended in defeat after ${nOf(s.year - w.start, 'year')}. The country is in mourning.`, ceasefire: `${cap(w.name)} ended in a ceasefire after ${nOf(s.year - w.start, 'year')}. Nobody quite won.` }[result];
+  announce(s, { emoji: result === 'defeat' ? '🏳️' : '🕊️', title: w.peace ? 'The call-up ends' : 'The war is over', tone: result === 'defeat' ? 'bad' : 'good', text, log: '🕊️ ' + text });
   add(s, { happy: result === 'defeat' ? -3 : 3 });
   const m = M(s);
   if (m.warBonds) {
@@ -468,14 +469,19 @@ onChoice('milMoment', (s, ctx, i) => {
 /* ---- the draft ------------------------------------------------------------------------- */
 function deferEligible(s) { return inSchool(s) || dependents(s).length > 0 || P(s).stats.health < 35 || knownDiseases(s).length >= 2; }
 function draftYear(s, w) {
-  const m = M(s), a = A(s);
-  if (!w || !w.draft || a < 18 || a > 30 || inService(s) || inPrison(s) || (mil(s) && (mil(s).vet || mil(s).deserter))) return;
+  const m = M(s), a = A(s), ages = (w && w.draftAges) || [18, 30]; // a real war names its own ages, and calls up men (88-world.js)
+  if (!w || !w.draft || a < ages[0] || a > ages[1] || !histDraftsMe(s, w) || inService(s) || inPrison(s) || (mil(s) && (mil(s).vet || mil(s).deserter))) return;
+  if (w.lottery && s.year >= (w.lottery.from || 0)) return lotteryYear(s, w); // a draw by birthday, not a roll (88-world.js)
   if (m.flags['draft_' + w.id] || isMonarch(s, P(s)) || !chance(0.5)) return;
   m.flags['draft_' + w.id] = s.year;
+  draftNotice(s, w, '');
+}
+// The letter, and the five things anyone can do about it. `lead` opens it ("Your number in the lottery was 73. ").
+function draftNotice(s, w, lead) {
   popup(s, {
-    emoji: '📜', title: 'Draft notice', text: `A letter from the ministry of defense: you have been selected for service in ${w.name}. You must report in thirty days.`, handler: 'milDraft', ctx: { wid: w.id },
+    emoji: '📜', title: 'Draft notice', text: `${lead}${w.peace ? 'The brown envelope has come. ' : ''}A letter from the ministry of defense: you have been selected for service in ${w.name}. You must report in thirty days.`, handler: 'milDraft', ctx: { wid: w.id },
     choices: [
-      { label: 'Report for duty', value: 'report', sub: 'Two years, or until the war ends' },
+      { label: 'Report for duty', value: 'report', sub: w.peace ? 'Two years of service' : 'Two years, or until the war ends' },
       { label: 'Claim a deferment', value: 'defer', sub: deferEligible(s) ? 'You qualify' : 'You probably will not qualify' },
       { label: 'Apply as a conscientious objector', value: 'co', sub: 'A board decides whether you are sincere' },
       { label: 'Flee the country', value: 'flee', tone: 'bad', sub: 'Your family will not forgive you easily' },

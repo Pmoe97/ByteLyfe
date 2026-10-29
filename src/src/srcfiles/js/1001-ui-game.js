@@ -24,6 +24,7 @@ SCREENS.game = () => {
       <button class="g-chip money" data-a="sheet" data-k="finance" aria-label="Bank balance, open finances">${icon('coin', 28)}<b class="${neg ? 'neg' : ''}">${fmtMoney(m.money)}</b></button>
       <button class="g-chip" data-a="sheet" data-k="profile" aria-label="Country: ${esc(C.name)}">${icon('globe', 22)}<span>${esc(C.name)}</span></button>
       ${G.gen > 1 ? `<button class="g-chip" data-a="sheet" data-k="lineage" aria-label="Family line, generation ${G.gen}">${icon('tree', 22)}<span>Gen ${G.gen}</span></button>` : ''}
+      ${worldChip()}
     </div>
   </header>
   <main class="g-log scroll" id="log">${renderLog()}</main>
@@ -93,6 +94,7 @@ SCREENS.death = () => {
       <div class="muted">Died ${esc(deathPhrase(rec.cause))}</div>
       <div class="ttl">${icon('laurel', 26)}${esc(rec.title)}</div>
       <div class="epi">“${esc(rec.epitaph)}”</div>
+      ${rec.lived && rec.lived.length ? `<div class="muted" style="margin-top:6px">Lived through ${esc(listJoin(rec.lived.filter((id) => HIST[id]).map((id) => HIST[id].emoji + ' ' + HIST[id].name)))}</div>` : ''}
     </section>
     <section class="facts" aria-label="Life summary">
       ${fact('piggy', 'Net worth', fmtMoneyShort(rec.worth))}

@@ -16,6 +16,7 @@ EV('sr_fall', {
   auto: (s) => { if (chance(0.3)) { getSick(s, chance(0.5) ? 'broken_leg' : 'broken_arm'); return 'You broke a bone.'; } add(s, { health: -randInt(3, 8) }); return 'You are bruised but okay.'; },
 });
 EV('sr_tech', {
+  era: 'social',
   ages: [60, 100], when: (s) => !M(s).socials, emoji: '📲', text: 'Your family offers to teach you how to use social media.',
   choices: [
     ['Sure, why not!', (s) => { M(s).socials = { followers: randInt(5, 60), posts: 0, verified: false, handle: '@' + P(s).first.toLowerCase().replace(/[^a-z]/g, '') + randInt(10, 99) }; add(s, { happy: 3 }); return 'You posted 47 photos of your garden on day one.'; }],
@@ -86,7 +87,7 @@ EV('any_raffle', {
     ['Pass', () => 'You passed.'],
   ],
 });
-EV('any_lost_phone', { ages: [10, 95], w: 0.7, emoji: '📵', text: 'You lost your phone.', auto: (s) => { if (A(s) >= 18) { const c = price(s, randInt(200, 900)); M(s).money -= c; return `A new one cost ${fmtMoney(c)}.`; } relAll(s, ['parent'], -3); return 'Your parents were not happy about buying another.'; } });
+EV('any_lost_phone', { era: 'mobile', ages: [10, 95], w: 0.7, emoji: '📵', text: 'You lost your phone.', auto: (s) => { if (A(s) >= 18) { const c = price(s, randInt(200, 900)); M(s).money -= c; return `A new one cost ${fmtMoney(c)}.`; } relAll(s, ['parent'], -3); return 'Your parents were not happy about buying another.'; } });
 EV('any_news', {
   ages: [12, 95], emoji: '📺', text: () => `A local news crew asks your opinion on ${pick(['the new stadium', 'the pigeon problem', 'the weather', 'a giant pothole', 'pineapple on pizza'])}.`,
   choices: [
@@ -285,6 +286,7 @@ EV('sr_pickleball', {
   ],
 });
 EV('sr_dating_app', {
+  era: 'dating',
   ages: [60, 95], emoji: '💌', when: (s) => !hasRomance(s) && free(s), text: 'Your grandkids set you up with a dating app.',
   choices: [
     ['Give it a try', (s) => { const p = candidatePerson(s, {}); setRel(s, p.id, 'friend', 55); return tryRomance(s, p.id, 0.1); }],
@@ -314,7 +316,7 @@ EV('any_ufo', {
   ages: [8, 110], w: 0.5, tags: ['chaos'], emoji: '🛸', text: 'A glowing disc hovered over your backyard for a full minute.',
   choices: [
     ['Wave at it', (s) => { add(s, { happy: 6 }); return 'It blinked twice and zipped away. Nobody believes you.'; }],
-    ['Film it for the internet', (s) => { add(s, { fame: 3 }); return 'Your blurry video got four million views and ten thousand theories.'; }],
+    { label: 'Film it for the internet', era: 'web', fx: (s) => { add(s, { fame: 3 }); return 'Your blurry video got four million views and ten thousand theories.'; } },
     ['Hide under the bed', () => 'Smart. Probably.'],
   ],
 });

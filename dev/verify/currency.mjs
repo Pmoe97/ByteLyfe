@@ -49,9 +49,14 @@ ok(fs('JPY', 7500000) === '¥7.5M', `short yen: ${fs('JPY', 7500000)}`);
   ctx.useCurrency(s);
   ok(ctx.fmtMoney(10000) === '$10,000', 'the US-dollar setting shows dollars');
   META.settings.currency = 'local';
-  const life = ctx.createLife({ country: 'jp' });
-  for (let i = 0; i < 40 && !life.dead; i++) { drain(life); ctx.ageUp(life); }
-  drain(life);
+  // A life that reaches adulthood, so there is income and spending to read (any one life may die young).
+  let life;
+  for (let t = 0; t < 12; t++) {
+    life = ctx.createLife({ country: 'jp' });
+    for (let i = 0; i < 40 && !life.dead; i++) { drain(life); ctx.ageUp(life); }
+    drain(life);
+    if (ctx.A(life) >= 25) break;
+  }
   const lines = life.log.flatMap((e) => e.lines.map((l) => l.t));
   const leak = lines.find((t) => /(^|[^A-Za-z])\$\d/.test(t));
   ok(!leak, `a Japanese life leaked dollars: "${leak}"`);

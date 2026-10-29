@@ -63,7 +63,7 @@ HOL('winter_wish', null, {
   ages: [3, 12], emoji: '🎁', text: 'The holidays are coming. What is at the top of your wish list?',
   choices: [
     ['A bike', (s) => { add(s, { happy: 6 }); addSkill(s, 'fitness', 2); return 'A shiny new bike! You rode it until it got dark.'; }],
-    ['A video game console', (s) => { add(s, { happy: 7, smarts: -1 }); return 'You did not see daylight until January.'; }],
+    { label: 'A video game console', era: 'games', fx: (s) => { add(s, { happy: 7, smarts: -1 }); return 'You did not see daylight until January.'; } },
     ['A puppy', (s) => { if (parentsAgree(s) && chance(0.4)) { const p = giftPet(s, 'dog'); add(s, { happy: 10 }); return `There was a box with holes in it. Inside was ${p.name}!`; } add(s, { happy: -2 }); return 'You got socks. And a stuffed dog. It is not the same.'; }],
     ['Books', (s) => { add(s, { smarts: 2, happy: 3 }); return 'A whole stack of them. You read three before lunch.'; }],
   ],

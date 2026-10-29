@@ -256,19 +256,46 @@ function tabooDisapproval(s, pid, big) {
   return n;
 }
 
-function tabooOnRomanceStart(s, pid, origKind) {
+// origSince: when the family tie was first on your list, so it can come back unchanged after a breakup.
+function tabooOnRomanceStart(s, pid, origKind, origSince) {
   try {
     const r = relOf(s, pid);
     const tag = tabooTagFor(s, pid) || (origKind && TABOO_KIND_TO_TAG[origKind]) || null;
     if (r && tag) {
       r.taboo = tag;
-      if (origKind && !r.wasFam) r.wasFam = origKind;
+      if (origKind && !r.wasFam) { r.wasFam = origKind; if (origSince) r.famSince = origSince; }
     }
     tally(s, 'tabooPartners');
     add(s, { karma: -4 });
     if (M(s).fame >= 30) add(s, { fame: -2 });
     tabooDisapproval(s, pid, false);
   } catch (e) {}
+}
+
+/* ---- when it ends, they are still family ------------------------------------
+ * Dating a relative turns the relationship into 'partner' (wasFam remembers what it was). Ending it must not
+ * file them under Others as an 'ex': blood is blood, so the family kind comes back with exRom ('ex' or
+ * 'exspouse') kept for the title ("Sister · Ex"). An in-law only returns while your current partner is who
+ * they are an in-law through. endRomance calls this, and migrate (29-save.js) for saves made before. */
+function tabooFamilyTieHolds(s, pid, kind) {
+  if (!kind) return false;
+  if (kind !== 'inlaw') return true;
+  const p = s.people[pid], mateId = romanticId(s), mate = mateId && s.people[mateId];
+  if (!p || !mate || mateId === pid) return false;
+  return mate.parents.includes(pid) || (p.parents || []).some((x) => mate.parents.includes(x));
+}
+function tabooRestoreFamily(s, pid, exKind) {
+  const r = relOf(s, pid);
+  if (!r || !r.wasFam || !K_EXES.includes(r.kind) || !s.people[pid]) return false;
+  if (!tabooFamilyTieHolds(s, pid, r.wasFam)) return false;
+  const keep = { taboo: r.taboo, wasFam: r.wasFam, since: r.famSince || r.since };
+  const n = setRel(s, pid, r.wasFam, r.rel);
+  if (keep.taboo) n.taboo = keep.taboo;
+  n.wasFam = keep.wasFam;
+  n.famSince = keep.since;
+  n.since = keep.since;
+  n.exRom = exKind || r.kind;
+  return true;
 }
 
 function tabooOnMarry(s, pid) {

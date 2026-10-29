@@ -124,7 +124,7 @@ function myHoodName(s) { return hoodName(P(s).country, P(s).city, myHood(s)); }
 function rentMult(s, cc, city, hood) { const info = cityInfo(cc, city); return info.col * cityState(s, cc, city).idx * hoodTier(s, cc, city, hood).rent; }
 function houseMult(s, cc, city, hood) { const info = cityInfo(cc, city); return Math.pow(info.col, 1.15) * cityState(s, cc, city).idx * hoodTier(s, cc, city, hood).price; }
 function colLiving(s) { return 0.7 + 0.3 * hereInfo(s).col; }
-function livingCost(s, usd) { return nicePrice(usd * econ(s) * colLiving(s)); }
+function livingCost(s, usd) { return nicePrice(usd * econ(s) * colLiving(s) * clamp(1 + wfx(s, 'living'), 0.6, 1.8)); } // wfx: the world's prices (88-world.js)
 function wageOf(s) { return hereInfo(s).wage; }
 function colWord(col) { return col >= 1.6 ? 'Very expensive' : col >= 1.2 ? 'Expensive' : col >= 0.92 ? 'Average' : col >= 0.78 ? 'Affordable' : 'Cheap'; }
 function pctVs(x) { const p = Math.round((x - 1) * 100); return p === 0 ? 'about average' : `${Math.abs(p)}% ${p > 0 ? 'above' : 'below'} average`; }
@@ -143,7 +143,10 @@ function jobOpenOdds(s, id) {
   if (info.hubs.includes(j.cat)) p += 0.18;
   else if (info.size === 'small' && BIG_CITY_CATS.includes(j.cat)) p -= 0.3;
   else if (info.size === 'mid' && BIG_CITY_CATS.includes(j.cat)) p -= 0.08;
-  return clamp(p, 0.15, 0.97);
+  if (worldJobBanned(s, id) || !eraJobOk(s, id)) return 0; // shut by law for now (88-world.js), or not invented yet (91-era.js)
+  p = clamp(p, 0.15, 0.97);
+  const world = wfxCat(s, 'jobs', j.cat); // a boom fills the board, a slump empties it (88-world.js)
+  return world ? clamp(p * (1 + Math.max(-0.9, world)), 0.05, 0.97) : p;
 }
 
 // The local market moves every year: booms and slumps that drift back toward normal.
@@ -151,7 +154,7 @@ function cityMarketYear(s, cc, city) {
   const st = cityState(s, cc, city), info = cityInfo(cc, city);
   if (st.yr === s.year) return st;
   st.yr = s.year;
-  st.g = clamp(0.22 * (1 - st.idx) + CITY_SIZES[info.size].drift + gauss(0, 0.035) - webUnease(s, cc, city), -0.12, 0.14); // an uneasy city sags (62-web.js)
+  st.g = clamp(0.22 * (1 - st.idx) + CITY_SIZES[info.size].drift + gauss(0, 0.035) - webUnease(s, cc, city) + wfx(s, 'housing', cc, city), -0.15, 0.17); // an uneasy city sags (62-web.js); so does a slump (88-world.js)
   st.idx = clamp(Math.round(st.idx * (1 + st.g) * 1000) / 1000, 0.7, 1.45);
   return st;
 }
@@ -1109,6 +1112,7 @@ EV('cty_short_term', {
   ],
 });
 EV('cty_startup', {
+  era: 'web',
   ages: [21, 60], emoji: '🚀', when: (s) => hereInfo(s).hubs.includes('tech') && free(s) && (skill(s, 'coding') >= 30 || (!!M(s).career && ['tech', 'business'].includes(JOBS[M(s).career.id].cat))), text: (s) => `A startup recruiter cornered you at a party in ${P(s).city}.`,
   choices: [
     ['Hear them out', (s) => {

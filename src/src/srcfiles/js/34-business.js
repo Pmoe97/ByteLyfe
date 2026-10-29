@@ -197,7 +197,8 @@ function bizDemand(co, q, tier, boost) {
   else if (tier === 'premium') tierDemand = clamp((q - 35) / 45, 0.25, 1.1);
   else if (tier === 'luxury') tierDemand = clamp((q - 55) / 40, 0.1, 0.95);
   // Each extra location competes with your others for the same customers.
-  const saturation = 1 / (1 + Math.max(0, co.locations - 1) * 0.035);
+  // (A gentle curve, not a wall: a hundred locations still sell far more than ten, and a thousand more than a hundred.)
+  const saturation = 1 / (1 + 0.04 * Math.pow(Math.max(0, co.locations - 1), 0.6));
   return clamp((0.55 + co.rep / 150) * Math.pow(0.6 + q / 150, I.qpow || 1) * tierDemand * boost * saturation, 0.03, 1.8);
 }
 // Up-front cash to hire: recruiting fees (10% of a year's pay, 20% for stars).
@@ -237,9 +238,10 @@ function bizForecast(s, co) {
 // What an industry with its own layer adds to the forecast: a revenue multiplier, a
 // reputation pull and running costs. (casinoMods: 54-house.js, zooMods: 58-zoo.js).
 function industryMods(s, co) {
-  if (co.ind === 'casino') return casinoMods(s, co);
-  if (co.ind === 'zoo' && typeof zooMods === 'function') return zooMods(s, co);
-  return { rev: 1, rep: 0, cost: 0 };
+  const world = 1 + clamp(worldBiz(s, co.ind), -0.7, 1); // a real boom or bust in the industry (88-world.js)
+  if (co.ind === 'casino') { const m = casinoMods(s, co); return Object.assign({}, m, { rev: m.rev * world }); }
+  if (co.ind === 'zoo' && typeof zooMods === 'function') { const m = zooMods(s, co); return Object.assign({}, m, { rev: m.rev * world }); }
+  return { rev: world, rep: 0, cost: 0 };
 }
 
 /* ---- franchising ----------------------------------------------------
@@ -668,21 +670,29 @@ defAction({
   sub: cosub((s, co) => fmtMoney(price(s, indOf(co).locBuild)) + ' · +' + indOf(co).perLoc + ' staff room · ' + fmtMoney(price(s, indOf(co).rent)) + '/yr overhead'),
   when: manageable,
   run: (s, id) => {
-    const co = company(s, id), cost = price(s, indOf(co).locBuild);
+    const co = company(s, id), I = indOf(co), cost = price(s, I.locBuild);
     popup(s, {
-      emoji: '📍', title: 'New ' + indOf(co).place, text: `Opening another ${indOf(co).place} costs ${fmtMoney(cost)}.`, handler: 'bizOpen', ctx: { co: id },
-      choices: [{ label: 'Pay from company cash', value: 'co', sub: 'Company has ' + fmtMoney(co.cash), disabled: co.cash < cost }, { label: 'Pay with my own money', value: 'me', sub: 'You have ' + fmtMoney(M(s).money), disabled: M(s).money < cost }, { label: 'Never mind', value: null }],
+      emoji: '📍', title: 'New ' + I.place, text: `Opening another ${I.place} costs ${fmtMoney(cost)}. You have ${nOf(co.locations, I.place)} now.`, handler: 'bizOpen', ctx: { co: id },
+      choices: [1, 5, 25, 100].map((n) => ({ label: n === 1 ? 'Open one' : `Open ${n}`, value: n, sub: fmtMoney(cost * n), disabled: co.cash < cost * n && M(s).money < cost * n })).concat([{ label: 'Never mind', value: null }]),
     });
   },
 });
+// First how many, then who pays. (A saved popup that already says "co" or "me" still opens one.)
 onChoice('bizOpen', (s, ctx, v) => {
   const co = company(s, ctx.co);
   if (!v || !co) return;
-  const cost = price(s, indOf(co).locBuild);
+  const n = typeof v === 'number' ? v : (ctx.n || 1), cost = price(s, indOf(co).locBuild) * n;
+  if (typeof v === 'number') {
+    popup(s, {
+      emoji: '📍', title: n === 1 ? 'Pay for it' : `Pay for ${n}`, text: `${n === 1 ? 'One more' : n + ' more'} ${n === 1 ? indOf(co).place : pluralize(indOf(co).place)}: ${fmtMoney(cost)}.`, handler: 'bizOpen', ctx: { co: co.id, n },
+      choices: [{ label: 'Pay from company cash', value: 'co', sub: 'Company has ' + fmtMoney(co.cash), disabled: co.cash < cost }, { label: 'Pay with my own money', value: 'me', sub: 'You have ' + fmtMoney(M(s).money), disabled: M(s).money < cost }, { label: 'Never mind', value: null }],
+    });
+    return;
+  }
   if (v === 'co') { if (co.cash < cost) return { text: `${co.name} can't afford it.`, nolog: true }; co.cash -= cost; } else if (!pay(s, cost)) return cantAfford(cost);
-  co.locations++;
-  tally(s, 'locationsOpened');
-  return { text: `${co.name} opened ${co.locations === 2 ? 'a second' : 'another'} ${indOf(co).place} (${co.locations} total). Hire staff to fill it.`, tone: 'good', emoji: '📍' };
+  co.locations += n;
+  tally(s, 'locationsOpened', n);
+  return { text: n === 1 ? `${co.name} opened ${co.locations === 2 ? 'a second' : 'another'} ${indOf(co).place} (${co.locations} total). Hire staff to fill ${n === 1 ? 'it' : 'them'}.` : `${co.name} opened ${n} new ${pluralize(indOf(co).place)} (${co.locations} total). Hire staff to fill them.`, tone: 'good', emoji: '📍' };
 });
 defAction({
   id: 'biz_closeloc', cat: 'company', target: 'company', emoji: '🏚️',

@@ -113,8 +113,8 @@ function assignNpcLife(s, p, opts) {
   else if (age <= 22 && EDU_RANK[p.edu] >= 3 && chance(0.6)) { p.job = { student: true }; }
   else if (chance(opts.jobs ? 0.04 : 0.08)) { p.job = null; }
   else {
-    let pool = opts.jobs ? opts.jobs.filter((id) => id && npcQualifies(p, id, age)) : [];
-    if (!pool.length) pool = JOB_IDS.filter((id) => npcQualifies(p, id, age));
+    let pool = opts.jobs ? opts.jobs.filter((id) => id && npcQualifies(p, id, age) && eraJobOk(s, id)) : [];
+    if (!pool.length) pool = JOB_IDS.filter((id) => npcQualifies(p, id, age) && eraJobOk(s, id));
     if (pool.length) {
       const id = pick(pool);
       const len = JOBS[id].ladder.length;
@@ -177,6 +177,8 @@ function kinTitle(s, pid) {
   if (r.kind === 'teacher' && p.teaches && typeof SUBJECTS !== 'undefined' && SUBJECTS[p.teaches]) return SUBJECTS[p.teaches].name + ' teacher';
   if (r.kind === 'instructor' && p.lesson && typeof LESSON_TYPES !== 'undefined' && LESSON_TYPES[p.lesson]) return LESSON_TYPES[p.lesson].name + ' teacher';
   const base = r.kind === 'inlaw' ? inlawTitle(s, p) : kinLabel(r.kind, p);
+  // A relative you dated and left stays family: "Sister · Ex" (48-taboo.js tabooRestoreFamily).
+  if (r.exRom && isFamilyKind(r.kind)) return base + ' · ' + kinLabel(r.exRom, p);
   // Taboo dual role: "Sister · Girlfriend" instead of losing the blood label.
   try {
     if (r.taboo && typeof bloodKinshipInfo === 'function') {
@@ -254,7 +256,8 @@ function generateFamily(s, me, o) {
   setRel(s, p2.id, 'parent', randInt(45, 95));
 
   // Older siblings.
-  const nOlder = weighted([0, 1, 2, 3], (n) => [42, 34, 17, 7][n]);
+  const boom = worldSiblingBonus(s); // a baby boom (88-world.js) makes families bigger
+  const nOlder = weighted([0, 1, 2, 3], (n) => [42 * (1 - boom), 34, 17 * (1 + boom), 7 * (1 + 2 * boom)][n]);
   for (let i = 0; i < nOlder; i++) {
     const maxAge = Math.min(momAge - 17, dadAge - 17, 16);
     if (maxAge < 1) break;

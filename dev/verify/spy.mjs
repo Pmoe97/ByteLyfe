@@ -448,7 +448,7 @@ const eachChoice = (s, handler, check) => {
       s.pending = [];
       try { ctx.ageUp(s); drain(s); } catch (e) { ok(false, `ageUp threw at ${y}: ${e.stack.split('\n').slice(0, 3).join(' | ')}`); break; }
       // Now and then a spy does something between years.
-      for (const a of ctx.actionList(s, 'spy').filter(() => Math.random() < 0.3)) { if (a.id === 'spy_sell' || a.id === 'spy_defect') continue; try { ctx.doAction(s, a.id); drain(s); } catch (e) { ok(false, `action ${a.id} threw: ${e.stack.split('\n').slice(0, 2).join(' | ')}`); } }
+      for (const a of ctx.actionList(s, 'spy').filter(() => ctx.run('rand()') < 0.3)) { if (a.id === 'spy_sell' || a.id === 'spy_defect') continue; try { ctx.doAction(s, a.id); drain(s); } catch (e) { ok(false, `action ${a.id} threw: ${e.stack.split('\n').slice(0, 2).join(' | ')}`); } }
       inv(s, `soak ${n}/${y}`);
       const c = s.player.career;
       if (c && c.id === 'spy') maxLevel = Math.max(maxLevel, c.level);

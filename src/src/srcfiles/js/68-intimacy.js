@@ -336,6 +336,7 @@ function intimTick(s) {
 /* ---- events ------------------------------------------------------------------------------------- */
 const intimSparkLow = (s) => { const r = romanticId(s); return !!r && intimSpark(s, r) < 35; };
 EV('in_ex_text', {
+  era: 'mobile',
   ages: [20, 70], emoji: '📱', title: 'A text at 1 a.m.', tags: INT_TAGS, cooldown: 3,
   when: (s) => free(s) && relPeople(s, ['ex', 'exspouse']).some((p) => ageOf(s, p) >= 20 && relOf(s, p.id).rel >= 15),
   ctx: (s) => ({ pid: pick(relPeople(s, ['ex', 'exspouse']).filter((p) => ageOf(s, p) >= 20 && relOf(s, p.id).rel >= 15)).id }),
@@ -358,6 +359,7 @@ EV('in_coworker_spark', {
   ],
 });
 EV('in_app_match', {
+  era: 'dating',
   ages: [18, 55], emoji: '📲', title: 'A very good match', tags: INT_TAGS, cooldown: 3,
   when: (s) => free(s) && intimSolo(s),
   ctx: (s) => { const c = makeDateCandidate(s); return { c }; },
@@ -369,6 +371,7 @@ EV('in_app_match', {
   ],
 });
 EV('in_photo', {
+  era: 'mobile',
   ages: [18, 50], emoji: '📸', title: 'Tagged', tags: INT_TAGS, cooldown: 4,
   when: (s) => free(s) && intimSolo(s) && !!pickRel(s, ['friend', 'coworker']),
   ctx: (s) => someone(s, ['friend', 'coworker']),

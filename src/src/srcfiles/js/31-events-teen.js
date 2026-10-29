@@ -66,6 +66,7 @@ EV('teen_exam', {
   ],
 });
 EV('teen_photo', {
+  era: 'social',
   ages: [13, 20], emoji: '📸', text: 'Someone posted an embarrassing photo of you online.',
   choices: [
     ['Clap back', (s) => { if (chance(0.5 + (trait(s, 'funny') ? 0.2 : 0))) { add(s, { happy: 4 }); return 'Your reply was so savage it got more likes than the photo.'; } add(s, { happy: -5 }); return 'Your clapback made it worse. So much worse.'; }],
@@ -121,7 +122,7 @@ EV('teen_sibling_clothes', {
     ['Take something of theirs', (s, c) => { addRel(s, c.pid, -4); add(s, { karma: -1, happy: 2 }); return `You "borrowed" ${nm(s, c.pid)}'s headphones. Fair is fair.`; }],
   ],
 });
-EV('teen_viral', { ages: [13, 25], w: 0.3, emoji: '📱', text: () => `A video of you ${pick(['tripping into a fountain', 'singing in the shower', 'dancing at a wedding', 'getting chased by a goose', 'nailing a backflip'])} went viral.`, auto: (s) => { add(s, { fame: 2, happy: chance(0.5) ? 4 : -4 }); if (M(s).socials) M(s).socials.followers += randInt(500, 20000); return 'Everyone at school has seen it.'; } });
+EV('teen_viral', { era: 'social', ages: [13, 25], w: 0.3, emoji: '📱', text: () => `A video of you ${pick(['tripping into a fountain', 'singing in the shower', 'dancing at a wedding', 'getting chased by a goose', 'nailing a backflip'])} went viral.`, auto: (s) => { add(s, { fame: 2, happy: chance(0.5) ? 4 : -4 }); if (M(s).socials) M(s).socials.followers += randInt(500, 20000); return 'Everyone at school has seen it.'; } });
 EV('teen_graffiti', {
   ages: [13, 17], emoji: '🎨', text: 'Your friends dare you to spray-paint your name on the water tower.',
   choices: [['Do it', (s) => commitCrime(s, 'vandalism')], ['Refuse', () => 'You value your clean record. And your life.']],
@@ -174,6 +175,7 @@ EV('teen_bad_grades_warn', {
   ],
 });
 EV('teen_hackathon', {
+  era: 'web',
   ages: [13, 22], when: (s) => skill(s, 'coding') >= 15, emoji: '💻', text: 'A local hackathon is offering a prize for the best app.',
   choices: [
     ['Enter', (s) => { addSkill(s, 'coding', randFloat(3, 6)); if (chance(skill(s, 'coding') / 120)) { const amt = price(s, randInt(500, 5000)); add(s, { money: amt, happy: 6 }); return `Your app won! You took home ${fmtMoney(amt)}.`; } return 'You built something cool but did not place.'; }],
@@ -220,6 +222,7 @@ EV('teen_group_project', {
   ],
 });
 EV('teen_group_chat', {
+  era: 'mobile',
   ages: [12, 19], emoji: '💬', text: 'Your friend group chat is exploding. Two of your friends are fighting, and both want you on their side.',
   choices: [
     ['Stay neutral', (s) => { add(s, { karma: 1 }); return 'You sent one sticker of a cat with sunglasses. It defused nothing.'; }],
@@ -242,6 +245,7 @@ EV('teen_babysit', {
   ],
 });
 EV('teen_screen_time', {
+  era: 'smartphone',
   ages: [12, 19], emoji: '📱', text: 'Your phone says you averaged nine hours of screen time a day this week.',
   choices: [
     ['Delete the worst apps', (s) => { add(s, { smarts: 1, happy: 2 }); return 'You read an actual book. Then you reinstalled everything.'; }],

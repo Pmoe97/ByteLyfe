@@ -125,10 +125,12 @@ onChoice('shopPick', (s, ctx, id) => {
   popup(s, { emoji: it.emoji, title: it.name, text: `Price: ${fmtMoney(it.value)}`, handler: 'buy', ctx: { key: ctx.key, id }, choices });
 });
 function financeTerms(it, s) {
-  if (it.kind === 'house') return vetLoanTerms(s, { down: 0.2, rate: 0.065, years: 30, name: 'Mortgage' }, it); // veterans’ mortgage (59-military.js)
-  if (it.kind === 'car') return { down: 0.1, rate: 0.075, years: 5, name: 'Car loan' };
-  if (it.kind === 'boat' || it.kind === 'aircraft') return { down: 0.2, rate: 0.08, years: 10, name: it.kind === 'boat' ? 'Boat loan' : 'Aircraft loan' };
-  return null;
+  let t = null;
+  if (it.kind === 'house') t = vetLoanTerms(s, { down: 0.2, rate: 0.065, years: 30, name: 'Mortgage' }, it); // veterans’ mortgage (59-military.js)
+  else if (it.kind === 'car') t = { down: 0.1, rate: 0.075, years: 5, name: 'Car loan' };
+  else if (it.kind === 'boat' || it.kind === 'aircraft') t = { down: 0.2, rate: 0.08, years: 10, name: it.kind === 'boat' ? 'Boat loan' : 'Aircraft loan' };
+  if (t) t.rate = Math.max(0.01, t.rate + wfx(s, 'rates')); // money costs what it costs this year (88-world.js)
+  return t;
 }
 onChoice('buy', (s, ctx, how) => {
   if (!how) return;

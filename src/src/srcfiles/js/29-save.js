@@ -10,7 +10,7 @@
  * ===================================================================== */
 
 const META = {
-  settings: { theme: 'auto', textSize: 'medium', showHidden: true, autoPopups: false, confirmAge: false, reduceMotion: false, currency: 'local', godMode: true, language: 'clean', chaos: false, mature: false, mature_intimacy: false, mature_substances: false, mature_adultwork: false, mature_violence: false, mature_themes: false, taboo: false, taboo_parent: false, taboo_step: false, taboo_sibling: false, taboo_child: false, taboo_grand: false, taboo_extended: false, taboo_inlaw: false },
+  settings: { theme: 'auto', textSize: 'medium', showHidden: true, autoPopups: false, confirmAge: false, reduceMotion: false, currency: 'local', godMode: true, history: true, randomBirth: 'now', language: 'clean', chaos: false, mature: false, mature_intimacy: false, mature_substances: false, mature_adultwork: false, mature_violence: false, mature_themes: false, taboo: false, taboo_parent: false, taboo_step: false, taboo_sibling: false, taboo_child: false, taboo_grand: false, taboo_extended: false, taboo_inlaw: false },
   achievements: {}, // id -> first unlock time
   graveyard: [], // past lives, newest first
   challenges: { done: {}, daily: { last: null, streak: 0, best: 0 }, history: [] }, // 52-challenges.js
@@ -145,6 +145,12 @@ function migrate(s) {
   if (!s.pets) s.pets = {};
   if (!s.lineage) s.lineage = [];
   ensureAllLooks(s);
+  // A relative who was dated and left used to become an "ex" under Others: back to the family list (48-taboo.js).
+  try {
+    if (typeof tabooRestoreFamily === 'function') for (const pid in s.player.rels) { const r = s.player.rels[pid]; if (r && r.wasFam && (r.kind === 'ex' || r.kind === 'exspouse')) tabooRestoreFamily(s, pid, r.kind); }
+  } catch (e) { console.warn('[ByteLyfe] family restore skipped', e); }
+  // A life in the years past the table carries its generated future (92-world-future.js): make it again, so an illness it names exists.
+  try { if (s.world && s.world.seed && typeof worldFutureUse === 'function') worldFutureUse(s); } catch (e) { console.warn('[ByteLyfe] future skipped', e); }
   s.v = SAVE_VERSION;
   return s;
 }

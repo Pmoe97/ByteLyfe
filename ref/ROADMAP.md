@@ -900,6 +900,74 @@ Nothing graphic, nothing sexual, nobody dies, and it is never the victim's fault
   them go and stay away, or you can blame them and lose them, with a report and an order at the end.
 - **Toxic, short of abuse:** a friend who drains you and a parent who keeps score, with boundaries as an answer.
 
+**Family romance fixes.** Asking out or rekindling with a relative asks "are you sure?" first (a general `confirm`
+on actions), and breaking up with one no longer drops them out of Family: they go back to being a sister, with "Sister · Ex"
+on the sheet. Saves made before are repaired when they load.
+
+**Start at any age.** A custom life can begin at any age from 0 to 60. The years before are lived for you, and you do not choose
+what happens in them: school and college, a first job, a place of your own, maybe a partner, a wedding and kids, as an autopilot
+that answers every popup and takes ordinary, sensible actions, and never crime, gambling, cheating or anything behind a content
+switch. If that character dies or is in prison when it ends, the years are lived again. You open on "Your story so far", with the
+whole life in the log and one free redesign of your adult look.
+
+**The real world (part one).** Lives in 1900 to 2025 live through real events, behind a Settings switch that is on by default
+(*Real-world history*), with a header chip and a World sheet that say what is going on and what it means for you. Three events
+so far: the Great Depression (the crash and the market year by year, layoffs and pay cuts, half the jobs gone, rents and prices
+falling, bank runs, the breadline, the Dust Bowl), the Second World War (real draft ages for the United Kingdom, the United States
+and Germany, men only and women only in the years Britain called them, rationing, victory gardens, evacuees, air raids, V-E Day,
+enlisting after Pearl Harbor), and COVID-19 (the illness, hardest on the old, and people you know dying of it, closed shops,
+travel and schools, furlough in some countries and layoffs in others, relief payments, a vaccine to choose, a crash to sit
+through). Real wars replace the made-up ones in those years. Random lives can be born "any year since 1920", and a custom life can
+pick an era.
+
+**The real world (part two): the headline events.** The rest of the big ones, each with its own numbers and a few moments that
+put you inside it: the First World War (real draft years and ages for Britain, France, Germany, Italy, the United States and
+Canada; volunteers only in Australia and Ireland; letters from the front; the armistice), the 1918 flu (it kills the young as
+well as the old, and shuts schools and clubs; a mask, nursing a sick relative), the postwar boom (jobs, rising pay and home
+prices, bigger families), the Korean War (families fleeing south) and the Vietnam War (the American draft lottery by birthday
+and the Australian ballot; protest or support), the Cold War and its moments (Sputnik, the Wall, the missile crisis,
+Chernobyl), the Moon landing, the oil shocks (gas lines, loans at 17%), Black Monday, the fall of the Wall, the dot-com boom and
+bust (stock options, a start-up; tech jobs and pay swing three times as hard), September 11 and the long wars after it (a
+recruiter's office; Afghanistan and Iraq, with no draft), the 2008 crisis (a mortgage worth more than the house, a failing bank)
+and the euro crisis (austerity, leaving for Australia), the inflation surge (a 15% rent rise, the energy bill), and the crypto
+years as they really went. The Second World War now covers every country: Italy, Japan, France, Canada, Australia, the
+Philippines, India, South Africa and the neutral ones (Sweden, Spain, Ireland) too.
+
+**The real world (part three): country events.** What each country went through, on its own. The United States: Prohibition
+(bartending is not a job, breweries fail, a night in a speakeasy or running bottles, which can end in a cell), the early-1980s
+rate squeeze. Canada: the conscription crisis, the 1998 ice storm, the oil bust. The United Kingdom: the Blitz (London hardest,
+other cities less), rationing, National Service (the brown envelope for men of 18 to 20), the Great Smog, the Winter of
+Discontent, the Falklands, Black Wednesday, the Troubles in Belfast, and the Brexit vote (leave, remain or stay home: the same
+cost either way, and a row with someone you love). Ireland: the War of Independence, the Civil War, the boat to England, the
+Celtic Tiger. Australia, Mexico, Brazil (hyperinflation melts the cash you keep, the Collor plan freezes your savings), France
+(occupation, Indochina, Algeria, May 1968), Germany (the 1923 inflation, the bombing of cities, the hard years, the new
+currency, the economic miracle), Italy, Spain (civil war, hunger years, the miracle), Sweden (the 500 percent week), Japan
+(bombing, occupation, the bubble and the lost decade), South Korea (liberation, the IMF crisis and the gold-collecting drive),
+India (the wars, liberalization, demonetisation), Nigeria, the Philippines (People Power) and South Africa (load-shedding: a
+generator or solar panels). Dated events now come the year they happen, and history's events are weighted up so a life meets
+them (`sure: true`, and a default weight of 10 for `wd_` events).
+
+**The real world (part four): local moments.** Things that happen to one city. The Olympic Games come to 24 host cities (London
+1908, 1948 and 2012, Stockholm, Paris, Los Angeles, Melbourne, Rome, Tokyo twice, Mexico City, Munich, Montreal, Seoul, Barcelona,
+Atlanta, Sydney, Rio, and the Winter Games in Sapporo, Calgary, Turin and Vancouver): two years of building and visitors (more
+jobs, rising rents), then the year itself, when you can volunteer, buy tickets, or rent your place to visitors. Forty-odd
+disasters strike one city or one region, from the Halifax explosion and the Great Kantō earthquake through Cyclone Tracy, Kobe and
+Hurricane Andrew to the Porto Alegre floods and the 2025 Los Angeles fires: homes damaged or lost, people hurt, people you know
+lost, home prices dipping and coming back, the building trades hiring the year after. The morning after, you help dig out, mend your
+home, give to the relief fund, or leave the city. And the arrival of radio, television, color television, the home computer, the
+mobile phone, the web, the smartphone and social media, in each country's own year.
+
+**The real world (part five): the future, and the era.** Lives past 2025 get a world of their own, made up for each family line (the
+same seed always gives the same one, and it is saved): a recession every eight to twelve years, sometimes a boom after it, a
+pandemic about once in sixty years with an illness of its own, and a disaster or two a year somewhere in the world, by the kind of
+city. They have invented names ("the Slump of 2041", "the 2058 flu") and the same effects as the real ones, and a few events: a
+lockdown, a vaccine, and the news that your employer is cutting jobs (take a pay cut, take the severance, or keep your head down).
+With history on, a life also feels like its time: no social media before 2004 to 2010 (by country), no dating app before the web, no
+index fund before 1976, no crypto before 2010, no video games before 1972, jobs that did not exist (software, IT, data science,
+content creator, call center, astronaut) are not on the board or among your family's jobs, the doctors of 1930 cure less, a few
+events wait for their invention, and in France, Germany, Italy, Spain and Ireland the money is francs, marks, lire, pesetas and Irish
+pounds until the euro in 2002.
+
 **Careers, part two (finishing Phase 3).**
 - **Forensic science and behavioral analysis** are tracks of their own. They work real case files: a good year moves a case
   and can close it, a bad one sets it back, and promotion needs the cases you moved.
@@ -913,6 +981,16 @@ Nothing graphic, nothing sexual, nobody dies, and it is never the victim's fault
   sea, a bad harvest and the bank.
 - **Twists:** a good result can bring a follow-up card nobody saw coming (the patient who came back, a commendation, a
   nomination), for the doctor, surgeon, firefighter, bartender, journalist, pilot and the new full systems.
+
+**The lottery and the top of the wealth ladder.** The lottery has no ticket limit, and tickets come in packs of 1, 10, 100, 1,000
+and 10,000. There is one visible jackpot a year (and a fresh one each time it is won), drawn from 20 million to 1.6 billion with
+the small ones most likely: the usual jackpot is around 78 million, one year in sixteen is over a billion, and about one in a
+hundred is over 1.5 billion. It is worked out from the save id, the year and the number of wins (`lottoJackpot`), so a menu never
+spends the random numbers. The odds are 1 in 250,000 for the jackpot, 1 in 5,000 for five numbers (1,000 to 50,000), and 1 in 10
+for a small prize (1 to 6 tickets' worth); the constants are in `LOTTO` in `21-activities.js`. There is no state lottery before
+1964 (with history on). Companies no longer hit a wall: the drop in sales as you add locations is now a gentle curve, so a hundred
+locations sell far more than ten and a thousand far more than a hundred (the best tech company can be worth hundreds of billions
+at a thousand locations and a trillion at several thousand), and "Open another" can open 1, 5, 25 or 100 at once.
 
 ## The big push: a connected, adult world
 
@@ -1043,6 +1121,23 @@ Phases 1 to 4 are all built, in this order:
 6. Serial offenders, adult dark themes, abduction and toxic relationships (Phase 4, parts three to six).
 7. **Next:** the rest of the Next up list below, each of which now plugs into the web.
 
+## Next arc: the world outside (planned)
+
+The detailed plan is [`PLAN-world-history.md`](PLAN-world-history.md). In order:
+
+1. **Family fixes.** A confirmation before asking out a relative, and breaking up with one puts
+   them back in your family instead of "Others".
+2. **Start at any age.** A custom life can begin at an older age; the years before are lived on
+   autopilot (popups answered, a job, a home, maybe a partner), and you don't choose what happens.
+3. **Real-world history.** Lives in 1900 to 2025 live through the biggest events: both World Wars
+   and the draft, the 1918 flu, the Depression, the postwar boom, the Cold War, Vietnam, the oil
+   shocks, the dot-com bust, 2008, COVID and the inflation surge, plus country events and disasters
+   in your city. They move the stock market, jobs and layoffs, pay, rents and home prices, living
+   costs, interest rates and currencies, and come with personal events that put you in the moment.
+   Data-driven (`09-data-history.js`), behind a `history` setting, on by default.
+4. **Later:** generated world events for the years after 2025, and era gates (no social media in
+   1950, money shown in francs and marks before the euro).
+
 ## Next up
 
 Roughly in priority order. Each one is a self-contained expansion. Many items include the most
@@ -1066,7 +1161,8 @@ web (secrets, reputation, ties, places) as it is built.
 
 **Historical eras.** Living through the Middle Ages, a revolution or the world wars would mean
 replacing nearly every data table (jobs, prices, assets, events, medicine). That makes it a
-spin-off for the distant future, not an expansion.
+spin-off for the distant future, not an expansion. The lighter version, modern life with real
+events layered on top (1900 to 2025), is planned above under "The world outside".
 
 ## Not planned
 

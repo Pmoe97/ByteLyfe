@@ -109,8 +109,12 @@ const CONTENT_TAGS = {
   taboo_extended: { name: 'Taboo: extended family', emoji: '👪', desc: 'Adult romance with aunts, uncles, cousins, nieces, nephews (18+ both). Requires the master switch too.' },
   taboo_inlaw: { name: 'Taboo: in-laws', emoji: '💍', desc: 'Adult romance with in-laws (18+ both). Requires the master switch too.' },
 };
+// True while a head start (90-head-start.js) lives the years before a custom life's starting age: nothing behind a switch
+// (chaos, mature, taboo) happens in them, whatever is switched on, because nobody chose it.
+let HEAD_START_RUN = false;
 function tagsOn(tags) {
   if (!tags || !tags.length) return true;
+  if (HEAD_START_RUN) return false;
   return tags.every((t) => !!META.settings[t]);
 }
 
@@ -121,6 +125,8 @@ function tagsOn(tags) {
  *   tags:   content tags (see CONTENT_TAGS); hidden unless all are switched on
  *   when:   availability; run: does it and returns the outcome
  *   sub:    optional hint line (a price, a limit)
+ *   confirm: optional (s, t) => null | { title, text, yes, no, emoji }; an object asks "are you sure?" first and
+ *           the action only runs on yes (the 'confirmAction' handler below)
  * The UI menus and the verify bot both read this registry. */
 const ACTIONS = {};
 const ACTION_ORDER = [];
@@ -131,6 +137,7 @@ function defAction(a) {
 }
 function actionAvailable(a, s, t) {
   if (!tagsOn(a.tags)) return false;
+  if (a.era && !eraHas(s, a.era)) return false; // not invented yet (91-era.js)
   try { return !a.when || !!a.when(s, t); } catch (e) { console.error('[ByteLyfe] when() failed for', a.id, e); return false; }
 }
 function actionList(s, cat, t) {
@@ -150,9 +157,32 @@ function doAction(s, id, t) {
   if (!a || s.dead || s.pending.length) return false;
   if (M(s).gamb && M(s).gamb.race) settleRaceQuietly(s); // a race left running (53-gambling.js)
   if (!actionAvailable(a, s, t)) return false;
+  const ask = actionConfirm(a, s, t);
+  if (ask) {
+    popup(s, {
+      emoji: ask.emoji || a.emoji, title: ask.title || actionLabel(a, s, t), text: ask.text || 'Are you sure?', tone: ask.tone || '', handler: 'confirmAction', ctx: { id, t: t === undefined ? null : t },
+      person: a.target === 'person' ? t : null,
+      choices: [{ label: ask.yes || 'Yes', value: true }, { label: ask.no || 'Never mind', value: false }],
+    });
+    return true;
+  }
   runWithResult(s, () => a.run(s, t), { emoji: a.emoji, title: actionLabel(a, s, t) });
   return true;
 }
+function actionConfirm(a, s, t) {
+  if (!a.confirm) return null;
+  try { return a.confirm(s, t) || null; } catch (e) { console.error('[ByteLyfe] confirm() failed for', a.id, e); return null; }
+}
+// "Are you sure?" answered: yes runs the action as if it had been picked, with its own title on the result.
+onChoice('confirmAction', (s, ctx, yes) => {
+  const a = ACTIONS[ctx.id], t = ctx.t === null ? undefined : ctx.t;
+  if (!yes || !a) return { text: 'You thought better of it.', quiet: true, nolog: true };
+  if (s.dead || !actionAvailable(a, s, t)) return { text: 'The moment passed.', quiet: true, nolog: true };
+  let r = a.run(s, t);
+  if (typeof r === 'string') r = { text: r };
+  if (r && typeof r === 'object' && !r.title) { r.title = actionLabel(a, s, t); r.emoji = r.emoji || a.emoji; }
+  return r;
+});
 
 // Charge the player. Returns false (and charges nothing) when they cannot afford it.
 function pay(s, amt) {

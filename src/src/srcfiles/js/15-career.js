@@ -213,8 +213,10 @@ function careerTick(s) {
   if (!M(s).career) return; // the job's own year may have ended it
 
   if (j.special) { specialTick(s, c, j); return; }
+  if (worldCareerYear(s, c, j)) return; // laid off, furloughed or cut in a bad year (88-world.js)
 
-  if (c.perf >= 50) c.salary = Math.round(c.salary * randFloat(1.01, 1.04));
+  const worldPay = wfxCat(s, 'pay', j.cat); // a boom lifts every raise, a bad year freezes or cuts them
+  if (!c.furlough && (c.perf >= 50 || worldPay)) c.salary = Math.max(1000, Math.round(c.salary * (1 + (c.perf >= 50 ? randFloat(1, 4) / 100 : 0) + worldPay)));
   if (c.perf < 18 && chance(0.45)) { fire(s, `Your performance has been terrible. You were let go from your job as a ${careerTitle(s)}.`); return; }
   const need = 1 + Math.floor(c.level / 2);
   if (c.level < j.ladder.length - 1 && !j.appointed && c.levelYears >= need && c.perf >= 62) {

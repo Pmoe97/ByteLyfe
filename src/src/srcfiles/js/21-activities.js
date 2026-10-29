@@ -232,26 +232,66 @@ defAction({
 });
 
 /* ---- money & luck -------------------------------------------------- */
+/* The lottery. There is one jackpot a year (and a fresh one each time it is won), and you can see it before you buy. It is drawn
+ * from a weighted spread, usually modest and now and then enormous: minJack * (maxJack / minJack) ^ (u ^ skew), u random from 0 to 1.
+ * It is worked out from the life's save id, the year and the number of wins so far, so the same life always sees the same jackpot
+ * (nothing random is spent while a menu draws). Money is in today's dollars and goes through price() for the year.
+ *   jackpot  chance per ticket of the jackpot   five  of five numbers (a prize of 1,000 to 50,000)   small  any small prize (1 to 6 tickets' worth) */
+const LOTTO = { ticket: 5, jackpot: 1 / 250000, five: 1 / 5000, small: 1 / 10, minJack: 20e6, maxJack: 1.6e9, skew: 1.7, packs: [1, 10, 100, 1000, 10000] };
+function lottoUnit(str) { // a number from 0 to 1 that only depends on the text
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+function lottoWins(s) { return s.lotto && s.lotto.year === s.year ? s.lotto.wins : 0; }
+function lottoJackpot(s) {
+  const u = lottoUnit(String(s.id || '') + '|' + s.year + '|' + lottoWins(s));
+  const raw = LOTTO.minJack * Math.pow(LOTTO.maxJack / LOTTO.minJack, Math.pow(u, LOTTO.skew));
+  const unit = Math.pow(10, Math.floor(Math.log10(raw)) - 1); // two figures: 47 million, 1.3 billion
+  return price(s, Math.round(raw / unit) * unit);
+}
 defAction({
-  id: 'lottery', cat: 'gamble', label: 'Buy a lottery ticket', emoji: '🎟️', desc: 'Long odds. Big dreams.',
+  id: 'lottery', era: 'lottery', cat: 'gamble', label: 'Buy lottery tickets', emoji: '🎟️', desc: 'Long odds. Big dreams.',
   when: (s) => free(s) && A(s) >= 18,
-  sub: (s) => fmtMoney(price(s, 5)),
+  sub: (s) => `Jackpot ${fmtMoneyShort(lottoJackpot(s))} · ${fmtMoney(price(s, LOTTO.ticket))} a ticket`,
   run: (s) => {
-    const cost = price(s, 5);
-    if (bump(s, 'lottery') > 15) return { text: 'The clerk refuses to sell you any more tickets this year.', nolog: true };
-    if (!pay(s, cost)) return cantAfford(cost);
-    habit(s, 'gambling', 0.5);
-    const luck = trait(s, 'lucky') ? 2 : 1;
-    if (chance(luck / 60000)) {
-      const win = price(s, randInt(2, 80) * 1e6);
-      add(s, { money: win, happy: 30 });
-      tally(s, 'jackpots');
-      return { text: `🎉 JACKPOT! You won ${fmtMoney(win)}!`, tone: 'good' };
-    }
-    if (chance(luck / 700)) { const win = price(s, randInt(1000, 50000)); add(s, { money: win, happy: 10 }); return { text: `You matched five numbers and won ${fmtMoney(win)}!`, tone: 'good' }; }
-    if (chance(luck / 12)) { const win = cost * randInt(2, 10); add(s, { money: win, happy: 2 }); return `You won ${fmtMoney(win)} on a scratch-off.`; }
-    return pick(['No luck this time.', 'Not even close.', 'You matched one number. That pays nothing.', 'You lost. The lottery is a tax on hope.']);
+    const cost = price(s, LOTTO.ticket);
+    popup(s, {
+      emoji: '🎟️', title: 'The lottery', handler: 'lottoBuy',
+      text: `This year's jackpot is ${fmtMoney(lottoJackpot(s))}. It is a 1 in ${groupDigits(Math.round(1 / LOTTO.jackpot))} shot on each ticket, and about one ticket in ten wins something small. Tickets are ${fmtMoney(cost)} each.`,
+      choices: LOTTO.packs.map((n) => ({ label: n === 1 ? 'Buy 1 ticket' : `Buy ${groupDigits(n)} tickets`, value: n, sub: fmtMoney(cost * n), disabled: M(s).money < cost * n })).concat([{ label: 'Never mind', value: 0 }]),
+    });
   },
+});
+onChoice('lottoBuy', (s, ctx, n) => {
+  if (!n || !LOTTO.packs.includes(n)) return;
+  const cost = price(s, LOTTO.ticket) * n;
+  if (!pay(s, cost)) return cantAfford(cost);
+  habit(s, 'gambling', 0.5 * Math.min(n, 12));
+  tally(s, 'gambled', cost);
+  const luck = trait(s, 'lucky') ? 2 : 1, pj = luck * LOTTO.jackpot, pf = pj + luck * LOTTO.five, ps = pf + luck * LOTTO.small;
+  let jacks = 0, jackSum = 0, fives = 0, fiveSum = 0, smalls = 0, smallSum = 0;
+  for (let i = 0; i < n; i++) {
+    const r = rand();
+    if (r < pj) { const w = lottoJackpot(s); jacks++; jackSum += w; tally(s, 'jackpots'); s.lotto = { year: s.year, wins: lottoWins(s) + 1 }; } // a win draws a new jackpot
+    else if (r < pf) { fives++; fiveSum += price(s, randInt(1000, 50000)); }
+    else if (r < ps) { smalls++; smallSum += price(s, LOTTO.ticket) * randInt(1, 6); }
+  }
+  const won = jackSum + fiveSum + smallSum;
+  add(s, { money: won, happy: jacks ? 30 : fives ? 10 : smalls ? 2 : 0 });
+  if (n === 1) {
+    if (jacks) return { text: `🎉 JACKPOT! You won ${fmtMoney(jackSum)}!`, tone: 'good' };
+    if (fives) return { text: `You matched five numbers and won ${fmtMoney(fiveSum)}!`, tone: 'good' };
+    if (smalls) return `You won ${fmtMoney(smallSum)} on a scratch-off.`;
+    return pick(['No luck this time.', 'Not even close.', 'You matched one number. That pays nothing.', 'You lost. The lottery is a tax on hope.']);
+  }
+  const parts = [];
+  if (jacks) parts.push(`🎉 JACKPOT${jacks > 1 ? ` (${jacks} times)` : ''}: ${fmtMoney(jackSum)}`);
+  if (fives) parts.push(`${nOf(fives, 'win')} matching five numbers: ${fmtMoney(fiveSum)}`);
+  if (smalls) parts.push(`${nOf(smalls, 'small prize')}: ${fmtMoney(smallSum)}`);
+  const net = won - cost;
+  return { text: `You bought ${groupDigits(n)} tickets for ${fmtMoney(cost)}. ${parts.length ? parts.join('; ') + '.' : 'Nothing.'} ${net >= 0 ? 'You came out ahead by' : 'You are down'} ${fmtMoney(Math.abs(net))}.`, tone: jacks || net > 0 ? 'good' : 'bad' };
 });
 defAction({
   id: 'charity', cat: 'money', label: 'Donate to charity', emoji: '💝', desc: 'Give back.',
@@ -280,7 +320,7 @@ defAction({
   run: (s) => {
     popup(s, {
       emoji: '📈', title: 'Investments', text: `Cash on hand: ${fmtMoney(M(s).money)}. Returns arrive each year.`, handler: 'investPick',
-      choices: INVEST_IDS.map((k) => ({ label: INVESTMENTS[k].emoji + ' ' + INVESTMENTS[k].name, value: k, sub: `Balance ${fmtMoney(M(s).invest[k] || 0)} · ${riskLabel(INVESTMENTS[k])}` })).concat([{ label: 'Done', value: null }]),
+      choices: INVEST_IDS.filter((k) => eraHas(s, k) || M(s).invest[k]).map((k) => ({ label: INVESTMENTS[k].emoji + ' ' + INVESTMENTS[k].name, value: k, sub: `Balance ${fmtMoney(M(s).invest[k] || 0)} · ${riskLabel(INVESTMENTS[k])}` })).concat([{ label: 'Done', value: null }]),
     });
   },
 });
@@ -472,11 +512,15 @@ onChoice('emigrate', (s, ctx, c) => {
   if (!pay(s, cost)) return cantAfford(cost);
   const odds = 0.35 + P(s).stats.smarts / 300 + (M(s).career ? 0.15 : 0) + (eduRank(s) >= 3 ? 0.15 : 0) + (netWorth(s) > price(s, 100000) ? 0.15 : 0) - (hasFelony(s) ? 0.35 : 0);
   if (!chance(clamp(odds, 0.05, 0.95))) return { text: `Your visa to ${COUNTRIES[c].name} was denied.`, tone: 'bad', emoji: '🛂' };
+  return emigrateNow(s, c);
+});
+// The move itself, once the visa is settled. The history events (89-world-events-3.js) use it too, with a city.
+function emigrateNow(s, c, city) {
   const me = P(s), from = me.country;
   const dep = leaveRental(s, 'moved');
   const oldHomeId = M(s).housing.type === 'own' ? M(s).housing.assetId : null;
   me.country = c;
-  me.city = pick(COUNTRIES[c].cities);
+  me.city = city || pick(COUNTRIES[c].cities);
   cityArrive(s);
   const fx = exchangeOnEmigrate(s, from, c);
   useCurrency(s);
@@ -502,7 +546,7 @@ onChoice('emigrate', (s, ctx, c) => {
   tally(s, 'countries');
   add(s, { happy: 6 });
   return { text: `You moved to ${me.city}, ${COUNTRIES[c].name}! ${COUNTRIES[c].flag} Find a place to live and a new job.${dep ? ' ' + dep : ''}${fx ? ' ' + fx : ''}${vacateNote}`, tone: 'good', emoji: '🛂' };
-});
+}
 
 /* ---- crime menu ---------------------------------------------------- */
 for (const id of SOLO_CRIMES) {
@@ -609,7 +653,7 @@ onChoice('will', (s, ctx, v) => { M(s).will = v; return { text: 'You updated you
 /* ---- fame & social media ------------------------------------------- */
 function followersToFame(f) { return f <= 0 ? 0 : clamp(Math.round(Math.log10(f) * 13 - 30), 0, 100); }
 defAction({
-  id: 'social_join', cat: 'fame', label: 'Create a social media account', emoji: '📱', desc: 'Post, grow, go viral.',
+  id: 'social_join', era: 'social', cat: 'fame', label: 'Create a social media account', emoji: '📱', desc: 'Post, grow, go viral.',
   when: (s) => !s.dead && A(s) >= 13 && !M(s).socials,
   run: (s) => { M(s).socials = { followers: randInt(5, 120), posts: 0, verified: false, handle: '@' + P(s).first.toLowerCase().replace(/[^a-z]/g, '') + randInt(10, 999) }; return `You created ${M(s).socials.handle}. You have ${M(s).socials.followers} followers (mostly relatives).`; },
 });
@@ -621,7 +665,7 @@ const POST_TYPES = [
   { id: 'hottake', name: 'Post a hot take', emoji: '🌶️', risky: true },
 ];
 defAction({
-  id: 'social_post', cat: 'fame', label: 'Post something', emoji: '✨', desc: 'Grow your following.',
+  id: 'social_post', era: 'social', cat: 'fame', label: 'Post something', emoji: '✨', desc: 'Grow your following.',
   when: (s) => !s.dead && !!M(s).socials && !inPrison(s),
   sub: (s) => fmtNum(M(s).socials.followers) + ' followers' + (M(s).socials.verified ? ' ✔️' : ''),
   run: (s) => {
@@ -662,7 +706,7 @@ onChoice('post', (s, ctx, id) => {
   return { text, emoji: t.emoji };
 });
 defAction({
-  id: 'social_delete', cat: 'fame', label: 'Delete your account', emoji: '🗑️',
+  id: 'social_delete', era: 'social', cat: 'fame', label: 'Delete your account', emoji: '🗑️',
   when: (s) => !s.dead && !!M(s).socials,
   run: (s) => { const h = M(s).socials.handle; M(s).socials = null; add(s, { happy: 3 }); return `You deleted ${h}. Peace and quiet.`; },
 });

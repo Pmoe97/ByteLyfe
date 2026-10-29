@@ -321,6 +321,7 @@ EV('kid_icecream', {
   ],
 });
 EV('kid_gaming', {
+  era: 'games',
   ages: [7, 16], emoji: '🎮', text: "You got a new video game. It's 2 a.m. and you're on the final boss.",
   choices: [
     ['Keep playing', (s) => { add(s, { happy: 4, health: -1 }); habit(s, 'gaming', randInt(3, 8)); return 'You beat the boss at 4 a.m. and slept through breakfast.'; }],
@@ -634,7 +635,7 @@ EV('kid_best_friend_moves', {
   ages: [6, 14], emoji: '📦', ctx: (s) => someone(s, ['bestie', 'friend'], (p) => ageOf(s, p) < 18),
   text: (s, c) => `${nm(s, c.pid)} is moving to another city.`,
   choices: [
-    ['Promise to video call every week', (s, c) => { addRel(s, c.pid, 10); add(s, { happy: -3 }); return `You actually do. ${nm(s, c.pid)} is still your best friend.`; }],
+    { label: (s) => (eraHas(s, 'smartphone') ? 'Promise to video call every week' : 'Promise to write every week'), fx: (s, c) => { addRel(s, c.pid, 10); add(s, { happy: -3 }); return `You actually do. ${nm(s, c.pid)} is still your best friend.`; } },
     ['Throw them a goodbye party', (s, c) => { addRel(s, c.pid, 8); add(s, { happy: 2 }); return 'Cake, balloons, and a lot of hugging at the end.'; }],
   ],
 });
@@ -649,6 +650,7 @@ EV('ms_locker', {
   ],
 });
 EV('ms_first_phone', {
+  era: 'mobile',
   ages: [10, 14], once: true, emoji: '📱', when: (s) => relPeople(s, ['parent']).length > 0, text: 'Your parents are finally getting you your own phone.',
   choices: [
     ['Promise to use it responsibly', (s) => { relAll(s, ['parent'], 4); add(s, { happy: 6 }); return 'You kept that promise for almost a week.'; }],

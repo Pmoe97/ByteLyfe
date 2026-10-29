@@ -44,7 +44,7 @@ const SILKS = ['#E5484D', '#3E8EF7', '#F5B700', '#30A46C', '#8E4EC6', '#F76B15',
 const BOOKIE_NICKS = ['the Accountant', 'Two Phones', 'Sunday', 'the Professor', 'Lucky', 'Uncle', 'Paperclip', 'the Vet', 'Slow Hands', 'Grandpa'];
 
 function gambleAge(s) { return Math.max(18, country(s).drink); }
-function canGamble(s) { return free(s) && A(s) >= gambleAge(s); }
+function canGamble(s) { return free(s) && A(s) >= gambleAge(s) && !worldClosed(s, 'gambling'); } // casinos close in a pandemic (88-world.js)
 function gamb(s) { const m = M(s); return m.gamb || (m.gamb = { at: {}, bets: [], debts: [], race: null, poker: { rating: 0, cashes: 0, wins: 0, rivals: [] }, excluded: 0, trip: null }); }
 function excluded(s) { return gamb(s).excluded > s.year; }
 function vById(s, id) { return (s.venues || {})[id] || null; }
@@ -752,6 +752,7 @@ function gamblingTick(s) {
 /* ---- events ---------------------------------------------------------------------------------- */
 const gambler = (s) => canGamble(s) && LC(s, 'gambled') > 0;
 EV('gb_free_bet', {
+  era: 'web',
   ages: [18, 90], emoji: '📱', when: (s) => gambler(s) && (excluded(s) || (M(s).addictions.gambling || 0) >= 20), text: (s) => `${appVenue(s).name} sent you a notification: "We miss you! Here’s a free ${fmtMoney(price(s, 50))} bet."`,
   choices: [
     ['Use it', (s) => { habit(s, 'gambling', 5); tally(s, 'relapse'); return chance(0.4) ? `It won. Of course it won. You deposited ${fmtMoney(price(s, 500))} that night.` : 'It lost. You deposited more to "get it back."'; }],

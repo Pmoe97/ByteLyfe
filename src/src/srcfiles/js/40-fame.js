@@ -88,9 +88,9 @@ defAction({
   run: (s) => {
     if (bump(s, 'bigbreak') > 2) return { text: "You've put out all you can this year. Try again next year.", nolog: true };
     const k = workKind(s), K = WORK_KINDS[k];
-    if (k === 'role') { offersPopup(s, k, 'sbRole', 'Casting calls', 'Your agent sent over two scripts.', [0, 1].map(() => ({ title: workTitle('film'), genre: pick(GENRES.film), series: chance(0.35), prestige: Math.round(randFloat(0.8, 1.6) * 100) / 100 }))); return; }
-    if (k === 'campaign') { offersPopup(s, k, 'sbCampaign', 'Bookings', 'Two brands want you.', BRANDS.slice().sort(() => rand() - 0.5).slice(0, 2).map((b) => ({ title: `${b} ${pick(['Spring', 'Fall', 'Holiday', 'Resort'])} campaign`, genre: '', prestige: Math.round(randFloat(0.8, 1.6) * 100) / 100 }))); return; }
-    if (k === 'record') { offersPopup(s, k, 'sbRecord', 'Studio sessions', 'Two artists want you behind the board.', ARTISTS.slice().sort(() => rand() - 0.5).slice(0, 2).map((a) => ({ title: `${workTitle('album')} by ${a}`, genre: pick(GENRES.music), prestige: Math.round(randFloat(0.8, 1.6) * 100) / 100 }))); return; }
+    if (k === 'role') { fameOffersPopup(s, k, 'sbRole', 'Casting calls', 'Your agent sent over two scripts.', [0, 1].map(() => ({ title: workTitle('film'), genre: pick(GENRES.film), series: chance(0.35), prestige: Math.round(randFloat(0.8, 1.6) * 100) / 100 }))); return; }
+    if (k === 'campaign') { fameOffersPopup(s, k, 'sbCampaign', 'Bookings', 'Two brands want you.', BRANDS.slice().sort(() => rand() - 0.5).slice(0, 2).map((b) => ({ title: `${b} ${pick(['Spring', 'Fall', 'Holiday', 'Resort'])} campaign`, genre: '', prestige: Math.round(randFloat(0.8, 1.6) * 100) / 100 }))); return; }
+    if (k === 'record') { fameOffersPopup(s, k, 'sbRecord', 'Studio sessions', 'Two artists want you behind the board.', ARTISTS.slice().sort(() => rand() - 0.5).slice(0, 2).map((a) => ({ title: `${workTitle('album')} by ${a}`, genre: pick(GENRES.music), prestige: Math.round(randFloat(0.8, 1.6) * 100) / 100 }))); return; }
     if (!K.genres) { budgetPopup(s, { k, genre: '' }); return; }
     const tr = trendsFor(s)[K.genres], st = sb(s);
     popup(s, {
@@ -99,7 +99,7 @@ defAction({
     });
   },
 });
-function offersPopup(s, k, handler, title, text, offers) {
+function fameOffersPopup(s, k, handler, title, text, offers) {
   popup(s, { emoji: WORK_KINDS[k].emoji, title, text, handler, ctx: { offers }, choices: offers.map((o, i) => ({ label: `“${o.title}”`, value: i, sub: `${o.genre ? o.genre + ' · ' : ''}${o.series ? 'TV series · ' : ''}${o.prestige >= 1.3 ? 'prestige project' : o.prestige <= 0.95 ? 'small project' : 'solid project'}` })).concat([{ label: 'Pass', value: -1 }]) });
 }
 onChoice('sbGenre', (s, ctx, g) => { if (g && fameJob(s)) budgetPopup(s, { k: ctx.k, genre: g }); });
@@ -328,6 +328,7 @@ EV('sb_paparazzi', {
   ],
 });
 EV('sb_feud', {
+  era: 'social',
   ages: [16, 120], when: famous(35), emoji: '🥊', text: () => `${pick(STARS)} took a shot at you in an interview.`,
   choices: [
     ['Clap back', (s) => { add(s, { fame: 5, karma: -2 }); if (chance(0.3)) { add(s, { fame: -4 }); return 'Your reply aged badly. The internet sided with them.'; } return 'Your reply was perfect. You won the week.'; }],
@@ -336,6 +337,7 @@ EV('sb_feud', {
   ],
 });
 EV('sb_romance_rumor', {
+  era: 'social',
   ages: [18, 120], when: famous(45), emoji: '💋', text: () => `The tabloids say you're secretly dating ${pick(STARS)}.`,
   choices: [
     ['Deny it', (s) => { add(s, { fame: 1 }); return 'Nobody believed the denial, which only helped.'; }],
@@ -344,6 +346,7 @@ EV('sb_romance_rumor', {
   ],
 });
 EV('sb_leak', {
+  era: 'web',
   ages: [16, 120], when: (s) => famous(30)(s) && ['album', 'film', 'record', 'book'].includes(workKind(s)), emoji: '💾', text: 'Your next project leaked online months early.',
   choices: [
     ['Embrace it', (s) => { add(s, { fame: 3 }); sb(s).boost = 1; return 'You called it a gift to the fans. The buzz has never been bigger.'; }],

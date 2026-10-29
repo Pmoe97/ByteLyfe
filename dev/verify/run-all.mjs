@@ -3,6 +3,10 @@
 //   - the emoji audit (nothing newer than Emoji 12)
 //   - content tags (known tags only, filters hide tagged content)
 //   - taboo gate/inbreeding/event checks (48-taboo.js)
+//   - family romance: a relative you dated stays family, "are you sure?" before asking one out, old saves restored (family.mjs)
+//   - head start: a custom life that starts at any age, lived for you by an autopilot (90-head-start.js)
+//   - real-world history: the table, every knob, the Depression, the Second World War, COVID, history off, lives in every era (09, 88, 89)
+//   - duplicate globals: no top-level name declared in two files (one shared scope: the later quietly replaces the earlier)
 //   - cities: city data, prices, moving, landlords and tenants (49-cities.js)
 //   - currencies: formats, exchange when emigrating, foreign savings (50-currency.js)
 //   - God Mode: the per-person editor's rules (28-sandbox.js)
@@ -65,12 +69,17 @@ const tasks = [
   { label: 'emoji audit', args: ['dev/verify/emoji-audit.mjs'] },
   { label: 'content tags', args: ['dev/verify/tags.mjs'] },
   { label: 'taboo checks', args: ['dev/verify/taboo.mjs'] },
+  { label: 'family romance checks', args: ['dev/verify/family.mjs'] },
+  { label: 'head start checks', args: ['dev/verify/headstart.mjs'] },
+  { label: 'real-world history checks', args: ['dev/verify/world.mjs'] },
+  { label: 'duplicate globals', args: ['dev/verify/globals.mjs'] },
   { label: 'cities checks', args: ['dev/verify/cities.mjs'] },
   { label: 'currency checks', args: ['dev/verify/currency.mjs'] },
   { label: 'God Mode checks', args: ['dev/verify/godmode.mjs'] },
   { label: 'Chaos checks', args: ['dev/verify/chaos.mjs'] },
   { label: 'challenge checks', args: ['dev/verify/challenges.mjs'] },
   { label: 'gambling checks', args: ['dev/verify/gambling.mjs'] },
+  { label: 'wealth checks', args: ['dev/verify/wealth.mjs'] },
   { label: 'house checks', args: ['dev/verify/house.mjs'] },
   { label: 'zoo checks', args: ['dev/verify/zoo.mjs'] },
   { label: 'youth checks', args: ['dev/verify/youth.mjs'] },

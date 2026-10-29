@@ -12,6 +12,16 @@
 // Files after 80 register their yearly turn with onYear(name, fn) instead of editing the list below: they run in
 // load order, in one phase right after capYear and before the paper (newsYear). A hook that throws is logged and skipped,
 // so one new system can never stop the year.
+// onYearStart (88-world.js and later) runs before anything else in the year, so the year's events (a war, a crash, a
+// pandemic) are in place before the body, the job and the money are worked out. Same rule: a hook that throws is skipped.
+const YEAR_START_HOOKS = [];
+function onYearStart(name, fn) { YEAR_START_HOOKS.push({ name, fn }); }
+function runYearStartHooks(s) {
+  for (const h of YEAR_START_HOOKS) {
+    if (s.dead) return;
+    try { h.fn(s); } catch (e) { console.error('[ByteLyfe] year-start hook failed:', h.name, e); }
+  }
+}
 const YEAR_HOOKS = [];
 function onYear(name, fn) { YEAR_HOOKS.push({ name, fn }); }
 function runYearHooks(s) {
@@ -21,7 +31,7 @@ function runYearHooks(s) {
   }
 }
 const AGE_PHASES = [
-  (s) => fxTick(s), bodyTick, pregnancyTick, schoolTick, (s) => militaryTick(s), (s) => spyTick(s), careerTick, (s) => businessTick(s), prisonTick, financeTick,
+  (s) => runYearStartHooks(s), (s) => fxTick(s), bodyTick, pregnancyTick, schoolTick, (s) => militaryTick(s), (s) => spyTick(s), careerTick, (s) => businessTick(s), prisonTick, financeTick,
   assetTick, (s) => cityTick(s), fameTick, npcTick, (s) => familyTick(s), (s) => parentingTick(s), (s) => romanceTick(s), (s) => tabooTick(s), (s) => royalTick(s), (s) => uwTick(s), (s) => showbizTick(s), (s) => sportsTick(s), (s) => courtTick(s), (s) => chaosTick(s), (s) => gamblingTick(s), (s) => houseTick(s), (s) => youthTick(s), (s) => webTick(s), (s) => invTick(s), (s) => intimTick(s), (s) => subsYear(s), (s) => vioYear(s), (s) => serYear(s), (s) => darkYear(s), (s) => favorYear(s), (s) => capYear(s), (s) => runYearHooks(s), (s) => newsYear(s), petTick, milestoneTick, (s) => storyTick(s), rollYearEvents, diseaseTick, deathCheck,
 ];
 

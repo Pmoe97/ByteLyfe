@@ -19,6 +19,8 @@ function amortize(principal, rate, years) {
   if (!rate) return principal / years;
   return (principal * rate) / (1 - Math.pow(1 + rate, -years));
 }
+// What a personal loan costs this year: the usual 11%, plus whatever money costs in the world right now (88-world.js).
+function personalRate(s) { return Math.max(0.02, 0.11 + wfx(s, 'rates')); }
 function addLoan(s, o) {
   const l = { id: uid(s, 'l'), kind: o.kind, name: o.name, balance: Math.round(o.amount), rate: o.rate, years: o.years, payment: Math.round(amortize(o.amount, o.rate, o.years)), assetId: o.assetId || null, missed: 0 };
   M(s).loans.push(l);
@@ -41,7 +43,7 @@ function flagOf(p, k) { return p.flags && p.flags[k]; }
 function financeTick(s) {
   const m = M(s), age = A(s);
   const inc = [], exp = [];
-  const tax = country(s).tax;
+  const tax = clamp(country(s).tax + wfx(s, 'tax'), 0, 0.7); // a war or a crisis can raise it (88-world.js)
   if (!inPrison(s)) {
     if (m.career) inc.push(['Salary (after tax)', Math.round(m.career.salary * (1 - tax))]);
     if (m.ptJob) inc.push(['Part-time pay', Math.round(m.ptJob.pay * (1 - tax * 0.5))]);
@@ -100,6 +102,8 @@ function financeTick(s) {
     const I = INVESTMENTS[k];
     let r = Math.max(-0.9, k === 'index' ? marketReturn(s) + gauss(0, 0.02) : k === 'stocks' ? marketReturn(s) * 1.1 + gauss(0.01, 0.22) : gauss(I.mean, I.sd));
     if (k === 'crypto' && chance(0.06)) r = -randFloat(0.6, 0.95);
+    if (k === 'savings' || k === 'bonds') r += wfx(s, 'rates'); // high rates pay savers (88-world.js)
+    if (k === 'crypto') { const cr = worldCrypto(s); if (cr !== null) r = Math.max(-0.9, cr + gauss(0, 0.05)); }
     const nv = Math.round(v * (1 + r));
     invDelta += nv - v;
     m.invest[k] = nv;
@@ -151,7 +155,7 @@ defAction({
     if (!canBorrow(s)) return { text: 'No bank will lend to you after your bankruptcy.', nolog: true };
     const amts = [5000, 20000, 50000, 200000, 1000000].map((a) => price(s, a));
     popup(s, {
-      emoji: '🏦', title: 'Personal loan', text: 'Loans are repaid over 5 years at about 11% interest.', handler: 'loan',
+      emoji: '🏦', title: 'Personal loan', text: `Loans are repaid over 5 years at about ${Math.round(personalRate(s) * 100)}% interest.`, handler: 'loan',
       choices: amts.map((a) => ({ label: fmtMoney(a), value: a })).concat([{ label: 'Never mind', value: 0 }]),
     });
   },
@@ -162,7 +166,7 @@ onChoice('loan', (s, ctx, amt) => {
   const payment = amortize(amt, 0.11, 5);
   const odds = clamp(0.2 + (income - payment * 3) / (payment * 6) + Math.max(0, netWorth(s)) / (amt * 2) - debtTotal(s) / (amt * 10), 0.02, 0.95);
   if (!chance(odds)) return { text: `The bank turned down your request for ${fmtMoney(amt)}.`, tone: 'bad' };
-  addLoan(s, { kind: 'personal', name: 'Personal loan', amount: amt, rate: 0.11, years: 5 });
+  addLoan(s, { kind: 'personal', name: 'Personal loan', amount: amt, rate: personalRate(s), years: 5 });
   add(s, { money: amt });
   return { text: `The bank approved your ${fmtMoney(amt)} loan.`, tone: 'good' };
 });

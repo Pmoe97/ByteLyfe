@@ -215,7 +215,7 @@ function checkAchievements(s) {
     m.achievements.push(a.id);
     if (!onAchievement(a.id)) continue; // already unlocked in an earlier life: count it quietly
     log(s, `🏅 Achievement unlocked: ${a.name}`, 'good');
-    if (!s.dead) popup(s, { emoji: a.emoji, title: 'Achievement unlocked!', text: `${a.name}: ${achDesc(a, s)}`, tone: 'good' });
+    if (!s.dead && !s.headStart) popup(s, { emoji: a.emoji, title: 'Achievement unlocked!', text: `${a.name}: ${achDesc(a, s)}`, tone: 'good' });
   }
 }
 function checkGoals(s) {

@@ -12,7 +12,7 @@ function pastLine(x) {
 }
 function caseRow(k) {
   const T = CASE_TYPES[k.type];
-  const when = k.stage === 'appeal' ? 'On appeal' : `Trial in ${k.trial} · chances look ${oddsWord(caseOdds(G, k))}`;
+  const when = k.stage === 'appeal' ? 'On appeal' : `Trial in ${k.trial} · chances look ${trialOddsWord(caseOdds(G, k))}`;
   return itemRow({ ico: T.emoji, t: esc(caseName(G, k)), s: `${esc(T.name)} · ${fmtMoney(k.claim)} · ${when}` });
 }
 // The Courts menu opens with your open cases and your record (42-courts.js).

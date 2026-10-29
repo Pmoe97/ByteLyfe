@@ -38,6 +38,7 @@ EV('ad_wedding_invite', {
   ],
 });
 EV('ad_scam_email', {
+  era: 'web',
   ages: [18, 95], emoji: '📧', text: () => `You got an email from a "prince" who needs your help moving ${fmtMoneyShort(1e7)} out of his country.`,
   choices: [
     ['Send your bank details', (s) => { const loss = Math.min(Math.max(0, M(s).money), price(s, randInt(500, 5000))); M(s).money -= loss; add(s, { happy: -6 }); return `The "prince" emptied ${fmtMoney(loss)} from your account. Royalty, huh.`; }],
@@ -433,6 +434,7 @@ EV('ad_free_couch', {
 });
 EV('ad_power_bill', { ages: [20, 100], w: 0.6, emoji: '💡', when: livesAlone, text: 'Your electric bill this month was three times the usual.', auto: (s) => { const c = price(s, randInt(150, 600)); M(s).money -= c; add(s, { happy: -2 }); return `${fmtMoney(c)}. It turns out ${pick(['the freezer door was open for a week', 'the AC was on full blast while you were away', 'a neighbor was plugged into your outdoor outlet'])}.`; } });
 EV('ad_crypto_pitch', {
+  era: 'crypto',
   ages: [18, 70], emoji: '💰', ctx: (s) => someone(s, ['friend', 'sibling', 'coworker'], (p) => ageOf(s, p) >= 18),
   text: (s, c) => `${nm(s, c.pid)} won't stop talking about a new coin called ${pick(['MoonGoat', 'HamsterCash', 'ToTheMoon', 'BurgerCoin'])}.`,
   choices: [
@@ -509,6 +511,7 @@ EV('job_meeting', {
   ],
 });
 EV('job_reply_all', {
+  era: 'web',
   ages: [18, 75], w: 0.7, emoji: '📧', when: regularJob, text: 'You accidentally hit "reply all" on a message complaining about your boss.',
   choices: [
     ['Own it with an apology', (s) => { M(s).career.perf = clamp100(M(s).career.perf - 5); add(s, { karma: 1 }); return 'Your boss said they appreciated the honesty. They did not.'; }],
